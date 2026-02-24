@@ -1,0 +1,141 @@
+---
+title: "Foundry and Hardhat Integration"
+sidebarTitle: "Foundry"
+description: "Use Guardian Wallet as a signer for Forge scripts, Cast commands, and Hardhat deployments. No private keys in your environment."
+"og:title": "Foundry Integration — Guardian Wallet"
+"og:description": "Deploy smart contracts with threshold signing. Guardian's JSON-RPC proxy works with Forge, Cast, and Hardhat. No private keys needed."
+---
+
+# Foundry Integration
+
+The `gw proxy` command starts a JSON-RPC signing proxy on localhost. It intercepts `eth_sendTransaction` and `eth_signTransaction`, signs via Guardian's threshold protocol, and forwards everything else to the upstream RPC.
+
+Your Forge scripts deploy with threshold signing. No private keys in your environment.
+
+## Start the Proxy
+
+```bash
+gw proxy --port 8545
+```
+
+The proxy:
+- Loads your signer share from local config
+- Connects to the Guardian server for co-signing
+- Listens on `http://localhost:8545`
+
+<Info>
+  The proxy intercepts `eth_sendTransaction`, `eth_signTransaction`, `eth_sign`, `personal_sign`, and `eth_accounts`. All other JSON-RPC methods (like `eth_getBalance`, `eth_call`) pass through to the upstream RPC.
+</Info>
+
+---
+
+## Forge Scripts
+
+Point Forge at the proxy. No `--private-key` flag needed.
+
+```bash
+forge script script/Deploy.s.sol \
+  --rpc-url http://localhost:8545 \
+  --broadcast
+```
+
+The proxy handles `eth_accounts` too. Forge automatically picks up your Guardian signer address.
+
+<CodeGroup>
+
+```solidity Deploy.s.sol
+pragma solidity ^0.8.20;
+
+import "forge-std/Script.sol";
+import "./MyContract.sol";
+
+contract Deploy is Script {
+    function run() external {
+        vm.startBroadcast();
+        new MyContract();
+        vm.stopBroadcast();
+    }
+}
+```
+
+```bash Run
+forge script script/Deploy.s.sol \
+  --rpc-url http://localhost:8545 \
+  --broadcast
+```
+
+</CodeGroup>
+
+---
+
+## Cast
+
+Send transactions with `cast` through the proxy.
+
+```bash
+cast send 0xContractAddress "mint(uint256)" 1 \
+  --rpc-url http://localhost:8545
+```
+
+```bash
+cast send 0xRecipient --value 0.01ether \
+  --rpc-url http://localhost:8545
+```
+
+---
+
+## Hardhat
+
+Set the Guardian proxy as a custom network in your Hardhat config.
+
+<CodeGroup>
+
+```javascript hardhat.config.js
+module.exports = {
+  networks: {
+    guardian: {
+      url: "http://localhost:8545",
+    },
+  },
+};
+```
+
+```bash Run
+npx hardhat run scripts/deploy.js --network guardian
+```
+
+</CodeGroup>
+
+No accounts config needed. The proxy provides the signer address via `eth_accounts`.
+
+---
+
+## Proxy Options
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `-p, --port <port>` | Port to listen on | `8545` |
+| `-r, --rpc-url <url>` | Override upstream RPC URL | Auto-detected from server |
+
+Override the RPC if you need a specific endpoint:
+
+```bash
+gw proxy --port 8545 --rpc-url https://mainnet.base.org
+```
+
+---
+
+## What Gets Signed
+
+| JSON-RPC Method | Action |
+|-----------------|--------|
+| `eth_sendTransaction` | Threshold sign + broadcast |
+| `eth_signTransaction` | Threshold sign (no broadcast) |
+| `eth_sign` | Threshold message sign |
+| `personal_sign` | Threshold message sign |
+| `eth_accounts` | Returns Guardian signer address |
+| Everything else | Forwarded to upstream RPC |
+
+<Tip>
+  The server evaluates all active guardrails before co-signing. Spending limits, rate limits, and contract allowlists all apply —even through the proxy. If a guardrail blocks the transaction, Forge gets a JSON-RPC error with the violation details.
+</Tip>

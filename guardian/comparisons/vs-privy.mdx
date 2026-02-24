@@ -1,0 +1,78 @@
+---
+title: "Guardian Wallet vs Privy"
+sidebarTitle: "vs Privy"
+description: "Guardian Wallet vs Privy: self-hosted threshold signing vs embedded wallet SDK. Feature comparison for AI agent builders and developer teams."
+"og:title": "Guardian Wallet vs Privy — Feature Comparison"
+"og:description": "Compare Guardian Wallet and Privy for agent key management. Self-custody MPC vs vendor-hosted embedded wallets."
+---
+
+# Guardian Wallet vs Privy
+
+Privy embeds wallets into your app. Guardian gives your AI agents their own wallets. Different tools for different problems.
+
+Privy is designed for consumer apps where users need wallets without MetaMask. Guardian is designed for autonomous agents and bots that need to sign transactions without exposing a private key.
+
+---
+
+## Quick Comparison
+
+| | Guardian Wallet | Privy |
+|---|---|---|
+| **Primary use case** | AI agent signing, developer key management | Consumer app embedded wallets |
+| **Key model** | 2-of-3 threshold ECDSA (no single key) | Server-side key management, TEE enclaves |
+| **Custody** | Self-hosted. You hold all shares. | Privy holds keys on your behalf. |
+| **Pricing** | Free and open source | Free tier + usage-based pricing |
+| **Source code** | Open source | Proprietary |
+| **Agent support** | Native SDK, CLI, MCP server | Not designed for agents |
+| **User authentication** | Passkey (WebAuthn) + email | Email, social login, wallets, phone |
+| **Policy engine** | Built-in guardrails (limits, allowlists, rate limits) | Not applicable |
+| **Self-hosting** | Yes, full self-hosting | No, Privy-hosted only |
+| **Chain support** | Every EVM chain | EVM + Solana |
+
+---
+
+## When to Choose Guardian
+
+- **You're building AI agents.** Guardian is purpose-built for autonomous signing. SDK, CLI, and MCP server for agent integration.
+- **You want self-custody.** No third party holds your keys. You run the infrastructure.
+- **You need transaction guardrails.** Spending limits, rate limits, contract allowlists, time windows. All enforced before every signature.
+- **You want the key to never exist.** Guardian uses threshold signing. The private key is never assembled. Privy stores keys in secure enclaves, but the key does exist as a whole value.
+
+---
+
+## When to Choose Privy
+
+- **You're building a consumer app.** Privy excels at onboarding non-crypto users. Social login, email login, phone login. No MetaMask required.
+- **You need social login.** Google, Twitter, Discord, Apple. Privy supports them all.
+- **You don't want to host infrastructure.** Privy is fully managed. No Docker. No Vault. No server to maintain.
+- **User wallets, not agent wallets.** Privy creates wallets per user. Guardian creates wallets per agent.
+
+---
+
+## Key Architecture Difference
+
+**Privy:** Stores the actual private key in a secure enclave (TEE). The key exists as a whole value inside the enclave. Privy manages the infrastructure. You trust their security.
+
+**Guardian:** The private key never exists as a whole value. Three shares are created via distributed key generation. Any two shares can co-sign, but no single share is useful alone. You host everything.
+
+This is not a philosophical difference. It changes the threat model:
+
+| Scenario | Privy | Guardian |
+|----------|-------|---------|
+| Vendor gets hacked | Attacker may access keys | No keys to access. Attacker gets one share. |
+| Your server gets hacked | N/A (Privy-hosted) | Attacker gets one share. Cannot sign alone. |
+| Vendor goes down | Your users lose wallet access | Your agents keep signing (2 of 3 shares still work) |
+| Vendor changes pricing | You're locked in | You self-host. No vendor. |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/guardian/quickstart">
+    From zero to signed transaction in 5 minutes
+  </Card>
+  <Card title="What is Threshold Signing?" icon="key" href="/guardian/concepts/threshold-signing">
+    How the cryptography works
+  </Card>
+</CardGroup>

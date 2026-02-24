@@ -22,31 +22,78 @@
   "topbarLinks": [
     {
       "name": "GitHub",
-      "url": "https://github.com/agentokratia"
+      "url": "https://github.com/agentokratia/guardian-wallet"
+    },
+    {
+      "name": "x402 Payments",
+      "url": "https://facilitator.agentokratia.com"
     }
   ],
   "topbarCtaButton": {
-    "name": "Dashboard",
-    "url": "https://app.agentokratia.com"
+    "name": "Guardian Wallet",
+    "url": "/guardian/quickstart"
   },
   "tabs": [
     {
-      "name": "x402 Facilitator",
-      "url": "x402"
+      "name": "Guardian Wallet",
+      "url": "guardian"
     },
     {
-      "name": "Marketplace",
-      "url": "marketplace"
+      "name": "x402 Payments",
+      "url": "x402"
     }
   ],
   "navigation": [
+    {
+      "group": "Getting Started",
+      "pages": ["guardian/introduction", "guardian/quickstart"]
+    },
+    {
+      "group": "Concepts",
+      "pages": [
+        "guardian/concepts/threshold-signing",
+        "guardian/concepts/signing-paths",
+        "guardian/concepts/guardrails",
+        "guardian/concepts/security"
+      ]
+    },
+    {
+      "group": "Integration",
+      "pages": [
+        "guardian/integration/cli",
+        "guardian/integration/sdk",
+        "guardian/integration/mcp",
+        "guardian/integration/foundry"
+      ]
+    },
+    {
+      "group": "Deployment",
+      "pages": ["guardian/self-hosting", "guardian/networks", "guardian/api-reference"]
+    },
+    {
+      "group": "Comparisons",
+      "pages": [
+        "guardian/comparisons/vs-fireblocks",
+        "guardian/comparisons/vs-privy",
+        "guardian/comparisons/mpc-vs-multisig"
+      ]
+    },
+    {
+      "group": "Resources",
+      "pages": ["guardian/faq", "guardian/glossary"]
+    },
     {
       "group": "Getting Started",
       "pages": ["x402/introduction", "x402/quickstart", "x402/getting-api-key"]
     },
     {
       "group": "Concepts",
-      "pages": ["x402/concepts/schemes", "x402/concepts/sessions", "x402/concepts/settlement", "x402/concepts/security"]
+      "pages": [
+        "x402/concepts/schemes",
+        "x402/concepts/sessions",
+        "x402/concepts/settlement",
+        "x402/concepts/security"
+      ]
     },
     {
       "group": "Integration",
@@ -64,38 +111,21 @@
         "x402/api-reference/verify",
         "x402/api-reference/settle"
       ]
-    },
-    {
-      "group": "Overview",
-      "pages": ["marketplace/introduction"]
-    },
-    {
-      "group": "Using Agents",
-      "pages": [
-        "marketplace/users/browsing",
-        "marketplace/users/playground",
-        "marketplace/users/payments"
-      ]
-    },
-    {
-      "group": "For Builders",
-      "pages": [
-        "marketplace/providers/getting-started",
-        "marketplace/providers/create-agent",
-        "marketplace/providers/go-live",
-        "marketplace/providers/earnings",
-        "marketplace/providers/handle-requests",
-        "marketplace/providers/best-practices"
-      ]
-    },
-    {
-      "group": "Trust & Reputation",
-      "pages": ["marketplace/reviews"]
     }
   ],
   "footerSocials": {
-    "github": "https://github.com/agentokratia",
+    "github": "https://github.com/agentokratia/guardian-wallet",
     "twitter": "https://twitter.com/agentokratia"
+  },
+  "seo": {
+    "indexHiddenPages": false
+  },
+  "metadata": {
+    "og:site_name": "Agentokratia",
+    "og:type": "website",
+    "og:image": "/images/og-default.png",
+    "twitter:card": "summary_large_image",
+    "twitter:site": "@agentokratia"
   },
   "api": {
     "baseUrl": "https://facilitator.agentokratia.com"

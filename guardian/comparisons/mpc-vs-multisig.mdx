@@ -1,0 +1,108 @@
+---
+title: "MPC Threshold Signing vs Multisig Wallets"
+sidebarTitle: "MPC vs Multisig"
+description: "MPC threshold signing vs smart contract multisig (Gnosis Safe). Off-chain vs on-chain key splitting, gas costs, and chain portability compared."
+"og:title": "MPC vs Multisig — Which Key Management Approach?"
+"og:description": "Compare MPC threshold signing and smart contract multisig. Off-chain key splitting vs on-chain approval. Gas costs, latency, and chain portability."
+---
+
+# MPC Threshold Signing vs Multisig
+
+Both MPC and multisig require multiple parties to approve a transaction. They solve the same problem: no single person can drain a wallet. They do it in fundamentally different ways.
+
+**Multisig** is a smart contract. It lives on-chain. Every signature costs gas. It works on one chain at a time.
+
+**MPC threshold signing** is an off-chain protocol. Shares cooperate to produce a standard ECDSA signature. No extra gas. Same address on every chain.
+
+---
+
+## Quick Comparison
+
+| | MPC Threshold Signing | Multisig (Gnosis Safe) |
+|---|---|---|
+| **Where it runs** | Off-chain (HTTPS between share holders) | On-chain (smart contract) |
+| **Extra gas cost** | None. Standard EOA transaction. | Yes. Smart contract execution per signature. |
+| **Chain portability** | Same address on every EVM chain | New deployment per chain |
+| **Setup cost** | Free (key generation is off-chain) | Gas cost to deploy the multisig contract |
+| **Signature type** | Standard ECDSA (indistinguishable from any wallet) | Smart contract transaction |
+| **Account type** | EOA (Externally Owned Account) | Contract account |
+| **DeFi compatibility** | Full. Looks like any wallet. | Partial. Some protocols don't support contract wallets. |
+| **Recovery** | Any 2-of-3 shares can sign | Depends on signer set configuration |
+| **Latency** | Sub-second (2-3 HTTPS round trips) | Block confirmation time (12+ seconds on Ethereum) |
+| **Transparency** | Signing is private (off-chain) | Approval history visible on-chain |
+
+---
+
+## When MPC Wins
+
+### No gas overhead
+
+Multisig wallets are smart contracts. Every transaction requires contract execution, which costs gas. On Ethereum mainnet, a multisig transaction costs 2-3x more gas than a standard transfer.
+
+MPC threshold signing produces a standard ECDSA signature. The network sees a normal transaction from a normal address. No extra gas.
+
+### One address, every chain
+
+An MPC wallet generates a standard Ethereum address. That same address works on Ethereum, Base, Arbitrum, Optimism, Polygon, and every other EVM chain. No redeployment.
+
+A Gnosis Safe must be deployed separately on each chain. Different deployment, different address (unless you use CREATE2), different configuration.
+
+### Agent compatibility
+
+AI agents need to sign transactions programmatically. MPC works via API calls. The agent holds one share, the server holds another, and they co-sign over HTTPS.
+
+Multisig requires submitting transactions to a smart contract and waiting for on-chain confirmations from other signers. Not practical for autonomous agent operations.
+
+### Privacy
+
+MPC signing is entirely off-chain. No one can see how many shares exist or who holds them. The blockchain sees a standard transaction from a standard address.
+
+Multisig approval history is public. Anyone can see the signer addresses, the approval threshold, and the execution history.
+
+---
+
+## When Multisig Wins
+
+### On-chain transparency
+
+Some organizations want approval history on the blockchain. Auditors, regulators, and compliance teams can verify every approval step by reading the contract's event logs.
+
+MPC signing happens off-chain. The blockchain only sees the final signed transaction.
+
+### Battle-tested governance
+
+Gnosis Safe has been running since 2018 and secures billions of dollars. The smart contract is heavily audited and widely deployed. It is the most battle-tested approach to multi-party transaction approval.
+
+MPC threshold signing is mathematically sound but has a shorter production track record in the Ethereum ecosystem.
+
+### No infrastructure
+
+A multisig wallet is a smart contract. It doesn't need servers. Deploy it and it runs on the blockchain forever.
+
+MPC requires infrastructure. Someone has to run the server that holds one share and participates in the signing protocol.
+
+---
+
+## Can You Use Both?
+
+Yes. An MPC signer can be one of the signers on a multisig wallet. This gives you:
+
+- Threshold signing for fast, low-gas autonomous operations
+- Multisig for high-value transactions that need on-chain governance
+
+---
+
+## Guardian Wallet's Approach
+
+Guardian uses 2-of-3 MPC threshold signing (CGGMP24 protocol). Three shares, any two sign. The result is a standard ECDSA signature from a standard EOA address.
+
+No gas overhead. No per-chain deployment. No smart contract complexity.
+
+<CardGroup cols={2}>
+  <Card title="What is Threshold Signing?" icon="key" href="/guardian/concepts/threshold-signing">
+    How the cryptography works under the hood
+  </Card>
+  <Card title="Quickstart" icon="rocket" href="/guardian/quickstart">
+    Create a signer and sign your first transaction
+  </Card>
+</CardGroup>

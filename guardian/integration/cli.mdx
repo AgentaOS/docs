@@ -1,0 +1,214 @@
+---
+title: "CLI Reference — gw Command"
+sidebarTitle: "CLI"
+description: "The gw command-line tool. Create wallets, send ETH, sign messages, deploy contracts, and start a JSON-RPC signing proxy. All from your terminal."
+"og:title": "CLI Reference — Guardian Wallet gw Command"
+"og:description": "Guardian Wallet CLI: gw init, gw send, gw sign-message, gw deploy, gw proxy. Threshold signing from your terminal."
+---
+
+# CLI Reference
+
+The `guardian-wallet` CLI manages wallets, signs transactions, and deploys contracts from your terminal. Every signing operation uses 2-of-3 threshold ECDSA. The full private key never exists.
+
+Both `guardian-wallet` and the short alias `gw` are available after install. All examples below use `gw`.
+
+## Install
+
+```bash
+npm install -g @agentokratia/guardian-wallet
+```
+
+## Global Options
+
+| Flag | Description |
+|------|-------------|
+| `-s, --signer <name>` | Signer name (default: auto-detected from `~/.guardian-wallet/`) |
+| `-V, --version` | Print version |
+| `-h, --help` | Show help |
+
+## Commands
+
+| Command | Description |
+|---------|-------------|
+| `gw init` | Create or import a wallet |
+| `gw status` | List all wallets with live status |
+| `gw info [name]` | Show full wallet details (copyable) |
+| `gw balance` | Check ETH balance |
+| `gw send <to> <amount>` | Send ETH |
+| `gw sign-message <message>` | Sign an arbitrary message |
+| `gw deploy <bytecode>` | Deploy a smart contract |
+| `gw proxy` | Start JSON-RPC signing proxy |
+| `gw admin` | Manage guardrails, admin access, and audit logs |
+
+---
+
+## `gw init`
+
+Interactive setup wizard. Create a new wallet or import an existing one.
+
+```bash
+gw init
+```
+
+Three options:
+1. **Create a new wallet** —runs DKG, generates 3 shares, saves config locally
+2. **Import existing wallet** —connect with an API key and signer secret
+3. **Switch active wallet** —change which wallet is used by default
+
+<Info>
+  DKG takes under 10 seconds. The server generates all 3 shares. Your signer share is saved locally. The server share goes to Vault. The user share is encrypted with your wallet signature.
+</Info>
+
+---
+
+## `gw status`
+
+Show all wallets with live server status, balances, and policy counts.
+
+```bash
+gw status
+```
+
+```text
+  ● my-agent     0x1a2b…3c4d   active   3 pol
+    staging       0x5e6f…7a8b   paused   1 pol
+
+  Active: my-agent · 2 wallets
+```
+
+---
+
+## `gw info`
+
+Show full details for a wallet. Useful for copying addresses and API keys.
+
+```bash
+gw info my-agent
+```
+
+---
+
+## `gw balance`
+
+Check ETH balance on a specific network.
+
+```bash
+gw balance -n base-sepolia
+```
+
+| Flag | Description |
+|------|-------------|
+| `-n, --network <network>` | Network name (required) |
+
+---
+
+## `gw send`
+
+Send ETH to an address. Signs via threshold ECDSA and broadcasts.
+
+```bash
+gw send 0xRecipient 0.01 -n base-sepolia
+```
+
+| Argument / Flag | Description |
+|-----------------|-------------|
+| `<to>` | Destination address (0x...) |
+| `<amount>` | Amount in ETH (e.g. `0.01`) |
+| `-n, --network <network>` | Network name |
+| `--gas-limit <limit>` | Override gas limit |
+| `--data <hex>` | Calldata as hex string |
+
+<Tip>
+  The server evaluates all active guardrails before co-signing. If any guardrail blocks the transaction, you get a 403 with the list of violations.
+</Tip>
+
+---
+
+## `gw sign-message`
+
+Sign an arbitrary message using threshold ECDSA. Returns `v`, `r`, `s`, and the full signature.
+
+```bash
+gw sign-message "Hello from Guardian"
+```
+
+Hex messages work too:
+
+```bash
+gw sign-message 0xdeadbeef
+```
+
+| Argument | Description |
+|----------|-------------|
+| `<message>` | Message to sign (string or hex with `0x` prefix) |
+
+---
+
+## `gw deploy`
+
+Deploy a smart contract. Pass bytecode as hex or a file path.
+
+```bash
+gw deploy ./out/MyContract.sol/MyContract.bin -n base-sepolia
+```
+
+| Argument / Flag | Description |
+|-----------------|-------------|
+| `<bytecode>` | Contract bytecode (hex string or file path) |
+| `-n, --network <network>` | Network name |
+| `--constructor-args <hex>` | ABI-encoded constructor arguments |
+
+---
+
+## `gw proxy`
+
+Start a JSON-RPC signing proxy. Intercepts `eth_sendTransaction` and `eth_signTransaction`, signs via Guardian, forwards everything else to the upstream RPC.
+
+```bash
+gw proxy -p 8545
+```
+
+| Flag | Description |
+|------|-------------|
+| `-p, --port <port>` | Port to listen on (default: `8545`) |
+| `-r, --rpc-url <url>` | Override upstream RPC URL |
+
+Use it with Foundry, Hardhat, or any tool that speaks JSON-RPC. See [Foundry Integration](/guardian/integration/foundry) for details.
+
+---
+
+## `gw admin`
+
+Manage guardrails, admin access, and audit logs.
+
+| Subcommand | Description |
+|------------|-------------|
+| `gw admin unlock` | Enable admin access (exchanges recovery key for JWT) |
+| `gw admin lock` | Revoke admin access |
+| `gw admin policies list` | Show current guardrail policy |
+| `gw admin policies edit` | Interactive policy editor |
+| `gw admin policies activate` | Activate a draft policy |
+| `gw admin pause` | Pause wallet (blocks all signing) |
+| `gw admin resume` | Resume a paused wallet |
+| `gw admin audit` | View signing history |
+
+| Flag | Description |
+|------|-------------|
+| `--limit <n>` | Max audit entries to show (for `audit`) |
+| `--status <status>` | Filter audit entries by status (for `audit`) |
+| `--export` | Export audit log as CSV (for `audit`) |
+
+---
+
+## Configuration
+
+All config lives in `~/.guardian-wallet/`.
+
+| File | Purpose |
+|------|---------|
+| `~/.guardian-wallet/signers/{name}.json` | Signer config (server URL, API key, address, embedded secret) |
+| `~/.guardian-wallet/.default` | Name of the active signer |
+
+<Info>
+  Signer secrets are stored as a base64 `apiSecret` field in the JSON config file, or referenced via `apiSecretFile` for external storage. The CLI never sends your signer share to the server.
+</Info>

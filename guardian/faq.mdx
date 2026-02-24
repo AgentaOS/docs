@@ -1,0 +1,96 @@
+---
+title: "FAQ — Frequently Asked Questions"
+sidebarTitle: "FAQ"
+description: "Common questions about Guardian Wallet: security, pricing, deployment, supported chains, and how it compares to Fireblocks, Privy, and multisig wallets."
+"og:title": "FAQ — Guardian Wallet"
+"og:description": "Answers to common questions about Guardian Wallet. Self-hosted, free, open source. How it compares to Fireblocks, Privy, and raw key wallets."
+---
+
+# Frequently Asked Questions
+
+## General
+
+### What is Guardian Wallet?
+
+Guardian Wallet gives AI agents and bots their own Ethereum addresses where the private key never exists. Instead of storing a key in a .env file, Guardian splits it into 3 shares. Any 2 of 3 can sign a transaction together, but no single share can do anything alone.
+
+### Is this a custodial wallet?
+
+No. You self-host everything. Guardian runs on your infra. No third party holds your keys or shares.
+
+### How much does it cost?
+
+The open-source version is free. Forever. Clone the repo, run it on a $5 VPS. No license fees, no per-transaction charges, no usage limits.
+
+### How is this different from a multisig?
+
+Multisig (like Gnosis Safe) is a smart contract — it lives on-chain, costs gas for every signature, and works on one chain at a time. Guardian is off-chain threshold signing. Same Ethereum address works on every EVM chain. No extra gas. No on-chain setup.
+
+### How is this different from Fireblocks or Privy?
+
+Fireblocks charges $50k-$500k/yr and you trust their infrastructure. Privy embeds wallets but they hold keys on your behalf. Guardian is open source and self-hosted. You run it on a $5 VPS or your own Kubernetes cluster. No vendor lock-in. No custody risk.
+
+### What chains does Guardian support?
+
+Any EVM chain. Ethereum, Base, Arbitrum, Optimism, Polygon, and all their testnets. Bitcoin and Solana support is planned. See [Supported Networks](/guardian/networks).
+
+---
+
+## Security
+
+### What happens if my server gets hacked?
+
+The attacker gets one share (the server share). One share alone cannot sign anything. You still have the signer share and user share. Revoke the compromised signer, spin up a new one, move your funds.
+
+### What happens if I lose a share?
+
+Any 2 of 3 shares can still sign. Lose the signer share? Use User + Server from the dashboard. Server down? Use Signer + User offline. Losing one share does not lock your funds.
+
+### Can the server see my private key?
+
+No. The private key never exists — not on the server, not on your machine, not anywhere. The server holds one share and participates in a signing protocol. It never learns the other shares or the full key.
+
+### What if someone steals my .secret file?
+
+The .secret file contains one share, encrypted with your passphrase. Without the passphrase, it's useless. Even with the passphrase, one share alone cannot sign. The attacker would also need access to the server share or user share.
+
+### Is the cryptography audited?
+
+The signing protocol (CGGMP24) is implemented by the [LFDT-Lockness/cggmp21](https://github.com/LFDT-Lockness/cggmp21) Rust crate, which is MIT/Apache 2.0 licensed. The protocol is based on a published, peer-reviewed paper with formal security proofs.
+
+---
+
+## Technical
+
+### What is the signing latency?
+
+Under 500ms for Signer + Server signing on a local network. The protocol runs 2-3 rounds over HTTPS.
+
+### Do I need Docker?
+
+For self-hosting, yes. The server, Vault (share storage), and dashboard run as Docker containers. For the CLI and SDK, no Docker needed.
+
+### Can I use Guardian with Hardhat or Foundry?
+
+Yes. The `gw proxy` command starts a local JSON-RPC proxy. Point Foundry or Hardhat at it. See [Foundry Integration](/guardian/integration/foundry).
+
+### Can I use Guardian with AI frameworks?
+
+Yes. Guardian has integrations for:
+- **Vercel AI SDK** — use as a tool in `generateText()`
+- **LangChain** — use as a `DynamicStructuredTool`
+- **MCP** — expose signing to Claude, Cursor, or any MCP client
+
+See [SDK](/guardian/integration/sdk) and [MCP Server](/guardian/integration/mcp).
+
+### What happens when the server restarts?
+
+Signing sessions are stateful. If the server restarts mid-signing, the session is lost and the client retries. Shares stored in Vault persist across restarts. No data is lost.
+
+<Warning>
+  In development mode, Vault stores data in memory. A Vault restart wipes all server shares. Use persistent storage in production.
+</Warning>
+
+### Can I run multiple signers?
+
+Yes. Each signer is an independent identity with its own Ethereum address, its own shares, and its own guardrails. Create as many as you need.

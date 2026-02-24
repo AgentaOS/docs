@@ -1,0 +1,171 @@
+---
+title: "Quickstart — First Transaction in 5 Minutes"
+sidebarTitle: "Quickstart"
+description: "Clone, install, create a signer, and send your first threshold-signed transaction in under 5 minutes. No private keys needed."
+"og:title": "Guardian Wallet Quickstart — First Transaction in 5 Minutes"
+"og:description": "Set up Guardian Wallet and sign your first Ethereum transaction using 2-of-3 threshold ECDSA. No private keys. Under 5 minutes."
+---
+
+# Quickstart
+
+Guardian Wallet splits every private key into 3 shares. No single share can sign anything alone. The full key never exists — not in memory, not on disk, not ever.
+
+This guide gets you from clone to signed transaction in 5 minutes.
+
+## Prerequisites
+
+<Info>
+  **You need:** Node.js 20+, pnpm 9+, Docker (for local Supabase + Vault)
+</Info>
+
+## Setup
+
+<Steps>
+  <Step title="Clone and install">
+    ```bash
+    git clone https://github.com/agentokratia/guardian-wallet.git
+    cd guardian-wallet
+    cp .env.example .env
+    pnpm install
+    pnpm build
+    ```
+  </Step>
+
+  <Step title="Start infrastructure">
+    Supabase runs Postgres locally. Vault stores key shares.
+
+    ```bash
+    npx supabase start
+    ```
+
+    <Note>
+      First run pulls Docker images. Takes a couple minutes. Subsequent starts are fast.
+    </Note>
+  </Step>
+
+  <Step title="Start server and dashboard">
+    Two terminals. Server handles signing and policy enforcement. Dashboard is the admin UI.
+
+    <CodeGroup>
+
+    ```bash Terminal 1 — Server
+    pnpm --filter @agentokratia/guardian-server dev   # :8080
+    ```
+
+    ```bash Terminal 2 — Dashboard
+    pnpm --filter @agentokratia/guardian-app dev      # :3000
+    ```
+
+    </CodeGroup>
+  </Step>
+
+  <Step title="Create your first signer">
+    A signer is an identity —its own Ethereum address, its own key shares, its own policy constraints.
+
+    <Tabs>
+      <Tab title="Dashboard">
+        1. Open [localhost:3000](http://localhost:3000)
+        2. Sign up with your email and register a passkey (Touch ID, Face ID, or security key)
+        3. Click **Create Signer**
+        4. Follow the wizard —name it, pick a network, done
+
+        Key setup runs automatically. Three shares are generated and distributed. You get back an Ethereum address.
+      </Tab>
+      <Tab title="CLI">
+        ```bash
+        gw init
+        ```
+
+        The interactive wizard walks you through setup. Choose **Create a new wallet**, pick a name and network. The CLI runs DKG, stores the signer share locally, and sends the server share to Vault.
+
+        Verify it worked:
+
+        ```bash
+        gw status
+        gw balance -n base-sepolia
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Send your first transaction">
+    Fund your signer address with testnet ETH, then send a transaction.
+
+    <Tabs>
+      <Tab title="CLI">
+        ```bash
+        gw send 0xRecipient 0.01 --network base-sepolia
+        ```
+
+        The CLI loads the local signer share, runs an interactive signing session with the server, and broadcasts the transaction. Two shares co-sign. The full key never appears.
+      </Tab>
+      <Tab title="SDK (TypeScript)">
+        ```typescript
+        import { ThresholdSigner } from '@agentokratia/guardian-signer';
+        import { createWalletClient, http, parseEther } from 'viem';
+        import { baseSepolia } from 'viem/chains';
+
+        // Load signer from API credentials (from gw init or the dashboard)
+        const signer = await ThresholdSigner.fromSecret({
+          apiSecret: process.env.GUARDIAN_API_SECRET!,
+          serverUrl: process.env.GUARDIAN_SERVER!,   // e.g. http://localhost:8080
+          apiKey: process.env.GUARDIAN_API_KEY!,      // e.g. gw_live_...
+        });
+
+        // Create a viem wallet client
+        const client = createWalletClient({
+          account: signer.toViemAccount(),
+          chain: baseSepolia,
+          transport: http(),
+        });
+
+        // Send —signing happens via distributed MPC
+        const hash = await client.sendTransaction({
+          to: '0xRecipient',
+          value: parseEther('0.01'),
+        });
+
+        console.log('Transaction:', hash);
+
+        // Clean up —wipes share from memory
+        signer.destroy();
+        ```
+      </Tab>
+    </Tabs>
+
+    <Tip>
+      Get testnet ETH from the [Base Sepolia Faucet](https://www.alchemy.com/faucets/base-sepolia).
+    </Tip>
+  </Step>
+</Steps>
+
+## What Just Happened
+
+**Key setup** created 3 key shares. No single share is the private key. Here's where they live:
+
+| Share | Held by | Purpose |
+|-------|---------|---------|
+| Signer share | Your machine (config file) | Autonomous agent signing |
+| Server share | Vault (encrypted at rest) | Co-signs with signer or user |
+| User share | Encrypted with your wallet | Emergency override from dashboard |
+
+No single share is a key. No two shares combined reconstruct a key. Signing is a multi-round protocol — two shares cooperate to produce a valid signature, and the private key never materializes.
+
+**Signing** used the Signer + Server path. Your CLI held one share, the server held another. They ran an interactive protocol over HTTPS. The result: a standard Ethereum transaction, signed and broadcast, with no full key anywhere in the process.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="CLI Reference" icon="terminal" href="/guardian/integration/cli">
+    All commands: init, status, info, balance, send, sign-message, deploy, proxy, admin.
+  </Card>
+  <Card title="SDK Integration" icon="code" href="/guardian/integration/sdk">
+    Use Guardian Wallet as a viem account in your TypeScript code.
+  </Card>
+  <Card title="Guardrails" icon="shield-check" href="/guardian/concepts/guardrails">
+    Spending limits, rate limits, contract allowlists. Rules enforced before every signature.
+  </Card>
+  <Card title="Self-Hosting" icon="server" href="/guardian/self-hosting">
+    Docker Compose deployment. Your infra, your keys, your rules.
+  </Card>
+</CardGroup>
