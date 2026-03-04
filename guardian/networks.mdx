@@ -1,14 +1,14 @@
 ---
 title: "Supported Networks — Every EVM Chain"
 sidebarTitle: "Networks"
-description: "Guardian Wallet signs on Ethereum, Base, Arbitrum, Optimism, Polygon, and every EVM-compatible chain. Bitcoin and Solana support planned."
-"og:title": "Supported Networks — Guardian Wallet"
-"og:description": "Guardian Wallet works on every EVM chain: Ethereum, Base, Arbitrum, Optimism, Polygon, and all testnets. Bitcoin and Solana coming soon."
+description: "AgentaOS signs on Ethereum, Base, Arbitrum, Optimism, Polygon, and every EVM-compatible chain. Bitcoin and Solana support planned."
+"og:title": "Supported Networks — AgentaOS"
+"og:description": "AgentaOS works on every EVM chain: Ethereum, Base, Arbitrum, Optimism, Polygon, and all testnets. Bitcoin and Solana coming soon."
 ---
 
 # Supported Networks
 
-Guardian Wallet signs transactions on any EVM chain.
+AgentaOS signs transactions on any EVM chain.
 
 ---
 
@@ -26,25 +26,25 @@ Guardian Wallet signs transactions on any EVM chain.
 | Arbitrum Sepolia | `421614` | Supported |
 
 <Info>
-All EVM-compatible chains work out of the box. Guardian Wallet uses a pluggable chain architecture —if it speaks EVM, it signs.
+All EVM-compatible chains work out of the box. AgentaOS uses a pluggable chain architecture — if it speaks EVM, it signs.
 </Info>
 
 ---
 
 ## How It Works
 
-Guardian doesn't care which chain you target. The signing protocol operates on raw transaction hashes. The chain adapter handles serialization, gas estimation, and broadcasting.
+Agenta doesn't care which chain you target. The signing protocol operates on raw transaction hashes. The chain adapter handles serialization, gas estimation, and broadcasting.
 
 Pick a network when you create a signer:
 
 ```bash
-gw init --name my-agent --network base
+agenta init --name my-agent --network base
 ```
 
 Or specify it per transaction:
 
 ```bash
-gw send 0xRecipient 0.01 --network arbitrum
+agenta send 0xRecipient 0.01 --network arbitrum
 ```
 
 ---
@@ -70,20 +70,3 @@ Use Base Sepolia for development. Fastest block times. Free faucet ETH from [Alc
   </Card>
 </CardGroup>
 
----
-
-## Adding a Custom Chain
-
-Any EVM chain can be added via the chain adapter interface in `@agentokratia/guardian-chains`.
-
-```typescript
-import { IChainAdapter } from '@agentokratia/guardian-core';
-
-class MyChainAdapter implements IChainAdapter {
-  // Implement serialization, gas estimation, broadcasting
-}
-```
-
-<Note>
-The chain adapter is responsible for transaction serialization and broadcasting. The MPC signing protocol is chain-agnostic —it produces standard ECDSA signatures that work on any chain.
-</Note>

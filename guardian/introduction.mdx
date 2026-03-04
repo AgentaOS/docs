@@ -1,61 +1,69 @@
 ---
-title: "Guardian Wallet — The First Wallet for AI Agents"
+title: "AgentaOS — The Financial OS for the Agent Economy"
 sidebarTitle: "Introduction"
-description: "Open-source 2-of-3 threshold signing for AI agents. The private key never exists. Self-hosted. Free. No vendor lock-in."
-"og:title": "Guardian Wallet — The First Wallet for AI Agents"
-"og:description": "Give your AI agents their own crypto wallets. 2-of-3 threshold ECDSA signing where the private key never exists. Self-hosted, open source, free."
+description: "Give AI agents sovereign financial accounts. Transact autonomously under human oversight. Accept payments. Hire other agents. Delegated identity with enforceable guardrails."
+"og:title": "AgentaOS — The Financial OS for the Agent Economy"
+"og:description": "Give AI agents a financial OS. Transact under guardrails. Accept payments. Hire other agents via x402. Delegated identity for the agent economy."
 ---
 
-# Guardian Wallet
+# The Financial OS for the Agent Economy
 
-Give your AI agents their own crypto wallets — without ever exposing a private key.
+Give your agents a financial OS in 30 seconds.
 
-The private key is never assembled. Not during creation. Not during signing. Not ever. Three shares. Any two sign. The key itself? It doesn't exist.
+```bash
+npm install -g agentaos && agenta login
+```
+
+That's it. Your agent gets a sovereign account — its own Ethereum address, enforceable guardrails, and the ability to transact, get paid, and hire other agents. The private key never exists.
+
+
+
+---
+
+## What Agents Can Do With AgentaOS
+
+<CardGroup cols={2}>
+  <Card title="Transact Autonomously" icon="bolt">
+    Agents spend money under human-set guardrails. Spending caps, approved vendors, business hours, DeFi slippage protection — all enforced before every transaction. Humans set the policy. Agents execute within it.
+  </Card>
+  <Card title="Get Paid for Services" icon="credit-card">
+    Agents advertise capabilities and accept payments. One link. Instant settlement. Customers — human or AI — pay and the agent delivers. No invoicing, no chasing.
+  </Card>
+  <Card title="Hire Other Agents" icon="users">
+    An agent that needs a capability it doesn't have can pay another agent to do it. Agent-to-agent commerce via the x402 payment protocol. Agents compose into teams, each billing for their work.
+  </Card>
+  <Card title="Know Their Master" icon="id-card">
+    Every agent has a delegated identity — it knows who created it, what organization it belongs to, and what authority it operates under. Provable, on-chain, auditable.
+  </Card>
+</CardGroup>
 
 <Info>
-**The key rule:** The private key is never assembled. Not in memory, not in logs, not anywhere. Two shares cooperate to sign — neither one ever sees the full key.
+**The core guarantee:** The full private key never exists. Not in memory, not in logs, not anywhere. Three shares. Any two sign. The key itself never materializes. This is the foundation — sovereign accounts that no single party can compromise.
 </Info>
 
 ---
 
-## Who is Guardian for?
+## The Bigger Picture
 
-- **AI agent builders** who need bots to send transactions autonomously
-- **Dev teams** who want on-chain signing without trusting a .env file
-- **Anyone tired of paying Fireblocks $50k/yr** for key management they could self-host
+Today's agents are powerful but economically powerless. They can research, analyze, and generate — but the moment money is involved, a human has to step in. That's a bottleneck.
 
-If your agent can spend money, Guardian makes sure a single hack can't drain everything.
+AgentaOS removes it. When agents have their own financial identity, they can:
 
----
+1. **Operate under policy, not permission.** Instead of asking a human to approve every transaction, the agent follows pre-set guardrails. Humans define the rules once. Agents transact freely within them.
 
-## The Problem
+2. **Earn, not just spend.** An agent that can accept payments can offer services — data analysis, content generation, code review, monitoring. It advertises a capability, quotes a price, and collects payment on delivery.
 
-Every wallet today forces a tradeoff: convenience or security. Pick one.
+3. **Compose into teams.** A coding agent needs a testing agent. A research agent needs a summarization agent. With x402 payments, agents hire each other directly. One agent's output is another agent's input, and money flows alongside the work.
 
-| Approach | Convenience | Security | What Goes Wrong |
-|----------|-------------|----------|----------------|
-| Hot wallet (raw key in .env) | High | None | Key leaks. You lose everything. |
-| Smart contract wallet | Medium | Medium | Complex social recovery. One wrong signer and funds lock. |
-| Hardware security module (HSM) | Low | High | Expensive hardware. Vendor lock-in. Not agent-friendly. |
-| Standard MPC (2-of-2) | Medium | High | Both parties must be online. No backup. |
-| **Guardian (2-of-3 threshold)** | **High** | **High** | **No single share can sign. Lose one, the other two still work.** |
+4. **Prove who they represent.** A delegated identity ties every agent to its creator. When an agent transacts, the counterparty knows who's behind it — which organization, which authority, which rules. Trust is cryptographic, not assumed.
 
-Guardian eliminates the tradeoff.
-
-### What it replaces
-
-| Before | After |
-|--------|-------|
-| Fireblocks ($50k-$500k/yr) | Self-hosted. Free. Open source. |
-| Privy embedded wallets (vendor custody) | You hold the shares. No vendor. |
-| Raw private key in .env | Key doesn't exist. Can't be stolen. |
-| Multisig (Gnosis Safe) | No on-chain overhead. Same address, any EVM chain. |
+This is not a wallet. It's the financial infrastructure for the agent economy.
 
 ---
 
 ## How It Works
 
-**Key setup** creates 3 shares. The full key never exists. Any 2 shares can sign together.
+Every agent account starts with key setup — 3 shares are created. The full key never exists. Any 2 shares can sign together.
 
 ```mermaid
 flowchart TD
@@ -69,18 +77,20 @@ flowchart TD
     S2 -. "Any 2 of 3\ncan sign" .-> SIG
 
     SIG(["Valid ECDSA Signature"])
-    SIG --> TX["Broadcast to Ethereum"]
+    SIG --> TX["Broadcast to any EVM chain"]
 
     style DKG fill:#f5f5f3,stroke:#1a1a1a,stroke-width:2px,color:#1a1a1a
-    style S0 fill:#fff,stroke:#6366f1,stroke-width:2px,color:#1a1a1a
-    style S1 fill:#fff,stroke:#6366f1,stroke-width:2px,color:#1a1a1a
-    style S2 fill:#fff,stroke:#6366f1,stroke-width:2px,color:#1a1a1a
-    style SIG fill:#22c55e,stroke:#16a34a,stroke-width:2px,color:#fff
+    style S0 fill:#fff,stroke:#4400E0,stroke-width:2px,color:#1a1a1a
+    style S1 fill:#fff,stroke:#4400E0,stroke-width:2px,color:#1a1a1a
+    style S2 fill:#fff,stroke:#4400E0,stroke-width:2px,color:#1a1a1a
+    style SIG fill:#00B4D8,stroke:#0077B6,stroke-width:2px,color:#fff
     style TX fill:#f5f5f3,stroke:#1a1a1a,stroke-width:1px,color:#1a1a1a
 ```
 
+**Why threshold signing?** Because the moment you store a private key somewhere — a file, an HSM, a vendor enclave — it becomes a target. AgentaOS never creates the key in the first place. Three shares exist independently. Two cooperate to sign. The key itself is a mathematical construct that is never materialized.
+
 <Note>
-Signing is a multi-round protocol. Two parties exchange messages over HTTPS and produce a valid signature together — without either one seeing the full key. No single share can do anything alone.
+Signing is a multi-round protocol. Two parties exchange messages over HTTPS and produce a valid ECDSA signature together — without either one seeing the full key. No single share can do anything alone.
 </Note>
 
 ---
@@ -89,52 +99,53 @@ Signing is a multi-round protocol. Two parties exchange messages over HTTPS and 
 
 | Path | Shares Used | When |
 |------|-------------|------|
-| **Signer + Server** | Signer share + Server share | Normal autonomous operation. Agent runs 24/7. |
-| **User + Server** | Passkey-encrypted share + Server share | Dashboard manual signing. No browser extensions needed. |
+| **Signer + Server** | Signer share + Server share | Normal autonomous operation. Agent runs 24/7. Guardrails enforced. |
+| **User + Server** | Passkey-encrypted share + Server share | Dashboard manual signing. Human-in-the-loop. |
 | **Signer + User** | Signer share + User share | Server down. Emergency bypass. |
 
-No single share can do anything alone. Lose one share, the other two still work.
+No single share can act alone. Lose one share, the other two still work.
 
 ---
 
-## Key Features
+## The Stack
 
-<CardGroup cols={2}>
-  <Card title="Zero-Knowledge Signing" icon="shield">
-    The key literally does not exist. Not as a variable, not in memory, not in transit. Math enforces this, not policy.
-  </Card>
-  <Card title="Guardrails" icon="lock">
-    Spending limits. Daily caps. Allowlisted contracts. Blocked addresses. Rate limits. Time windows. Rules enforced before every signature.
-  </Card>
-  <Card title="Self-Hosted" icon="server">
-    Your infra. Your keys. Docker Compose up and you're running. No third-party custody. No vendor lock-in.
-  </Card>
-  <Card title="AI Agent Ready" icon="robot">
-    TypeScript SDK. CLI tool. MCP server. Your agent gets its own Ethereum address, its own key shares, its own guardrails.
-  </Card>
-  <Card title="Browser Signing" icon="browser">
-    Sign transactions directly from the dashboard. Your share is decrypted in the browser — the server never sees it. No browser extensions needed.
-  </Card>
-  <Card title="Open Source" icon="code">
-    AGPL-3.0 server. Apache-2.0 SDK, CLI, and core libraries. Read every line. Audit everything.
-  </Card>
-</CardGroup>
-
----
-
-## What's in the box
-
-| Component | What It Does |
-|-----------|-------------|
-| **Server** | Runs the signing protocol, enforces guardrails, stores server shares in Vault |
-| **Dashboard** | Web UI for creating signers, setting guardrails, and manual signing |
-| **CLI** (`gw`) | Terminal tool — create signers, send transactions, deploy contracts |
-| **SDK** | TypeScript library — drop Guardian into any Node.js app, AI agent, or framework |
-| **MCP Server** | Give Claude, Cursor, or any AI assistant access to your wallet |
+| Layer | Component | What It Does |
+|-------|-----------|-------------|
+| **Interface** | [Dashboard](https://app.agentaos.ai) | Create accounts, set guardrails, accept payments, sign manually |
+| **CLI** | `agenta` | Terminal tool — create signers, send transactions, deploy contracts |
+| **SDK** | `@agentaos/sdk` | TypeScript library for any Node.js app, AI agent, or framework |
+| **AI Bridge** | MCP Server | Give Claude, Cursor, or any AI assistant access to agent accounts |
+| **Payments** | x402 Protocol | Agent-to-agent and human-to-agent payment protocol |
+| **API** | REST API | Signing sessions, signer management, guardrails, audit logs |
 
 <Tip>
-Start with the CLI. `gw init` creates a signer, generates the shares, and gives you a working Ethereum address in under 30 seconds.
+Start here: `npm install -g agentaos && agenta login`. From zero to a funded agent account in 30 seconds.
 </Tip>
+
+---
+
+## Key Capabilities
+
+<CardGroup cols={2}>
+  <Card title="Sovereign Accounts" icon="shield">
+    The key never exists. Not as a variable, not in memory, not in transit. Math enforces this, not policy. No vendor can freeze your agent's funds.
+  </Card>
+  <Card title="Guardrails" icon="lock">
+    15 guardrail types. Spending limits, daily caps, allowlisted contracts, blocked addresses, rate limits, time windows, slippage protection. All enforced before every signature.
+  </Card>
+  <Card title="Accept Payments" icon="credit-card">
+    One link. Customers and agents pay instantly. Funds settle in under 1 second. No crypto knowledge needed.
+  </Card>
+  <Card title="Agent-to-Agent Payments" icon="arrows-rotate">
+    Agents hire other agents via x402. An agent that needs a capability pays for it. Composable agent teams with real economic incentives.
+  </Card>
+  <Card title="Delegated Identity" icon="id-card">
+    Every agent knows who created it and what authority it operates under. Provable ownership. Auditable delegation chain.
+  </Card>
+  <Card title="Open Source" icon="code">
+    Open source SDK, CLI, and core libraries. Apache-2.0 licensed. Read every line. Audit the cryptography yourself.
+  </Card>
+</CardGroup>
 
 ---
 
@@ -142,15 +153,15 @@ Start with the CLI. `gw init` creates a signer, generates the shares, and gives 
 
 <CardGroup cols={2}>
   <Card title="Quickstart" icon="rocket" href="/guardian/quickstart">
-    From zero to signing in 5 minutes
+    From zero to signed transaction in 5 minutes
   </Card>
   <Card title="CLI Reference" icon="terminal" href="/guardian/integration/cli">
-    All commands: init, status, info, balance, send, sign-message, deploy, proxy, admin.
+    All commands: init, status, send, deploy, proxy, and more
   </Card>
   <Card title="SDK Guide" icon="code" href="/guardian/integration/sdk">
-    ThresholdSigner for your TypeScript agent
+    AgentaOS SDK for your TypeScript agent
   </Card>
-  <Card title="Self-Hosting" icon="server" href="/guardian/self-hosting">
-    Docker Compose. Your machine. Your rules.
+  <Card title="Guardrails" icon="shield-check" href="/guardian/concepts/guardrails">
+    15 guardrail types. Rules enforced before every signature.
   </Card>
 </CardGroup>

@@ -1,200 +1,304 @@
 ---
 title: "TypeScript SDK"
-description: "ThresholdSigner for viem, Vercel AI SDK, and LangChain. 10 lines to give your AI agent a crypto wallet with threshold signing."
-"og:title": "TypeScript SDK — Guardian Wallet"
-"og:description": "Drop Guardian into any TypeScript app. Works with viem, Vercel AI SDK, and LangChain. 10 lines to threshold-sign transactions."
+description: "AgentaOS SDK for viem, Vercel AI SDK, and LangChain. 10 lines to give your AI agent a sovereign account with threshold signing."
+"og:title": "TypeScript SDK — AgentaOS"
+"og:description": "Drop Agenta into any TypeScript app. Works with viem, Vercel AI SDK, and LangChain. 10 lines to threshold-sign transactions."
 ---
 
 # TypeScript SDK
 
-The `@agentokratia/guardian-signer` package gives you a `ThresholdSigner` that works like any other Ethereum signer. Except the private key never exists.
+The `@agentaos/sdk` package gives you an `Agenta` client and a `ThresholdSigner` that work like any other Ethereum signer. Except the private key never exists.
 
 ## Install
 
 ```bash
-npm install @agentokratia/guardian-signer
+npm install @agentaos/sdk
 ```
 
 ## Quick Start
 
 ```typescript
-import { ThresholdSigner } from '@agentokratia/guardian-signer';
+import { Agenta } from '@agentaos/sdk';
 
-const signer = await ThresholdSigner.fromSecret({
-  apiSecret: process.env.GUARDIAN_API_SECRET!,
-  serverUrl: process.env.GUARDIAN_SERVER!,
-  apiKey: process.env.GUARDIAN_API_KEY!,
+const agent = await Agenta.connect({
+  apiSecret: process.env.AGENTA_API_SECRET!,   // Base64-encoded key share
+  serverUrl: process.env.AGENTA_SERVER!,        // e.g. https://api.agentaos.ai
+  apiKey: process.env.AGENTA_API_KEY!,          // e.g. gw_live_...
 });
 
 // Sign and broadcast a transaction
-const { txHash } = await signer.signTransaction({
+const { txHash } = await agent.signTransaction({
   to: '0xRecipient...',
   value: '10000000000000000', // 0.01 ETH in wei
   network: 'base-sepolia',
 });
 
-// Always clean up —wipes share from memory
+// Always clean up — wipes share from memory
+agent.destroy();
+```
+
+---
+
+## Environment Variables
+
+```bash
+AGENTA_API_KEY=gw_live_...               # Required — API key (gw_live_* or gw_test_*)
+AGENTA_API_SECRET=base64-key-material    # Required — Base64-encoded key share
+AGENTA_SERVER=https://api.agentaos.ai   # Required — Server URL (no default in SDK; CLI/MCP default to https://api.agentaos.ai)
+AGENTA_NETWORK=base-sepolia              # Optional — Default network name
+AGENTA_RPC_URL=https://...               # Optional — Global RPC URL override
+AGENTA_RPC_URL_MAINNET=https://...       # Optional — Per-network RPC override
+AGENTA_RPC_URL_BASE_SEPOLIA=https://...  # Optional — Per-network RPC override
+```
+
+---
+
+## Agenta (Recommended)
+
+The `Agenta` class wraps both signing and read operations in one object. This is the recommended entry point.
+
+### `Agenta.connect(opts)`
+
+```typescript
+const agent = await Agenta.connect({
+  apiSecret: string,   // Base64 JSON containing { coreShare, auxInfo }
+  serverUrl: string,   // Server URL (e.g., "http://localhost:8080")
+  apiKey: string,      // API key (gw_live_* or gw_test_*)
+});
+```
+
+### Properties
+
+```typescript
+agent.address           // string — Ethereum address (0x...)
+agent.participantIndex  // number — 1, 2, or 3
+agent.isDestroyed       // boolean — whether key material has been wiped
+```
+
+### Signing Methods
+
+```typescript
+// Sign and broadcast a transaction
+const { txHash, signature } = await agent.signTransaction({
+  to: '0x...',
+  value: '1000000000000000',  // wei
+  network: 'base-sepolia',
+  data: '0x...',              // optional calldata
+  gasLimit: '21000',          // optional
+});
+
+// Sign an arbitrary message (EIP-191)
+const { signature, v, r, s } = await agent.signMessage('Hello from Agenta');
+
+// Get a viem-compatible account
+const account = agent.toViemAccount();
+// account.address, account.signMessage, account.signTransaction, account.signTypedData
+```
+
+### Read Operations
+
+```typescript
+// Server health
+const health = await agent.getHealth();
+
+// Signers
+const signers = await agent.listSigners();
+const defaultSigner = await agent.getDefaultSigner();
+
+// Balances
+const balance = await agent.getBalance(signerId, 'base-sepolia');
+const tokens = await agent.getTokenBalances(signerId, chainId);
+
+// Networks (cached 60s)
+const networks = await agent.listNetworks();
+const chainId = await agent.getChainId('base-sepolia');
+const rpcUrl = await agent.getRpcUrl('base-sepolia');
+const explorerUrl = await agent.getExplorerTxUrl('base-sepolia', txHash);
+
+// Tokens
+const tokenList = await agent.listTokens(signerId, chainId);
+const resolved = await agent.resolveToken('USDC', signerId, chainId);
+
+// Policies & Audit
+const policies = await agent.getPolicies(signerId);
+const audit = await agent.getAuditLog({ limit: 10, status: 'all', page: 1 });
+
+// Simulation
+const sim = await agent.simulate(signerId, {
+  to: '0x...', value: '0', data: '0x...', network: 'base-sepolia'
+});
+// sim.success, sim.estimatedGas, sim.gasCostEth, sim.error
+
+// ENS
+const resolved = await agent.resolveAddress('vitalik.eth');
+// resolved.address, resolved.isEns, resolved.ensName
+```
+
+### Lifecycle
+
+```typescript
+agent.destroy();  // Wipe key material from memory. Call when done.
+```
+
+---
+
+## ThresholdSigner (Low-Level)
+
+For lower-level control, use `ThresholdSigner` directly. It only handles signing — no read operations.
+
+```typescript
+import { ThresholdSigner } from '@agentaos/sdk';
+
+const signer = await ThresholdSigner.fromSecret({
+  apiSecret: process.env.AGENTA_API_SECRET!,
+  serverUrl: process.env.AGENTA_SERVER!,
+  apiKey: process.env.AGENTA_API_KEY!,
+  timeout: 30000,  // optional, default 30s
+});
+
+// Same signing methods as Agenta
+const { txHash } = await signer.signTransaction({ to: '0x...', value: '0', network: 'base-sepolia' });
+const { signature, v, r, s } = await signer.signMessage('Hello');
+const account = signer.toViemAccount();
+
 signer.destroy();
 ```
 
 ---
 
-## ThresholdSigner
+## Exports
 
-### `ThresholdSigner.fromSecret(opts)`
-
-Create a signer from a base64-encoded API secret.
+The `@agentaos/sdk` package exports:
 
 ```typescript
-const signer = await ThresholdSigner.fromSecret({
-  apiSecret: string,   // Base64 key material (from dashboard or gw init)
-  serverUrl: string,   // Guardian server URL
-  apiKey: string,      // API key (gw_live_... or gw_test_...)
-});
+import {
+  Agenta,            // Recommended facade (signing + read operations)
+  ThresholdSigner,   // Low-level signer (signing only)
+  HttpClient,        // Raw HTTP client for server communication
+  AgentaApi,         // Read-only API client
+  wipeShare,         // Share cleanup utility
+} from '@agentaos/sdk';
 ```
-
-### `signer.signTransaction(tx)`
-
-Sign and broadcast a transaction. Returns `{ txHash, signature }`.
-
-```typescript
-const result = await signer.signTransaction({
-  to: '0x...',
-  value: '1000000000000000',
-  network: 'base-sepolia',
-  data: '0x...',       // optional calldata
-  gasLimit: '21000',   // optional
-});
-
-console.log(result.txHash);    // 0xabc...
-console.log(result.signature); // 0x...
-```
-
-### `signer.signMessage(message)`
-
-Sign an arbitrary message. Returns `{ signature, v, r, s }`.
-
-```typescript
-const result = await signer.signMessage('Hello from Guardian');
-console.log(result.signature); // 0x...
-console.log(result.v, result.r, result.s);
-```
-
-### `signer.toViemAccount()`
-
-Get a viem-compatible custom account. Drop it into any viem wallet client.
-
-```typescript
-const account = signer.toViemAccount();
-// account.address, account.signMessage, account.signTransaction, account.signTypedData
-```
-
-### `signer.destroy()`
-
-Wipe the share from memory. Call this when done.
 
 ---
 
-## Guardian (Facade)
-
-For convenience, the `Guardian` class wraps both signing and read operations in one object.
+## Return Types
 
 ```typescript
-import { Guardian } from '@agentokratia/guardian-signer';
+// signTransaction result
+interface SignTransactionResult {
+  txHash: string;       // Transaction hash (0x...)
+  signature: string;    // 65-byte hex signature (0x...) — r + s + v
+}
 
-const gw = await Guardian.connect({
-  apiSecret: process.env.GUARDIAN_API_SECRET!,
-  serverUrl: process.env.GUARDIAN_SERVER!,
-  apiKey: process.env.GUARDIAN_API_KEY!,
-});
+// signMessage result
+interface SignMessageResult {
+  signature: string;    // 65-byte hex signature
+  v: number;           // 27 or 28
+  r: string;           // 0x-prefixed hex
+  s: string;           // 0x-prefixed hex
+}
 
-// Signing
-const { txHash } = await gw.signTransaction({ to: '0x...', value: '0', network: 'base-sepolia' });
-
-// Read operations
-const health = await gw.getHealth();
-const signers = await gw.listSigners();
-const networks = await gw.listNetworks();
-const balance = await gw.getBalance(signerId, 'base-sepolia');
-const tokens = await gw.getTokenBalances(signerId, chainId);
-const policies = await gw.getPolicies(signerId);
-const audit = await gw.getAuditLog({ limit: 10 });
-
-// Utilities
-const resolved = await gw.resolveAddress('vitalik.eth');
-const simResult = await gw.simulate(signerId, tx);
-
-gw.destroy();
+// toViemAccount result
+interface ViemAccount {
+  address: `0x${string}`;
+  type: 'local';
+  signMessage(args: { message: unknown }): Promise<`0x${string}`>;
+  signTransaction(tx: Record<string, unknown>): Promise<`0x${string}`>;
+  signTypedData(typedData: unknown): Promise<`0x${string}`>;
+}
 ```
 
 ---
 
 ## viem Integration
 
-Guardian plugs directly into viem's wallet client.
+Agenta plugs directly into viem's wallet client.
 
 ```typescript
-import { ThresholdSigner } from '@agentokratia/guardian-signer';
+import { Agenta } from '@agentaos/sdk';
 import { createWalletClient, http, parseEther } from 'viem';
 import { baseSepolia } from 'viem/chains';
 
-const signer = await ThresholdSigner.fromSecret({
-  apiSecret: process.env.GUARDIAN_API_SECRET!,
-  serverUrl: process.env.GUARDIAN_SERVER!,
-  apiKey: process.env.GUARDIAN_API_KEY!,
+const agent = await Agenta.connect({
+  apiSecret: process.env.AGENTA_API_SECRET!,
+  serverUrl: process.env.AGENTA_SERVER!,
+  apiKey: process.env.AGENTA_API_KEY!,
 });
 
 const client = createWalletClient({
-  account: signer.toViemAccount(),
+  account: agent.toViemAccount(),
   chain: baseSepolia,
   transport: http(),
 });
 
+// Send ETH
 const hash = await client.sendTransaction({
   to: '0xRecipient...',
   value: parseEther('0.01'),
 });
 
-console.log('Tx:', hash);
-signer.destroy();
+// Sign a message
+const sig = await client.signMessage({ message: 'hello' });
+
+// Sign EIP-712 typed data
+const typedSig = await client.signTypedData({
+  domain: { name: 'MyApp', version: '1', chainId: 84532 },
+  types: { Message: [{ name: 'content', type: 'string' }] },
+  primaryType: 'Message',
+  message: { content: 'hello' },
+});
+
+agent.destroy();
 ```
 
 ---
 
 ## Vercel AI SDK
 
-Use Guardian as a tool in the Vercel AI SDK.
+Use Agenta as a tool in the Vercel AI SDK.
 
 ```typescript
 import { generateText, tool } from 'ai';
-import { Guardian } from '@agentokratia/guardian-signer';
+import { Agenta } from '@agentaos/sdk';
 import { z } from 'zod';
 
-const gw = await Guardian.connect({
-  apiSecret: process.env.GUARDIAN_API_SECRET!,
-  serverUrl: process.env.GUARDIAN_SERVER!,
-  apiKey: process.env.GUARDIAN_API_KEY!,
+const agent = await Agenta.connect({
+  apiSecret: process.env.AGENTA_API_SECRET!,
+  serverUrl: process.env.AGENTA_SERVER!,
+  apiKey: process.env.AGENTA_API_KEY!,
 });
 
 const sendEth = tool({
   description: 'Send ETH to an address',
   parameters: z.object({
-    to: z.string().describe('Recipient address'),
+    to: z.string().describe('Recipient address or ENS name'),
     amount: z.string().describe('Amount in wei'),
+    network: z.string().default('base-sepolia').describe('Network name'),
   }),
-  execute: async ({ to, amount }) => {
-    const { txHash } = await gw.signTransaction({
-      to,
-      value: amount,
-      network: 'base-sepolia',
+  execute: async ({ to, amount, network }) => {
+    const { txHash } = await agent.signTransaction({
+      to, value: amount, network,
     });
     return { txHash };
   },
 });
 
+const getBalance = tool({
+  description: 'Check ETH and token balances',
+  parameters: z.object({
+    network: z.string().default('base-sepolia'),
+  }),
+  execute: async ({ network }) => {
+    const signer = await agent.getDefaultSigner();
+    const balance = await agent.getBalance(signer.id, network);
+    return balance;
+  },
+});
+
 const { text } = await generateText({
   model: yourModel,
-  tools: { sendEth },
+  tools: { sendEth, getBalance },
   prompt: 'Send 0.01 ETH to 0xRecipient...',
 });
 ```
@@ -203,35 +307,79 @@ const { text } = await generateText({
 
 ## LangChain
 
-Wrap Guardian as a LangChain tool.
+Wrap Agenta as a LangChain tool.
 
 ```typescript
 import { DynamicStructuredTool } from '@langchain/core/tools';
-import { Guardian } from '@agentokratia/guardian-signer';
+import { Agenta } from '@agentaos/sdk';
 import { z } from 'zod';
 
-const gw = await Guardian.connect({
-  apiSecret: process.env.GUARDIAN_API_SECRET!,
-  serverUrl: process.env.GUARDIAN_SERVER!,
-  apiKey: process.env.GUARDIAN_API_KEY!,
+const agent = await Agenta.connect({
+  apiSecret: process.env.AGENTA_API_SECRET!,
+  serverUrl: process.env.AGENTA_SERVER!,
+  apiKey: process.env.AGENTA_API_KEY!,
 });
 
 const sendEthTool = new DynamicStructuredTool({
   name: 'send_eth',
-  description: 'Send ETH using Guardian threshold signing',
+  description: 'Send ETH using Agenta threshold signing',
   schema: z.object({
     to: z.string(),
     amount: z.string(),
+    network: z.string().default('base-sepolia'),
   }),
-  func: async ({ to, amount }) => {
-    const { txHash } = await gw.signTransaction({
-      to,
-      value: amount,
-      network: 'base-sepolia',
+  func: async ({ to, amount, network }) => {
+    const { txHash } = await agent.signTransaction({
+      to, value: amount, network,
     });
     return `Sent. Tx: ${txHash}`;
   },
 });
+```
+
+---
+
+## Claude Agent SDK
+
+Use Agenta with the Claude Agent SDK for autonomous DeFi agents.
+
+```typescript
+import Anthropic from '@anthropic-ai/sdk';
+import { Agenta } from '@agentaos/sdk';
+
+const agent = await Agenta.connect({
+  apiSecret: process.env.AGENTA_API_SECRET!,
+  serverUrl: process.env.AGENTA_SERVER!,
+  apiKey: process.env.AGENTA_API_KEY!,
+});
+
+// Define tools that Claude can call
+const tools = [
+  {
+    name: 'send_eth',
+    description: 'Send ETH to an address',
+    input_schema: {
+      type: 'object',
+      properties: {
+        to: { type: 'string', description: 'Recipient address' },
+        amount: { type: 'string', description: 'Amount in wei' },
+      },
+      required: ['to', 'amount'],
+    },
+  },
+];
+
+// Handle tool calls
+async function handleToolCall(name: string, input: any) {
+  if (name === 'send_eth') {
+    const { txHash } = await agent.signTransaction({
+      to: input.to,
+      value: input.amount,
+      network: 'base-sepolia',
+    });
+    return { txHash };
+  }
+}
 ```
 
 <Info>

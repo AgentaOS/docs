@@ -1,13 +1,13 @@
 ---
 title: "Glossary"
-description: "Key terms used in Guardian Wallet: threshold signing, MPC, DKG, ECDSA, shares, guardrails, and more. Plain-language definitions."
-"og:title": "Glossary — Guardian Wallet"
-"og:description": "Plain-language definitions of threshold signing, MPC, DKG, ECDSA, shares, guardrails, Vault, and other Guardian Wallet concepts."
+description: "Key terms used in AgentaOS: threshold signing, MPC, DKG, ECDSA, shares, guardrails, and more. Plain-language definitions."
+"og:title": "Glossary — AgentaOS"
+"og:description": "Plain-language definitions of threshold signing, MPC, DKG, ECDSA, shares, guardrails, Vault, and other AgentaOS concepts."
 ---
 
 # Glossary
 
-Plain-language definitions for every term used in Guardian Wallet.
+Plain-language definitions for every term used in AgentaOS.
 
 ---
 
@@ -15,7 +15,7 @@ Plain-language definitions for every term used in Guardian Wallet.
 
 ### Threshold Signing
 
-A way to sign transactions where multiple parties must cooperate. No single party can sign alone. Guardian uses 2-of-3 threshold signing: three shares exist, any two can produce a valid signature.
+A way to sign transactions where multiple parties must cooperate. No single party can sign alone. Agenta uses 2-of-3 threshold signing: three shares exist, any two can produce a valid signature.
 
 The key property: the full private key is never assembled. Not during key creation. Not during signing. Not ever.
 
@@ -23,19 +23,19 @@ The key property: the full private key is never assembled. Not during key creati
 
 ### MPC (Multi-Party Computation)
 
-A cryptographic technique where multiple parties jointly compute a result without revealing their private inputs. In Guardian, MPC means two share holders cooperate to produce a signature without either one learning the other's share.
+A cryptographic technique where multiple parties jointly compute a result without revealing their private inputs. In Agenta, MPC means two share holders cooperate to produce a signature without either one learning the other's share.
 
 ### Share
 
-One piece of the split private key. Guardian creates three shares during key setup. Each share is stored separately (agent filesystem, server Vault, encrypted user blob). No single share is the private key. No single share can sign anything.
+One piece of the split private key. Agenta creates three shares during key setup. Each share is stored separately (agent filesystem, server Vault, encrypted user blob). No single share is the private key. No single share can sign anything.
 
 ### ECDSA
 
-Elliptic Curve Digital Signature Algorithm. The standard signing algorithm used by Ethereum, Bitcoin, and most blockchains. Guardian produces standard ECDSA signatures that are indistinguishable from any other wallet.
+Elliptic Curve Digital Signature Algorithm. The standard signing algorithm used by Ethereum, Bitcoin, and most blockchains. AgentaOS produces standard ECDSA signatures that are indistinguishable from any other Ethereum account.
 
 ### CGGMP24
 
-The threshold signing protocol used by Guardian. Named after its creators (Canetti, Gennaro, Goldfeder, Makriyannis, Peled). It splits ECDSA key generation and signing into a multi-party protocol where no party ever sees the full key.
+The threshold signing protocol used by Agenta. Named after its creators (Canetti, Gennaro, Goldfeder, Makriyannis, Peled). It splits ECDSA key generation and signing into a multi-party protocol where no party ever sees the full key.
 
 [Learn more](/guardian/concepts/threshold-signing)
 
@@ -45,11 +45,11 @@ The one-time ceremony that creates shares. Three parties each generate their pie
 
 ---
 
-## Guardian Components
+## Agenta Components
 
 ### Signer
 
-An identity in Guardian Wallet. Each signer has its own Ethereum address, its own three shares, and its own guardrails. A signer can be an AI agent, a bot, a script, or a team member.
+An identity in AgentaOS. Each signer has its own Ethereum address, its own three shares, and its own guardrails. A signer can be an AI agent, a bot, a script, or a team member.
 
 ### Guardrails
 
@@ -59,7 +59,7 @@ Rules enforced before every transaction gets signed. Spending limits, daily caps
 
 ### Server Share
 
-The share stored in HashiCorp Vault on the Guardian server. Participates in signing with either the signer share or user share. Wiped from memory after every signing operation.
+The share stored in HashiCorp Vault on the AgentaOS server. Participates in signing with either the signer share or user share. Wiped from memory after every signing operation.
 
 ### Signer Share
 
@@ -75,19 +75,19 @@ The share encrypted with the user's passkey (Touch ID, Face ID, or security key)
 
 ### Vault
 
-HashiCorp Vault. The secret storage backend where server shares live. Provides encryption at rest, access control, and audit logging. Guardian uses the KV v2 secrets engine.
+HashiCorp Vault. The secret storage backend where server shares live. Provides encryption at rest, access control, and audit logging. Agenta uses the KV v2 secrets engine.
 
 ### KMS Provider
 
-The abstraction layer for secret storage. Guardian ships with two providers: Vault KV v2 (production) and local-file AES-256-GCM (development).
+The abstraction layer for secret storage. Agenta ships with two providers: Vault KV v2 (production) and local-file AES-256-GCM (development).
 
 ### Passkey (WebAuthn)
 
-A hardware-backed authentication credential. Touch ID, Face ID, Windows Hello, or a security key. Guardian uses passkeys for dashboard login and for encrypting the user share. No passwords. No seed phrases.
+A hardware-backed authentication credential. Touch ID, Face ID, Windows Hello, or a security key. Agenta uses passkeys for dashboard login and for encrypting the user share. No passwords. No seed phrases.
 
 ### PRF (Pseudo-Random Function)
 
-A WebAuthn extension that produces a deterministic secret from a passkey authentication. Guardian uses the PRF output to derive the encryption key for the user share. The PRF output never leaves the browser.
+A WebAuthn extension that produces a deterministic secret from a passkey authentication. Agenta uses the PRF output to derive the encryption key for the user share. The PRF output never leaves the browser.
 
 ---
 
@@ -113,7 +113,7 @@ The offline recovery path. The agent's share and the user's share cooperate dire
 
 ### API Key
 
-A secret token for authenticating signer requests to the Guardian server. Prefixed with `gw_live_` (production) or `gw_test_` (testnet). Stored as a SHA-256 hash on the server. The plaintext exists only on the agent's machine.
+A secret token for authenticating signer requests to the AgentaOS server. Stored as a SHA-256 hash on the server. The plaintext exists only on the agent's machine.
 
 ### JWT Session
 
@@ -129,7 +129,7 @@ A stateful multi-round interaction between two share holders. Created at `/sign/
 
 ### EOA (Externally Owned Account)
 
-A standard Ethereum address controlled by a private key. Guardian wallets are EOAs. Their signatures are indistinguishable from any other Ethereum wallet.
+A standard Ethereum address controlled by a private key. AgentaOS agent accounts are EOAs. Their signatures are indistinguishable from any other Ethereum account.
 
 ### Multisig
 
@@ -139,4 +139,4 @@ A smart contract that requires multiple on-chain signatures to execute a transac
 
 ### HSM (Hardware Security Module)
 
-Dedicated hardware for key storage and signing. Expensive, not agent-friendly, and creates vendor lock-in. Guardian replaces HSMs with software-based threshold signing.
+Dedicated hardware for key storage and signing. Expensive, not agent-friendly, and creates vendor lock-in. Agenta replaces HSMs with software-based threshold signing.

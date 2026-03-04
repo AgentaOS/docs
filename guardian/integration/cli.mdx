@@ -1,28 +1,28 @@
 ---
-title: "CLI Reference — gw Command"
+title: "CLI Reference — agenta Command"
 sidebarTitle: "CLI"
-description: "The gw command-line tool. Create wallets, send ETH, sign messages, deploy contracts, and start a JSON-RPC signing proxy. All from your terminal."
-"og:title": "CLI Reference — Guardian Wallet gw Command"
-"og:description": "Guardian Wallet CLI: gw init, gw send, gw sign-message, gw deploy, gw proxy. Threshold signing from your terminal."
+description: "The agenta command-line tool. Create agent accounts, send ETH, sign messages, deploy contracts, and start a JSON-RPC signing proxy. All from your terminal."
+"og:title": "CLI Reference — AgentaOS agenta Command"
+"og:description": "AgentaOS CLI: agenta init, agenta send, agenta sign-message, agenta deploy, agenta proxy. Threshold signing from your terminal."
 ---
 
 # CLI Reference
 
-The `guardian-wallet` CLI manages wallets, signs transactions, and deploys contracts from your terminal. Every signing operation uses 2-of-3 threshold ECDSA. The full private key never exists.
+The `agentaos` CLI manages agent accounts, signs transactions, and deploys contracts from your terminal. Every signing operation uses 2-of-3 threshold ECDSA. The full private key never exists.
 
-Both `guardian-wallet` and the short alias `gw` are available after install. All examples below use `gw`.
+Both `agentaos` and the short alias `agenta` are available after install. All examples below use `agenta`.
 
 ## Install
 
 ```bash
-npm install -g @agentokratia/guardian-wallet
+npm install -g agentaos
 ```
 
 ## Global Options
 
 | Flag | Description |
 |------|-------------|
-| `-s, --signer <name>` | Signer name (default: auto-detected from `~/.guardian-wallet/`) |
+| `-s, --signer <name>` | Signer name (default: auto-detected from `~/.agenta/`) |
 | `-V, --version` | Print version |
 | `-h, --help` | Show help |
 
@@ -30,84 +30,104 @@ npm install -g @agentokratia/guardian-wallet
 
 | Command | Description |
 |---------|-------------|
-| `gw init` | Create or import a wallet |
-| `gw status` | List all wallets with live status |
-| `gw info [name]` | Show full wallet details (copyable) |
-| `gw balance` | Check ETH balance |
-| `gw send <to> <amount>` | Send ETH |
-| `gw sign-message <message>` | Sign an arbitrary message |
-| `gw deploy <bytecode>` | Deploy a smart contract |
-| `gw proxy` | Start JSON-RPC signing proxy |
-| `gw admin` | Manage guardrails, admin access, and audit logs |
+| `agenta init` | Create or import a signer |
+| `agenta login` | Authenticate with email + OTP |
+| `agenta logout` | Log out (clear session) |
+| `agenta status` | List all signers with live status |
+| `agenta info [name]` | Show full signer details (copyable) |
+| `agenta balance` | Check ETH balance |
+| `agenta send <to> <amount>` | Send ETH |
+| `agenta sign-message <message>` | Sign an arbitrary message |
+| `agenta deploy <bytecode>` | Deploy a smart contract |
+| `agenta proxy` | Start JSON-RPC signing proxy |
+| `agenta network` | Manage networks (list, set, get, info) |
+| `agenta link [signer]` | Send recovery key to AgentaOS via 6-word transfer code |
+| `agenta receive [signer]` | Import share from another device |
+| `agenta admin` | Manage guardrails and audit logs |
 
 ---
 
-## `gw init`
+## `agenta init`
 
-Interactive setup wizard. Create a new wallet or import an existing one.
+Interactive setup wizard. Create a new signer or import an existing one.
 
 ```bash
-gw init
+agenta init
 ```
 
 Three options:
-1. **Create a new wallet** —runs DKG, generates 3 shares, saves config locally
-2. **Import existing wallet** —connect with an API key and signer secret
-3. **Switch active wallet** —change which wallet is used by default
+1. **Create a new signer** — runs DKG, generates 3 shares, saves config locally
+2. **Import existing signer** — connect with an API key and signer secret
+3. **Switch active signer** — change which signer is used by default
 
 <Info>
-  DKG takes under 10 seconds. The server generates all 3 shares. Your signer share is saved locally. The server share goes to Vault. The user share is encrypted with your wallet signature.
+  DKG takes under 10 seconds. The server generates all 3 shares. Your signer share is saved locally. The server share goes to Vault. The user share is encrypted with your passkey.
 </Info>
 
 ---
 
-## `gw status`
+## `agenta login`
 
-Show all wallets with live server status, balances, and policy counts.
+Authenticate with email and OTP.
 
 ```bash
-gw status
+agenta login
+agenta login --server https://your-server.com
+```
+
+| Flag | Description |
+|------|-------------|
+| `--server <url>` | Server URL (default: `AGENTA_SERVER` env or `https://api.agentaos.ai`) |
+
+---
+
+## `agenta status`
+
+Show all signers with live server status, balances, and policy counts.
+
+```bash
+agenta status
 ```
 
 ```text
   ● my-agent     0x1a2b…3c4d   active   3 pol
     staging       0x5e6f…7a8b   paused   1 pol
 
-  Active: my-agent · 2 wallets
+  Active: my-agent · 2 signers
 ```
 
 ---
 
-## `gw info`
+## `agenta info`
 
-Show full details for a wallet. Useful for copying addresses and API keys.
+Show full details for a signer. Useful for copying addresses and API keys.
 
 ```bash
-gw info my-agent
+agenta info my-agent
 ```
 
 ---
 
-## `gw balance`
+## `agenta balance`
 
 Check ETH balance on a specific network.
 
 ```bash
-gw balance -n base-sepolia
+agenta balance -n base-sepolia
 ```
 
 | Flag | Description |
 |------|-------------|
-| `-n, --network <network>` | Network name (required) |
+| `-n, --network <network>` | Network name (falls back to configured default if omitted) |
 
 ---
 
-## `gw send`
+## `agenta send`
 
 Send ETH to an address. Signs via threshold ECDSA and broadcasts.
 
 ```bash
-gw send 0xRecipient 0.01 -n base-sepolia
+agenta send 0xRecipient 0.01 -n base-sepolia
 ```
 
 | Argument / Flag | Description |
@@ -124,18 +144,18 @@ gw send 0xRecipient 0.01 -n base-sepolia
 
 ---
 
-## `gw sign-message`
+## `agenta sign-message`
 
 Sign an arbitrary message using threshold ECDSA. Returns `v`, `r`, `s`, and the full signature.
 
 ```bash
-gw sign-message "Hello from Guardian"
+agenta sign-message "Hello from Agenta"
 ```
 
 Hex messages work too:
 
 ```bash
-gw sign-message 0xdeadbeef
+agenta sign-message 0xdeadbeef
 ```
 
 | Argument | Description |
@@ -144,28 +164,28 @@ gw sign-message 0xdeadbeef
 
 ---
 
-## `gw deploy`
+## `agenta deploy`
 
 Deploy a smart contract. Pass bytecode as hex or a file path.
 
 ```bash
-gw deploy ./out/MyContract.sol/MyContract.bin -n base-sepolia
+agenta deploy ./out/MyContract.sol/MyContract.bin -n base-sepolia
 ```
 
 | Argument / Flag | Description |
 |-----------------|-------------|
 | `<bytecode>` | Contract bytecode (hex string or file path) |
 | `-n, --network <network>` | Network name |
-| `--constructor-args <hex>` | ABI-encoded constructor arguments |
+| `--constructor-args <args>` | ABI-encoded constructor arguments (hex) |
 
 ---
 
-## `gw proxy`
+## `agenta proxy`
 
-Start a JSON-RPC signing proxy. Intercepts `eth_sendTransaction` and `eth_signTransaction`, signs via Guardian, forwards everything else to the upstream RPC.
+Start a JSON-RPC signing proxy. Intercepts `eth_sendTransaction` and `eth_signTransaction`, signs via Agenta, forwards everything else to the upstream RPC.
 
 ```bash
-gw proxy -p 8545
+agenta proxy -p 8545
 ```
 
 | Flag | Description |
@@ -177,38 +197,95 @@ Use it with Foundry, Hardhat, or any tool that speaks JSON-RPC. See [Foundry Int
 
 ---
 
-## `gw admin`
+## `agenta network`
 
-Manage guardrails, admin access, and audit logs.
+Manage networks — list available chains, set your default.
 
 | Subcommand | Description |
 |------------|-------------|
-| `gw admin unlock` | Enable admin access (exchanges recovery key for JWT) |
-| `gw admin lock` | Revoke admin access |
-| `gw admin policies list` | Show current guardrail policy |
-| `gw admin policies edit` | Interactive policy editor |
-| `gw admin policies activate` | Activate a draft policy |
-| `gw admin pause` | Pause wallet (blocks all signing) |
-| `gw admin resume` | Resume a paused wallet |
-| `gw admin audit` | View signing history |
+| `agenta network list` | List all available networks |
+| `agenta network set <name>` | Set the default network |
+| `agenta network get` | Show the current default network |
+| `agenta network info <name>` | Show details for a specific network |
+
+---
+
+## `agenta link`
+
+Send recovery key to AgentaOS via a 6-word transfer code.
+
+```bash
+agenta link
+agenta link my-agent --server https://your-server.com
+```
+
+| Argument / Flag | Description |
+|-----------------|-------------|
+| `[signer]` | Signer name (optional, auto-detected if omitted) |
+| `--server <url>` | Server URL override |
+
+---
+
+## `agenta receive`
+
+Import a share from another device using a transfer code.
+
+```bash
+agenta receive
+agenta receive my-agent --server https://your-server.com
+```
+
+| Argument / Flag | Description |
+|-----------------|-------------|
+| `[signer]` | Signer name (optional) |
+| `--server <url>` | Server URL override |
+
+---
+
+## `agenta admin`
+
+Manage guardrails and audit logs.
+
+| Subcommand | Description |
+|------------|-------------|
+| `agenta admin policies edit` | Interactive policy editor |
+| `agenta admin pause` | Pause signer (blocks all signing) |
+| `agenta admin resume` | Resume a paused signer |
+| `agenta admin audit` | View signing history |
 
 | Flag | Description |
 |------|-------------|
 | `--limit <n>` | Max audit entries to show (for `audit`) |
-| `--status <status>` | Filter audit entries by status (for `audit`) |
+| `--status <status>` | Filter: `completed`, `blocked`, `failed`, `pending` (for `audit`) |
 | `--export` | Export audit log as CSV (for `audit`) |
 
 ---
 
 ## Configuration
 
-All config lives in `~/.guardian-wallet/`.
+All config lives in `~/.agenta/`.
 
 | File | Purpose |
 |------|---------|
-| `~/.guardian-wallet/signers/{name}.json` | Signer config (server URL, API key, address, embedded secret) |
-| `~/.guardian-wallet/.default` | Name of the active signer |
+| `~/.agenta/signers/{name}.json` | Signer config (server URL, API key, address, embedded secret) |
+| `~/.agenta/.default` | Name of the active signer |
+
+Signer config file structure:
+
+```typescript
+interface SignerConfig {
+  version: 1;
+  serverUrl: string;
+  apiKey: string;
+  apiSecret?: string;        // Base64-encoded key share (inline)
+  network?: string;           // Default network name
+  signerName: string;
+  ethAddress: string;
+  signerId?: string;
+  createdAt?: string;
+}
+```
 
 <Info>
-  Signer secrets are stored as a base64 `apiSecret` field in the JSON config file, or referenced via `apiSecretFile` for external storage. The CLI never sends your signer share to the server.
+  Signer secrets are stored as a base64 `apiSecret` field in the JSON config file. The CLI never sends your signer share to the server. All config files are saved with mode 0o600 (read/write owner only).
 </Info>

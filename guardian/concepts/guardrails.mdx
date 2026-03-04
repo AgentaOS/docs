@@ -2,13 +2,13 @@
 title: "Guardrails — Transaction Rules and Spending Limits"
 sidebarTitle: "Guardrails"
 description: "Spending limits, daily caps, contract allowlists, rate limits, and time windows. Rules enforced before every transaction gets signed."
-"og:title": "Guardrails — Transaction Rules for AI Agent Wallets"
-"og:description": "Set spending limits, contract allowlists, rate limits, and time windows for your AI agent's wallet. Rules enforced before every signature."
+"og:title": "Guardrails — Enforceable Transaction Rules for AI Agents"
+"og:description": "Spending limits, contract allowlists, rate limits, and time windows. Rules enforced before every agent transaction gets signed."
 ---
 
 # Guardrails, Not Gatekeepers
 
-Before any transaction gets signed, Guardian checks it against your rules. Spending too much? Blocked. Sending to an unknown address? Blocked. Too many transactions per hour? Blocked. The server refuses to co-sign until every rule passes.
+Before any transaction gets signed, Agenta checks it against your rules. Spending too much? Blocked. Sending to an unknown address? Blocked. Too many transactions per hour? Blocked. The server refuses to co-sign until every rule passes.
 
 Every enabled rule is checked. If any rule fails, the server returns the full list of violations — not just the first one. You see exactly what went wrong.
 
@@ -36,9 +36,9 @@ flowchart TD
 
     style TX fill:#f5f5f3,stroke:#1a1a1a,stroke-width:2px
     style CHECK fill:#fff,stroke:#1a1a1a,stroke-width:2px
-    style SIGN fill:#22c55e,stroke:#16a34a,color:#fff
+    style SIGN fill:#00B4D8,stroke:#0077B6,color:#fff
     style REJECT fill:#ef4444,stroke:#dc2626,color:#fff
-    style AUDIT_OK fill:#f5f5f3,stroke:#22c55e,stroke-width:1px
+    style AUDIT_OK fill:#f5f5f3,stroke:#00B4D8,stroke-width:1px
     style AUDIT_FAIL fill:#f5f5f3,stroke:#ef4444,stroke-width:1px
 ```
 
@@ -75,7 +75,7 @@ The response includes every violation, not just the first one. You see the full 
 
 ## Rules Engine
 
-The rules engine is Guardian's policy system. You define an ordered list of rules. Each rule has criteria and an action (`accept` or `reject`). Rules are evaluated top-to-bottom. First match wins.
+The rules engine is Agenta's policy system. You define an ordered list of rules. Each rule has criteria and an action (`accept` or `reject`). Rules are evaluated top-to-bottom. First match wins.
 
 <Info>
   Rules are stored as a **policy document** per signer. One document, one ordered rule set. Supports draft/active versioning.
@@ -85,31 +85,33 @@ The rules engine is Guardian's policy system. You define an ordered list of rule
 
 | Type | What It Checks | Key Fields |
 |------|---------------|------------|
-| `ethValue` | Transaction value in wei | `operator`, `value` |
-| `evmAddress` | Destination address | `operator` (in/not_in), `addresses` |
-| `evmNetwork` | Chain ID | `operator` (in/not_in), `chainIds` |
-| `evmFunction` | Function selector (4-byte) | `selectors` |
-| `ipAddress` | Caller IP | `operator` (in/not_in), `ips` |
-| `rateLimit` | Requests per hour | `maxPerHour` |
-| `timeWindow` | UTC hour range | `startHour`, `endHour` |
-| `dailyLimit` | Rolling 24h spend (wei) | `maxWei` |
-| `monthlyLimit` | Rolling 30-day spend (wei) | `maxWei` |
-| `maxPerTxUsd` | Per-transaction USD cap | `maxUsd` |
-| `dailyLimitUsd` | Rolling 24h spend (USD) | `maxUsd` |
-| `monthlyLimitUsd` | Rolling 30-day spend (USD) | `maxUsd` |
-| `blockInfiniteApprovals` | Block unlimited ERC-20 approvals | `enabled` |
-| `maxSlippage` | Max swap slippage percent | `maxPercent` |
-| `mevProtection` | MEV protection enforcement | `enabled` |
-| `evmAddressBlocked` | Blocked destination addresses | `operator` (in/not_in), `addresses` |
-| `maliciousAddressBlacklist` | Known malicious address check (always-on) | `enabled` |
+| `ethValue` | Cap transaction value in wei | `operator` (`<=`, `<`, `>=`, `>`, `=`), `value` |
+| `evmAddress` | Allowlist or blocklist destination addresses | `operator` (`in` / `not_in`), `addresses`, `allowDeploy?` |
+| `evmNetwork` | Restrict to specific chains | `operator` (`in` / `not_in`), `chainIds` |
+| `evmFunction` | Allowlist function selectors (4-byte) | `selectors`, `allowPlainTransfer?` |
+| `ipAddress` | Restrict by caller IP (supports CIDR) | `operator` (`in` / `not_in`), `ips` |
+| `rateLimit` | Max signing requests per hour | `maxPerHour` |
+| `timeWindow` | Only allow signing during specific UTC hours | `startHour`, `endHour` |
+| `dailyLimit` | Rolling 24h spend cap in wei | `maxWei` |
+| `monthlyLimit` | Rolling 30-day spend cap in wei | `maxWei` |
+| `maxPerTxUsd` | Per-transaction USD cap (fail-closed if no price data) | `maxUsd` |
+| `dailyLimitUsd` | Rolling 24h spend cap in USD | `maxUsd` |
+| `monthlyLimitUsd` | Rolling 30-day spend cap in USD | `maxUsd` |
+| `blockInfiniteApprovals` | Block unlimited ERC-20/ERC-721 approvals and Permit2 | `enabled` |
+| `maxSlippage` | Reject swaps exceeding slippage threshold (zero slippage always blocked) | `maxPercent` |
+| `mevProtection` | Block DEX swaps vulnerable to front-running | `enabled` |
+
+<Info>
+Use `evmAddress` with `operator: "in"` for allowlists (approved contracts) and `operator: "not_in"` for blocklists (blocked addresses). Known malicious addresses (burn address, dead address) are always blocked server-side regardless of your policy.
+</Info>
 
 ### Rule Structure
 
 Each rule has:
-- **`action`** —`accept` or `reject`
-- **`criteria`** —array of conditions (all must match for the rule to fire)
-- **`description`** —human-readable label (optional)
-- **`enabled`** —toggle without deleting (optional)
+- **`action`** — `accept` or `reject`
+- **`criteria`** — array of conditions (all must match for the rule to fire)
+- **`description`** — human-readable label (optional)
+- **`enabled`** — toggle without deleting (optional)
 
 ### Full Example
 
@@ -183,22 +185,22 @@ A production policy for a trading bot:
 
 ---
 
-## Simple Policies
+## Built-in Policies
 
-For simple use cases, Guardian supports individual policies per signer. These are standalone rules — no ordered evaluation, just pass/fail checks on each transaction.
+For quick setup, Agenta supports individual policies per signer. These are standalone constraints — no ordered evaluation, just hard pass/fail checks on every transaction.
 
-| Type | Config | What It Does |
-|------|--------|-------------|
-| `spending_limit` | `{ maxWei: "..." }` | Max per-transaction value |
+| Type | Config | What It Enforces |
+|------|--------|-----------------|
+| `spending_limit` | `{ maxWei: "..." }` | Max value per transaction |
 | `daily_limit` | `{ maxWei: "..." }` | Rolling 24h spend cap |
 | `monthly_limit` | `{ maxWei: "..." }` | Rolling 30-day spend cap |
-| `allowed_contracts` | `{ addresses: [...] }` | Allowlist of contract addresses |
-| `allowed_functions` | `{ selectors: [...] }` | Allowlist of function selectors |
-| `blocked_addresses` | `{ addresses: [...] }` | Blocklist of destination addresses |
+| `allowed_contracts` | `{ addresses: [...] }` | Whitelist of contract addresses |
+| `allowed_functions` | `{ selectors: [...] }` | Whitelist of function selectors |
+| `blocked_addresses` | `{ addresses: [...] }` | Blacklist of destination addresses |
 | `rate_limit` | `{ maxPerHour: N }` | Max signing requests per hour |
 | `time_window` | `{ startHour, endHour }` | UTC hours when signing is allowed |
 
-Legacy policies are evaluated alongside rules engine policies. Both must pass.
+Built-in policies are evaluated alongside rules engine policies. Every active constraint must pass before the server co-signs.
 
 ---
 
@@ -215,7 +217,7 @@ Legacy policies are evaluated alongside rules engine policies. Both must pass.
     POST   /api/v1/signers/:id/policy/backtest  # Backtest against history
     ```
   </Tab>
-  <Tab title="Simple Policies">
+  <Tab title="Built-in Policies">
     ```
     GET    /api/v1/signers/:id/policies    # List policies for signer
     POST   /api/v1/signers/:id/policies    # Create policy

@@ -1,36 +1,36 @@
 ---
 title: "FAQ — Frequently Asked Questions"
 sidebarTitle: "FAQ"
-description: "Common questions about Guardian Wallet: security, pricing, deployment, supported chains, and how it compares to Fireblocks, Privy, and multisig wallets."
-"og:title": "FAQ — Guardian Wallet"
-"og:description": "Answers to common questions about Guardian Wallet. Self-hosted, free, open source. How it compares to Fireblocks, Privy, and raw key wallets."
+description: "Common questions about AgentaOS: security, pricing, deployment, supported chains, and how it compares to Fireblocks, Privy, and multisig."
+"og:title": "FAQ — AgentaOS"
+"og:description": "Answers to common questions about AgentaOS. Free to start. Open source. How it compares to Fireblocks, Privy, and raw key approaches."
 ---
 
 # Frequently Asked Questions
 
 ## General
 
-### What is Guardian Wallet?
+### What is AgentaOS?
 
-Guardian Wallet gives AI agents and bots their own Ethereum addresses where the private key never exists. Instead of storing a key in a .env file, Guardian splits it into 3 shares. Any 2 of 3 can sign a transaction together, but no single share can do anything alone.
+The financial OS for the agent economy. AgentaOS gives AI agents sovereign accounts — their own Ethereum addresses where the private key never exists. Agents can transact autonomously under human-set guardrails, accept payments, and hire other agents. Three shares. Any 2 sign. The key never materializes.
 
-### Is this a custodial wallet?
+### Is this custodial?
 
-No. You self-host everything. Guardian runs on your infra. No third party holds your keys or shares.
+No. No third party holds your keys or shares. AgentaOS gives each agent a sovereign account — the private key never exists, and no single party can access your funds.
 
 ### How much does it cost?
 
-The open-source version is free. Forever. Clone the repo, run it on a $5 VPS. No license fees, no per-transaction charges, no usage limits.
+Free to start on the managed plan at [app.agentaos.ai](https://app.agentaos.ai). No license fees, no per-transaction charges, no usage limits. The open-source SDK is available on [GitHub](https://github.com/AgentaOS/agentaos).
 
 ### How is this different from a multisig?
 
-Multisig (like Gnosis Safe) is a smart contract — it lives on-chain, costs gas for every signature, and works on one chain at a time. Guardian is off-chain threshold signing. Same Ethereum address works on every EVM chain. No extra gas. No on-chain setup.
+Multisig (like Gnosis Safe) is a smart contract — it lives on-chain, costs gas for every signature, and works on one chain at a time. Agenta is off-chain threshold signing. Same Ethereum address works on every EVM chain. No extra gas. No on-chain setup.
 
 ### How is this different from Fireblocks or Privy?
 
-Fireblocks charges $50k-$500k/yr and you trust their infrastructure. Privy embeds wallets but they hold keys on your behalf. Guardian is open source and self-hosted. You run it on a $5 VPS or your own Kubernetes cluster. No vendor lock-in. No custody risk.
+Fireblocks charges $50k-$500k/yr and you trust their infrastructure. Privy embeds wallets but they hold keys on your behalf. AgentaOS is free to start and open source. No vendor lock-in. No custody risk. Your agents get sovereign accounts where the private key never exists.
 
-### What chains does Guardian support?
+### What chains does Agenta support?
 
 Any EVM chain. Ethereum, Base, Arbitrum, Optimism, Polygon, and all their testnets. Bitcoin and Solana support is planned. See [Supported Networks](/guardian/networks).
 
@@ -68,15 +68,15 @@ Under 500ms for Signer + Server signing on a local network. The protocol runs 2-
 
 ### Do I need Docker?
 
-For self-hosting, yes. The server, Vault (share storage), and dashboard run as Docker containers. For the CLI and SDK, no Docker needed.
+No. The managed platform at [app.agentaos.ai](https://app.agentaos.ai) handles everything. For the CLI and SDK, just `npm install -g agentaos`.
 
-### Can I use Guardian with Hardhat or Foundry?
+### Can I use Agenta with Hardhat or Foundry?
 
-Yes. The `gw proxy` command starts a local JSON-RPC proxy. Point Foundry or Hardhat at it. See [Foundry Integration](/guardian/integration/foundry).
+Yes. The `agenta proxy` command starts a local JSON-RPC proxy. Point Foundry or Hardhat at it. See [Foundry Integration](/guardian/integration/foundry).
 
-### Can I use Guardian with AI frameworks?
+### Can I use Agenta with AI frameworks?
 
-Yes. Guardian has integrations for:
+Yes. Agenta has integrations for:
 - **Vercel AI SDK** — use as a tool in `generateText()`
 - **LangChain** — use as a `DynamicStructuredTool`
 - **MCP** — expose signing to Claude, Cursor, or any MCP client

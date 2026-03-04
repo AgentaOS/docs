@@ -1,13 +1,13 @@
 ---
 title: "Three Signing Paths"
 description: "Signer+Server for autonomous bots, User+Server for dashboard overrides, Signer+User for offline recovery. Same signature, different security tradeoffs."
-"og:title": "Three Signing Paths — Guardian Wallet"
-"og:description": "Guardian Wallet offers three signing paths: autonomous bot signing, manual dashboard signing, and offline recovery. All produce identical ECDSA signatures."
+"og:title": "Three Signing Paths — AgentaOS"
+"og:description": "AgentaOS offers three signing paths: autonomous bot signing, manual dashboard signing, and offline recovery. All produce identical ECDSA signatures."
 ---
 
 # Three Paths, One Signature
 
-Guardian Wallet has three signing paths. Each uses a different pair of shares. Each fits a different situation.
+AgentaOS has three signing paths. Each uses a different pair of shares. Each fits a different situation.
 
 | Path | Shares Used | Auth | Best For |
 |------|-------------|------|----------|
@@ -35,7 +35,7 @@ The signer (bot, script, CLI) holds its share locally. The server holds its shar
 6. If any guardrail blocks, the server returns 403 with violations. Signing never starts.
 7. Server fetches its share from Vault, starts its signing session
 8. Multi-round message exchange via `POST /sign/round`
-9. Protocol completes —signature produced
+9. Protocol completes — signature produced
 10. Server broadcasts the signed transaction
 11. Server wipes its share from memory
 12. Return `{ txHash, signature: { r, s, v } }`
@@ -43,7 +43,7 @@ The signer (bot, script, CLI) holds its share locally. The server holds its shar
 ```mermaid
 sequenceDiagram
     participant CLI as Signer (CLI/Bot)
-    participant API as Guardian Server
+    participant API as AgentaOS Server
     participant Vault as HashiCorp Vault
     participant Chain as Ethereum
 
@@ -91,7 +91,7 @@ Your user share is stored on the server, encrypted. The server cannot decrypt it
 ```mermaid
 sequenceDiagram
     participant You as You (Browser)
-    participant API as Guardian Server
+    participant API as AgentaOS Server
     participant Chain as Ethereum
 
     You->>You: Authenticate with passkey (Touch ID / Face ID)
@@ -151,9 +151,9 @@ If the server is down or unreachable, the signer and user can co-sign directly. 
 
 ## When to Use Each Path
 
-- **Automated operations** (trading bots, payment processors, scheduled transfers) —use Signer+Server. Guardrails protect you.
-- **Manual oversight** (large transfers, contract deployments, sensitive operations) —use User+Server from the dashboard. You approve each transaction.
-- **Server down** —use Signer+User. Get the transaction through, then fix the server.
+- **Automated operations** (trading bots, payment processors, scheduled transfers) — use Signer+Server. Guardrails protect you.
+- **Manual oversight** (large transfers, contract deployments, sensitive operations) — use User+Server from the dashboard. You approve each transaction.
+- **Server down** — use Signer+User. Get the transaction through, then fix the server.
 
 <CardGroup cols={3}>
   <Card title="Signer + Server" icon="robot">

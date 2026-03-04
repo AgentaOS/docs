@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Agentokratia x402 Facilitator",
+    "title": "AgentaOS x402 Facilitator",
     "description": "Payment verification and settlement API for the x402 protocol. Supports both exact (pay-per-call) and escrow (session-based) payment schemes.",
     "version": "1.0.0",
     "contact": {

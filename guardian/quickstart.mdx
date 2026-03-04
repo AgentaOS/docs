@@ -1,16 +1,16 @@
 ---
 title: "Quickstart — First Transaction in 5 Minutes"
 sidebarTitle: "Quickstart"
-description: "Clone, install, create a signer, and send your first threshold-signed transaction in under 5 minutes. No private keys needed."
-"og:title": "Guardian Wallet Quickstart — First Transaction in 5 Minutes"
-"og:description": "Set up Guardian Wallet and sign your first Ethereum transaction using 2-of-3 threshold ECDSA. No private keys. Under 5 minutes."
+description: "Install the CLI, create a signer, and send your first threshold-signed transaction in under 5 minutes. No private keys needed."
+"og:title": "AgentaOS Quickstart — First Transaction in 5 Minutes"
+"og:description": "Set up AgentaOS and sign your first Ethereum transaction using 2-of-3 threshold ECDSA. No private keys. Under 5 minutes."
 ---
 
 # Quickstart
 
-Guardian Wallet splits every private key into 3 shares. No single share can sign anything alone. The full key never exists — not in memory, not on disk, not ever.
+AgentaOS splits every private key into 3 shares. No single share can sign anything alone. The full key never exists — not in memory, not on disk, not ever.
 
-This guide gets you from clone to signed transaction in 5 minutes.
+This guide gets you from install to signed transaction in 5 minutes.
 
 ## Prerequisites
 
@@ -21,69 +21,47 @@ This guide gets you from clone to signed transaction in 5 minutes.
 ## Setup
 
 <Steps>
-  <Step title="Clone and install">
+  <Step title="Install the CLI">
     ```bash
-    git clone https://github.com/agentokratia/guardian-wallet.git
-    cd guardian-wallet
-    cp .env.example .env
-    pnpm install
-    pnpm build
+    npm install -g agentaos
     ```
+
+    This gives you both the `agentaos` and `agenta` commands. All examples below use `agenta`.
   </Step>
 
-  <Step title="Start infrastructure">
-    Supabase runs Postgres locally. Vault stores key shares.
-
+  <Step title="Login to your account">
     ```bash
-    npx supabase start
+    agenta login
     ```
 
-    <Note>
-      First run pulls Docker images. Takes a couple minutes. Subsequent starts are fast.
-    </Note>
-  </Step>
-
-  <Step title="Start server and dashboard">
-    Two terminals. Server handles signing and policy enforcement. Dashboard is the admin UI.
-
-    <CodeGroup>
-
-    ```bash Terminal 1 — Server
-    pnpm --filter @agentokratia/guardian-server dev   # :8080
-    ```
-
-    ```bash Terminal 2 — Dashboard
-    pnpm --filter @agentokratia/guardian-app dev      # :3000
-    ```
-
-    </CodeGroup>
+    Authenticate with your email and OTP.
   </Step>
 
   <Step title="Create your first signer">
-    A signer is an identity —its own Ethereum address, its own key shares, its own policy constraints.
+    A signer is an identity — its own Ethereum address, its own key shares, its own policy constraints.
 
     <Tabs>
-      <Tab title="Dashboard">
-        1. Open [localhost:3000](http://localhost:3000)
-        2. Sign up with your email and register a passkey (Touch ID, Face ID, or security key)
-        3. Click **Create Signer**
-        4. Follow the wizard —name it, pick a network, done
-
-        Key setup runs automatically. Three shares are generated and distributed. You get back an Ethereum address.
-      </Tab>
       <Tab title="CLI">
         ```bash
-        gw init
+        agenta init
         ```
 
-        The interactive wizard walks you through setup. Choose **Create a new wallet**, pick a name and network. The CLI runs DKG, stores the signer share locally, and sends the server share to Vault.
+        The interactive wizard walks you through setup. Choose **Create a new signer**, pick a name and network. The CLI runs DKG, stores the signer share locally, and sends the server share to Vault.
 
         Verify it worked:
 
         ```bash
-        gw status
-        gw balance -n base-sepolia
+        agenta status
+        agenta balance -n base-sepolia
         ```
+      </Tab>
+      <Tab title="Dashboard">
+        1. Open [app.agentaos.ai](https://app.agentaos.ai)
+        2. Sign up with your email and register a passkey (Touch ID, Face ID, or security key)
+        3. Click **Create Signer**
+        4. Follow the wizard — name it, pick a network, done
+
+        Key setup runs automatically. Three shares are generated and distributed. You get back an Ethereum address.
       </Tab>
     </Tabs>
   </Step>
@@ -94,32 +72,32 @@ This guide gets you from clone to signed transaction in 5 minutes.
     <Tabs>
       <Tab title="CLI">
         ```bash
-        gw send 0xRecipient 0.01 --network base-sepolia
+        agenta send 0xRecipient 0.01 --network base-sepolia
         ```
 
         The CLI loads the local signer share, runs an interactive signing session with the server, and broadcasts the transaction. Two shares co-sign. The full key never appears.
       </Tab>
       <Tab title="SDK (TypeScript)">
         ```typescript
-        import { ThresholdSigner } from '@agentokratia/guardian-signer';
+        import { Agenta } from '@agentaos/sdk';
         import { createWalletClient, http, parseEther } from 'viem';
         import { baseSepolia } from 'viem/chains';
 
-        // Load signer from API credentials (from gw init or the dashboard)
-        const signer = await ThresholdSigner.fromSecret({
-          apiSecret: process.env.GUARDIAN_API_SECRET!,
-          serverUrl: process.env.GUARDIAN_SERVER!,   // e.g. http://localhost:8080
-          apiKey: process.env.GUARDIAN_API_KEY!,      // e.g. gw_live_...
+        // Connect using API credentials (from agenta init or the dashboard)
+        const agent = await Agenta.connect({
+          apiSecret: process.env.AGENTA_API_SECRET!,
+          serverUrl: process.env.AGENTA_SERVER!,   // e.g. https://api.agentaos.ai
+          apiKey: process.env.AGENTA_API_KEY!,
         });
 
         // Create a viem wallet client
         const client = createWalletClient({
-          account: signer.toViemAccount(),
+          account: agent.toViemAccount(),
           chain: baseSepolia,
           transport: http(),
         });
 
-        // Send —signing happens via distributed MPC
+        // Send — signing happens via distributed MPC
         const hash = await client.sendTransaction({
           to: '0xRecipient',
           value: parseEther('0.01'),
@@ -127,8 +105,8 @@ This guide gets you from clone to signed transaction in 5 minutes.
 
         console.log('Transaction:', hash);
 
-        // Clean up —wipes share from memory
-        signer.destroy();
+        // Clean up — wipes share from memory
+        agent.destroy();
         ```
       </Tab>
     </Tabs>
@@ -147,7 +125,7 @@ This guide gets you from clone to signed transaction in 5 minutes.
 |-------|---------|---------|
 | Signer share | Your machine (config file) | Autonomous agent signing |
 | Server share | Vault (encrypted at rest) | Co-signs with signer or user |
-| User share | Encrypted with your wallet | Emergency override from dashboard |
+| User share | Encrypted with your passkey | Emergency override from dashboard |
 
 No single share is a key. No two shares combined reconstruct a key. Signing is a multi-round protocol — two shares cooperate to produce a valid signature, and the private key never materializes.
 
@@ -160,12 +138,12 @@ No single share is a key. No two shares combined reconstruct a key. Signing is a
     All commands: init, status, info, balance, send, sign-message, deploy, proxy, admin.
   </Card>
   <Card title="SDK Integration" icon="code" href="/guardian/integration/sdk">
-    Use Guardian Wallet as a viem account in your TypeScript code.
+    Use AgentaOS as a viem account in your TypeScript code.
   </Card>
   <Card title="Guardrails" icon="shield-check" href="/guardian/concepts/guardrails">
     Spending limits, rate limits, contract allowlists. Rules enforced before every signature.
   </Card>
-  <Card title="Self-Hosting" icon="server" href="/guardian/self-hosting">
-    Docker Compose deployment. Your infra, your keys, your rules.
+  <Card title="MCP Server" icon="robot" href="/guardian/integration/mcp">
+    Give Claude, Cursor, or any AI assistant access to your agent's account.
   </Card>
 </CardGroup>

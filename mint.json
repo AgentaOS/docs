@@ -1,28 +1,28 @@
 {
   "$schema": "https://mintlify.com/schema.json",
-  "name": "Agentokratia",
+  "name": "AgentaOS",
   "logo": {
-    "dark": "/images/logo-dark.svg",
-    "light": "/images/logo-light.svg"
+    "dark": "/images/agentaos-icon.png",
+    "light": "/images/agentaos-icon.png"
   },
-  "favicon": "/images/favicon.svg",
+  "favicon": "/images/agentaos-icon.png",
   "colors": {
-    "primary": "#1A1A1A",
-    "light": "#6B6B6B",
-    "dark": "#1A1A1A",
+    "primary": "#4400E0",
+    "light": "#00B4D8",
+    "dark": "#4400E0",
     "background": {
-      "light": "#FAFAF8",
-      "dark": "#1A1A1A"
+      "light": "#FFFFFF",
+      "dark": "#1A1A24"
     },
     "anchors": {
-      "from": "#1A1A1A",
-      "to": "#6B6B6B"
+      "from": "#4400E0",
+      "to": "#00B4D8"
     }
   },
   "topbarLinks": [
     {
       "name": "GitHub",
-      "url": "https://github.com/agentokratia/guardian-wallet"
+      "url": "https://github.com/AgentaOS/agentaos"
     },
     {
       "name": "x402 Payments",
@@ -30,16 +30,16 @@
     }
   ],
   "topbarCtaButton": {
-    "name": "Guardian Wallet",
-    "url": "/guardian/quickstart"
+    "name": "Get Started",
+    "url": "https://app.agentaos.ai"
   },
   "tabs": [
     {
-      "name": "Guardian Wallet",
+      "name": "AgentaOS",
       "url": "guardian"
     },
     {
-      "name": "x402 Payments",
+      "name": "x402 Payments (Legacy)",
       "url": "x402"
     }
   ],
@@ -68,7 +68,7 @@
     },
     {
       "group": "Deployment",
-      "pages": ["guardian/self-hosting", "guardian/networks", "guardian/api-reference"]
+      "pages": ["guardian/architecture", "guardian/networks", "guardian/api-reference"]
     },
     {
       "group": "Comparisons",
@@ -114,14 +114,14 @@
     }
   ],
   "footerSocials": {
-    "github": "https://github.com/agentokratia/guardian-wallet",
+    "github": "https://github.com/AgentaOS/agentaos",
     "twitter": "https://twitter.com/agentokratia"
   },
   "seo": {
     "indexHiddenPages": false
   },
   "metadata": {
-    "og:site_name": "Agentokratia",
+    "og:site_name": "AgentaOS",
     "og:type": "website",
     "og:image": "/images/og-default.png",
     "twitter:card": "summary_large_image",

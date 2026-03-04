@@ -1,55 +1,51 @@
-# Agentokratia Documentation
+# AgentaOS Documentation
 
-Official documentation for Agentokratia products.
+Official documentation for AgentaOS — the financial OS for the agent economy.
 
-**Live docs:** [docs.agentokratia.com](https://docs.agentokratia.com)
+**Live docs:** [docs.agentaos.ai](https://docs.agentaos.ai)
 
 ## Products
 
 | Product | Description | Status |
 |---------|-------------|--------|
+| [Agenta Wallet](./guardian) | 2-of-3 threshold signing for AI agents — CLI, SDK, MCP | Live |
 | [x402 Facilitator](./x402) | Payment verification and settlement for x402 protocol | Live |
-| [Agent Marketplace](./marketplace) | Deploy, discover, and monetize AI agents | Coming Soon |
+
+## AI-Friendly Docs
+
+This documentation is optimized for AI agent consumption. Mintlify auto-generates `llms.txt` and `llms-full.txt` at the site root for LLM context ingestion. You can also use the individual `.mdx` files directly.
+
+**Key files for AI agents:**
+- `guardian/integration/sdk.mdx` — SDK integration (packages, classes, methods)
+- `guardian/integration/cli.mdx` — CLI commands reference
+- `guardian/integration/mcp.mdx` — MCP server tools for Claude/Cursor
+- `guardian/quickstart.mdx` — End-to-end setup guide
 
 ## Development
-
-### Prerequisites
-
-- Node.js 18+
-- [Mintlify CLI](https://www.npmjs.com/package/mintlify)
-
-### Run locally
 
 ```bash
 npx mintlify dev
 ```
 
-Docs will be available at `http://localhost:3000`
+Docs at `http://localhost:3000`
 
-### Project structure
+## Project Structure
 
 ```
 ├── mint.json           # Mintlify configuration
-├── x402/               # x402 Facilitator docs
+├── guardian/           # Agenta Wallet docs
+│   ├── introduction.mdx
+│   ├── quickstart.mdx
+│   ├── integration/    # CLI, SDK, MCP, Foundry
+│   ├── concepts/       # Threshold signing, guardrails, security
+│   └── comparisons/    # vs Fireblocks, vs Privy, MPC vs Multisig
+├── x402/               # x402 Payment Facilitator docs
 │   ├── introduction.mdx
 │   ├── quickstart.mdx
 │   ├── api-reference/
-│   ├── concepts/
 │   └── integration/
-├── marketplace/        # Agent Marketplace docs
-│   └── introduction.mdx
 └── images/             # Logos and assets
 ```
-
-## Contributing
-
-Contributions are welcome! Please:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/improvement`)
-3. Commit your changes (`git commit -m 'Add improvement'`)
-4. Push to the branch (`git push origin feature/improvement`)
-5. Open a Pull Request
 
 ## License
 

@@ -1,9 +1,9 @@
 ---
 title: "REST API Reference"
 sidebarTitle: "API Reference"
-description: "Complete REST API for Guardian Wallet. Signing endpoints, signer management, policy CRUD, audit logs, and authentication flows."
-"og:title": "REST API Reference — Guardian Wallet"
-"og:description": "Guardian Wallet REST API: signing sessions, signer management, policy configuration, audit log export, and passkey authentication."
+description: "Complete REST API for AgentaOS. Signing endpoints, signer management, policy CRUD, audit logs, and authentication flows."
+"og:title": "REST API Reference — AgentaOS"
+"og:description": "AgentaOS REST API: signing sessions, signer management, policy configuration, audit log export, and passkey authentication."
 ---
 
 # API Reference
@@ -21,8 +21,8 @@ Two auth modes. API key for signers. JWT session cookie for the dashboard. Some 
     Pass the signer's API key in the `x-api-key` header. Generated during signer creation.
 
     ```bash
-    curl -H "x-api-key: gw_live_abc123..." \
-      https://your-server/api/v1/sign/session
+    curl -H "x-api-key: your-api-key" \
+      https://api.agentaos.ai/api/v1/sign/session
     ```
   </Tab>
   <Tab title="JWT Session (Dashboard)">
@@ -30,7 +30,7 @@ Two auth modes. API key for signers. JWT session cookie for the dashboard. Some 
 
     ```bash
     # 1. Get challenge, sign with wallet, then:
-    curl -X POST https://your-server/api/v1/auth/passkey/login \
+    curl -X POST https://api.agentaos.ai/api/v1/auth/passkey/login \
       -H "Content-Type: application/json" \
       -d '{"credential": "..."}'
     # Session cookie is set automatically
@@ -92,18 +92,33 @@ JWT session auth. These power the dashboard UI.
 | `POST` | `/signers/:id/policy/activate` | Activate the draft policy |
 | `POST` | `/signers/:id/policy/backtest` | Backtest policy against historical transactions |
 
-### Simple Policies (Legacy)
+### Built-in Policies
+
+Eight policy types you can stack on any signer. Each one is a hard constraint — if a transaction violates any active policy, the server refuses to co-sign.
 
 | Method | Path | Purpose |
 |--------|------|---------|
-| `GET` | `/signers/:id/policies` | List legacy policies for a signer |
-| `POST` | `/signers/:id/policies` | Create a legacy policy |
-| `PATCH` | `/policies/:id` | Update legacy policy config |
-| `DELETE` | `/policies/:id` | Delete legacy policy |
+| `GET` | `/signers/:id/policies` | List active policies for a signer |
+| `POST` | `/signers/:id/policies` | Create a policy |
+| `PATCH` | `/policies/:id` | Update policy config |
+| `DELETE` | `/policies/:id` | Delete policy |
 
-<Note>
-The rules engine is the primary guardrail system. Legacy policies (8 types: `spending_limit`, `daily_limit`, `monthly_limit`, `allowed_contracts`, `allowed_functions`, `blocked_addresses`, `rate_limit`, `time_window`) are evaluated alongside rules engine policies. Both must pass.
-</Note>
+**Available policy types:**
+
+| Type | What It Enforces |
+|------|-----------------|
+| `spending_limit` | Max value per transaction |
+| `daily_limit` | Max total spend per 24h |
+| `monthly_limit` | Max total spend per calendar month |
+| `allowed_contracts` | Whitelist of contract addresses the signer can interact with |
+| `allowed_functions` | Whitelist of function selectors (e.g. only `transfer`, `approve`) |
+| `blocked_addresses` | Blacklist — block sends to known bad actors or honeypots |
+| `rate_limit` | Max number of transactions in a time window |
+| `time_window` | Only allow signing during specific hours (e.g. business hours UTC) |
+
+<Tip>
+Built-in policies and rules engine policies are evaluated together. Every active constraint must pass before the server co-signs. Stack them to build defense in depth.
+</Tip>
 
 ### User Share (Browser Signing)
 
@@ -121,7 +136,7 @@ The rules engine is the primary guardrail system. Legacy policies (8 types: `spe
 | `POST` | `/signers/:id/sign/complete` | Finalize User+Server signing |
 
 <Tip>
-User+Server signing runs CGGMP24 in the browser via WASM. The user share is decrypted client-side with the wallet signature. The server only sees protocol messages —never the raw share.
+User+Server signing runs CGGMP24 in the browser via WASM. The user share is decrypted client-side with the wallet signature. The server only sees protocol messages — never the raw share.
 </Tip>
 
 ### DKG (Distributed Key Generation)
@@ -169,7 +184,7 @@ User+Server signing runs CGGMP24 in the browser via WASM. The user share is decr
 
 | Method | Path | Purpose |
 |--------|------|---------|
-| `GET` | `/health` | Health check. Returns `200` when healthy, `503` when degraded. |
+| `GET` | `/health` (no `/api/v1` prefix) | Health check. Returns `200` when healthy, `503` when degraded. |
 
 ---
 
@@ -193,11 +208,11 @@ All errors follow a consistent format:
 
 | Status | Meaning |
 |--------|---------|
-| `400` | Bad request —invalid input |
-| `401` | Unauthorized —missing or invalid auth |
-| `403` | Forbidden —policy violation or signer paused |
+| `400` | Bad request — invalid input |
+| `401` | Unauthorized — missing or invalid auth |
+| `403` | Forbidden — policy violation or signer paused |
 | `404` | Not found |
-| `503` | Service degraded —Vault sealed or DB unreachable |
+| `503` | Service degraded — Vault sealed or DB unreachable |
 
 <Warning>
 Policy violations return `403` with a `violations` array. Every violation includes the policy type and a human-readable message. All violations are logged to the audit trail.
@@ -212,6 +227,6 @@ Policy violations return `403` with a `violations` array. Every violation includ
     From zero to signing in 5 minutes
   </Card>
   <Card title="SDK Guide" icon="code" href="/guardian/integration/sdk">
-    ThresholdSigner for your TypeScript agent
+    Agenta SDK for your TypeScript agent
   </Card>
 </CardGroup>

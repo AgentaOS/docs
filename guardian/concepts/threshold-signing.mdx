@@ -1,13 +1,13 @@
 ---
 title: "What is Threshold Signing?"
 description: "How 2-of-3 MPC threshold ECDSA works. Three shares, any two sign. The full private key is never constructed — not during creation, not during signing."
-"og:title": "What is Threshold Signing? — Guardian Wallet"
+"og:title": "What is Threshold Signing? — AgentaOS"
 "og:description": "Threshold signing splits a private key into three shares. Any two can sign, but no single share is useful alone. The full key never exists."
 ---
 
 # The Key That Never Exists
 
-Guardian Wallet has one core invariant:
+AgentaOS has one core invariant:
 
 <Warning>
   **The full private key must never exist.**
@@ -17,18 +17,18 @@ Guardian Wallet has one core invariant:
 
 Traditional wallets store a private key somewhere. A file. An HSM. A browser extension. One place, one target.
 
-Guardian splits it. Three shares. No single share is useful alone. No share is ever combined with another to reconstruct the original key. The original key never existed in the first place.
+Agenta splits it. Three shares. No single share is useful alone. No share is ever combined with another to reconstruct the original key. The original key never existed in the first place.
 
 ---
 
 ## How the cryptography works
 
-Guardian uses the **CGGMP24** threshold signing protocol — the current state of the art for splitting ECDSA keys. The name comes from its creators (Canetti, Gennaro, Goldfeder, Makriyannis, Peled) and the year of their latest paper. You don't need to know this to use Guardian. But if you want to audit the math, the paper is linked in the Research section below.
+Agenta uses the **CGGMP24** threshold signing protocol — the current state of the art for splitting ECDSA keys. The name comes from its creators (Canetti, Gennaro, Goldfeder, Makriyannis, Peled) and the year of their latest paper. You don't need to know this to use Agenta. But if you want to audit the math, the paper is linked in the Research section below.
 
 The protocol has two phases:
 
-1. **Distributed Key Generation (DKG)** —three parties jointly create a public key and their own shares. No trusted dealer. No single party ever sees the full key.
-2. **Threshold Signing** —any 2 of 3 parties run an interactive protocol to produce a valid ECDSA signature. Multi-round message exchange. Not a pre-computed partial signature.
+1. **Distributed Key Generation (DKG)** — three parties jointly create a public key and their own shares. No trusted dealer. No single party ever sees the full key.
+2. **Threshold Signing** — any 2 of 3 parties run an interactive protocol to produce a valid ECDSA signature. Multi-round message exchange. Not a pre-computed partial signature.
 
 <Info>
   The implementation uses the `cggmp24` Rust crate (v0.7.0) compiled to WebAssembly. Same code runs server-side (Node.js) and client-side (browser).
@@ -38,7 +38,7 @@ The protocol has two phases:
 
 ## Distributed Key Generation
 
-DKG is how shares are born. Three parties —Signer, Server, User —each run the protocol independently. After 3 rounds of message exchange, each party holds:
+DKG is how shares are born. Three parties — Signer, Server, User — each run the protocol independently. After 3 rounds of message exchange, each party holds:
 
 - A **core share** (their piece of the key)
 - **Auxiliary info** (public parameters for signing)
@@ -93,7 +93,7 @@ Three shares. Any two can sign. No single share can act alone.
 |-------|--------|---------|
 | Share 0 | **Signer** (agent/bot) | Agent filesystem, AES-256-GCM encrypted |
 | Share 1 | **Server** | HashiCorp Vault KV v2 |
-| Share 2 | **User** (wallet owner) | Server-side opaque blob, encrypted with passkey PRF |
+| Share 2 | **User** (account owner) | Server-side opaque blob, encrypted with passkey PRF |
 
 This gives you three signing paths:
 

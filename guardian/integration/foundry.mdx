@@ -1,26 +1,26 @@
 ---
 title: "Foundry and Hardhat Integration"
 sidebarTitle: "Foundry"
-description: "Use Guardian Wallet as a signer for Forge scripts, Cast commands, and Hardhat deployments. No private keys in your environment."
-"og:title": "Foundry Integration — Guardian Wallet"
-"og:description": "Deploy smart contracts with threshold signing. Guardian's JSON-RPC proxy works with Forge, Cast, and Hardhat. No private keys needed."
+description: "Use AgentaOS as a signer for Forge scripts, Cast commands, and Hardhat deployments. No private keys in your environment."
+"og:title": "Foundry Integration — AgentaOS"
+"og:description": "Deploy smart contracts with threshold signing. Agenta's JSON-RPC proxy works with Forge, Cast, and Hardhat. No private keys needed."
 ---
 
 # Foundry Integration
 
-The `gw proxy` command starts a JSON-RPC signing proxy on localhost. It intercepts `eth_sendTransaction` and `eth_signTransaction`, signs via Guardian's threshold protocol, and forwards everything else to the upstream RPC.
+The `agenta proxy` command starts a JSON-RPC signing proxy on localhost. It intercepts `eth_sendTransaction` and `eth_signTransaction`, signs via Agenta's threshold protocol, and forwards everything else to the upstream RPC.
 
 Your Forge scripts deploy with threshold signing. No private keys in your environment.
 
 ## Start the Proxy
 
 ```bash
-gw proxy --port 8545
+agenta proxy --port 8545
 ```
 
 The proxy:
 - Loads your signer share from local config
-- Connects to the Guardian server for co-signing
+- Connects to the AgentaOS server for co-signing
 - Listens on `http://localhost:8545`
 
 <Info>
@@ -39,7 +39,7 @@ forge script script/Deploy.s.sol \
   --broadcast
 ```
 
-The proxy handles `eth_accounts` too. Forge automatically picks up your Guardian signer address.
+The proxy handles `eth_accounts` too. Forge automatically picks up your Agenta signer address.
 
 <CodeGroup>
 
@@ -86,14 +86,14 @@ cast send 0xRecipient --value 0.01ether \
 
 ## Hardhat
 
-Set the Guardian proxy as a custom network in your Hardhat config.
+Set the Agenta proxy as a custom network in your Hardhat config.
 
 <CodeGroup>
 
 ```javascript hardhat.config.js
 module.exports = {
   networks: {
-    guardian: {
+    agenta: {
       url: "http://localhost:8545",
     },
   },
@@ -101,7 +101,7 @@ module.exports = {
 ```
 
 ```bash Run
-npx hardhat run scripts/deploy.js --network guardian
+npx hardhat run scripts/deploy.js --network agenta
 ```
 
 </CodeGroup>
@@ -120,7 +120,7 @@ No accounts config needed. The proxy provides the signer address via `eth_accoun
 Override the RPC if you need a specific endpoint:
 
 ```bash
-gw proxy --port 8545 --rpc-url https://mainnet.base.org
+agenta proxy --port 8545 --rpc-url https://mainnet.base.org
 ```
 
 ---
@@ -133,9 +133,9 @@ gw proxy --port 8545 --rpc-url https://mainnet.base.org
 | `eth_signTransaction` | Threshold sign (no broadcast) |
 | `eth_sign` | Threshold message sign |
 | `personal_sign` | Threshold message sign |
-| `eth_accounts` | Returns Guardian signer address |
+| `eth_accounts` | Returns Agenta signer address |
 | Everything else | Forwarded to upstream RPC |
 
 <Tip>
-  The server evaluates all active guardrails before co-signing. Spending limits, rate limits, and contract allowlists all apply —even through the proxy. If a guardrail blocks the transaction, Forge gets a JSON-RPC error with the violation details.
+  The server evaluates all active guardrails before co-signing. Spending limits, rate limits, and contract allowlists all apply — even through the proxy. If a guardrail blocks the transaction, Forge gets a JSON-RPC error with the violation details.
 </Tip>
