@@ -1,0 +1,256 @@
+---
+title: "API Reference"
+description: "Complete REST API reference for AgentaOS Payments. All endpoints, parameters, and response shapes."
+---
+
+
+**Base URL:** `https://api.agentaos.ai/api/v1`
+
+**Authentication:** `x-api-key` header with your secret key.
+
+```bash
+curl https://api.agentaos.ai/api/v1/gateway/sessions \
+  -H "x-api-key: sk_live_your_key_here"
+```
+
+<Note>
+**SDK vs REST API:** The TypeScript SDK (`@agentaos/pay`) wraps these endpoints. Method mapping: `checkouts.create()` → `POST /gateway/sessions`, `checkouts.retrieve()` → `GET /gateway/sessions/:id`. The SDK uses camelCase field names (`checkoutUrl`), the REST API uses snake_case (`checkout_url`).
+</Note>
+
+## Checkout Sessions
+
+### Create Session
+
+<ParamField body="amount" type="number">
+  Amount in currency units (e.g. `49.99`). Required if no `linkId`.
+</ParamField>
+
+<ParamField body="currency" type="string" default="org default">
+  `EUR` or `USD`. Defaults to org settlement currency.
+</ParamField>
+
+<ParamField body="description" type="string">
+  Shown on checkout page. Max 1000 chars.
+</ParamField>
+
+<ParamField body="successUrl" type="string">
+  Redirect customer here after payment. HTTPS only.
+</ParamField>
+
+<ParamField body="cancelUrl" type="string">
+  "Cancel" link on checkout page. HTTPS only.
+</ParamField>
+
+<ParamField body="webhookUrl" type="string">
+  Server notification URL. HTTPS only.
+</ParamField>
+
+<ParamField body="taxRateId" type="string">
+  UUID of pre-created tax rate.
+</ParamField>
+
+<ParamField body="buyerEmail" type="string">
+  Pre-populate buyer email.
+</ParamField>
+
+<ParamField body="buyerName" type="string">
+  Pre-populate buyer name.
+</ParamField>
+
+<ParamField body="buyerCompany" type="string">
+  Pre-populate company name.
+</ParamField>
+
+<ParamField body="buyerCountry" type="string">
+  ISO 3166-1 alpha-2 (e.g. `DE`).
+</ParamField>
+
+<ParamField body="buyerVat" type="string">
+  VAT number (e.g. `DE123456789`).
+</ParamField>
+
+<ParamField body="metadata" type="object">
+  Custom key-value data. Max 8KB.
+</ParamField>
+
+<ParamField body="expiresIn" type="number" default="1800">
+  Seconds until expiry (300-86400).
+</ParamField>
+
+<ParamField body="linkId" type="string">
+  Create from a payment link template.
+</ParamField>
+
+```bash POST /gateway/sessions
+curl -X POST https://api.agentaos.ai/api/v1/gateway/sessions \
+  -H "x-api-key: sk_live_..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": 49.99,
+    "currency": "EUR",
+    "description": "Pro Plan",
+    "successUrl": "https://shop.com/success",
+    "cancelUrl": "https://shop.com/cart",
+    "webhookUrl": "https://shop.com/webhooks",
+    "buyerEmail": "john@example.com"
+  }'
+```
+
+<ResponseExample>
+```json 201
+{
+  "id": "uuid",
+  "session_id": "mZrESFyR7RC9RPsJfZCVkg",
+  "checkout_url": "https://app.agentaos.ai/checkout/mZrESFyR7RC9RPsJfZCVkg",
+  "status": "open",
+  "amount_override": 49.99,
+  "currency": "EURe",
+  "expires_at": "2026-03-17T02:30:00.000Z",
+  "created_at": "2026-03-17T02:00:00.000Z"
+}
+```
+</ResponseExample>
+
+### Retrieve Session
+
+```bash GET /gateway/sessions/:sessionId
+curl https://api.agentaos.ai/api/v1/gateway/sessions/mZrESFyR7RC9RPsJfZCVkg \
+  -H "x-api-key: sk_live_..."
+```
+
+### List Sessions
+
+```bash GET /gateway/sessions
+curl "https://api.agentaos.ai/api/v1/gateway/sessions?status=completed&limit=10" \
+  -H "x-api-key: sk_live_..."
+```
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `status` | `string` | `open`, `completed`, `expired`, `cancelled` |
+| `limit` | `number` | Max results (1-100, default 10) |
+| `offset` | `number` | Pagination offset |
+
+### Cancel Session
+
+```bash POST /gateway/sessions/:sessionId/cancel
+curl -X POST https://api.agentaos.ai/api/v1/gateway/sessions/mZrESFyR7RC9RPsJfZCVkg/cancel \
+  -H "x-api-key: sk_live_..."
+```
+
+---
+
+## Payment Links
+
+### Create Payment Link
+
+```bash POST /gateway/payment-links
+curl -X POST https://api.agentaos.ai/api/v1/gateway/payment-links \
+  -H "x-api-key: sk_live_..." \
+  -H "Content-Type: application/json" \
+  -d '{ "amount": 29.99, "currency": "EUR", "description": "Monthly subscription" }'
+```
+
+### List Payment Links
+
+```bash GET /gateway/payment-links
+curl "https://api.agentaos.ai/api/v1/gateway/payment-links?limit=20" \
+  -H "x-api-key: sk_live_..."
+```
+
+### Cancel Payment Link
+
+```bash DELETE /gateway/payment-links/:id
+curl -X DELETE https://api.agentaos.ai/api/v1/gateway/payment-links/uuid \
+  -H "x-api-key: sk_live_..."
+```
+
+---
+
+## Transactions
+
+### List Transactions
+
+```bash GET /gateway/all-transactions
+curl "https://api.agentaos.ai/api/v1/gateway/all-transactions?direction=inbound&from=2026-03-01&to=2026-03-31" \
+  -H "x-api-key: sk_live_..."
+```
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `direction` | `string` | `all`, `inbound`, `outbound` |
+| `from` | `string` | Start date (ISO 8601) |
+| `to` | `string` | End date (ISO 8601) |
+| `limit` | `number` | Max results |
+| `offset` | `number` | Pagination offset |
+
+---
+
+## Invoices
+
+### List Invoices
+
+```bash GET /gateway/invoices
+curl "https://api.agentaos.ai/api/v1/gateway/invoices?from=2026-03-01&to=2026-03-31&status=issued" \
+  -H "x-api-key: sk_live_..."
+```
+
+### Download Invoice PDF
+
+```bash GET /gateway/invoices/:id/pdf
+curl https://api.agentaos.ai/api/v1/gateway/invoices/uuid/pdf \
+  -H "x-api-key: sk_live_..." \
+  -o invoice.pdf
+```
+
+### Download Monthly Statement
+
+```bash GET /gateway/invoices/statement
+curl "https://api.agentaos.ai/api/v1/gateway/invoices/statement?from=2026-03-01&to=2026-03-31" \
+  -H "x-api-key: sk_live_..." \
+  -o statement.pdf
+```
+
+### Export CSV
+
+```bash GET /gateway/invoices/export
+curl "https://api.agentaos.ai/api/v1/gateway/invoices/export?from=2026-03-01&to=2026-03-31" \
+  -H "x-api-key: sk_live_..." \
+  -o invoices.csv
+```
+
+### Void Invoice
+
+```bash POST /gateway/invoices/:id/void
+curl -X POST https://api.agentaos.ai/api/v1/gateway/invoices/uuid/void \
+  -H "x-api-key: sk_live_..."
+```
+
+---
+
+## Errors
+
+```json
+{
+  "statusCode": 400,
+  "message": "amount is required when creating a session without a link"
+}
+```
+
+| Status | Meaning |
+|--------|---------|
+| `400` | Bad request - invalid parameters |
+| `401` | Unauthorized - invalid or missing API key |
+| `403` | Forbidden - key doesn't have access |
+| `404` | Not found - resource doesn't exist |
+| `409` | Conflict - idempotency conflict |
+| `429` | Rate limited (check `Retry-After` header) |
+| `500` | Server error - retry with backoff |
+
+## Rate Limits
+
+| Endpoint | Limit |
+|----------|-------|
+| `POST /gateway/send` | 20/min |
+| All authenticated endpoints | 100/min |
+| Public endpoints | 30/min |

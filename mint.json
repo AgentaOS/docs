@@ -25,8 +25,8 @@
       "url": "https://github.com/AgentaOS/agentaos"
     },
     {
-      "name": "x402 Payments",
-      "url": "https://facilitator.agentokratia.com"
+      "name": "llms.txt",
+      "url": "https://docs.agentaos.ai/llms.txt"
     }
   ],
   "topbarCtaButton": {
@@ -35,18 +35,22 @@
   },
   "tabs": [
     {
-      "name": "AgentaOS",
+      "name": "Overview",
       "url": "guardian"
     },
     {
-      "name": "x402 Payments (Legacy)",
+      "name": "Payments",
+      "url": "payments"
+    },
+    {
+      "name": "x402 Protocol",
       "url": "x402"
     }
   ],
   "navigation": [
     {
       "group": "Getting Started",
-      "pages": ["guardian/introduction", "guardian/quickstart"]
+      "pages": ["guardian/overview", "guardian/introduction", "guardian/quickstart"]
     },
     {
       "group": "Concepts",
@@ -84,6 +88,25 @@
     },
     {
       "group": "Getting Started",
+      "pages": ["payments/introduction", "payments/overview"]
+    },
+    {
+      "group": "SDK Reference",
+      "pages": [
+        "payments/checkouts",
+        "payments/webhooks",
+        "payments/invoices"
+      ]
+    },
+    {
+      "group": "API & Examples",
+      "pages": [
+        "payments/api-reference",
+        "payments/example"
+      ]
+    },
+    {
+      "group": "Getting Started",
       "pages": ["x402/introduction", "x402/quickstart", "x402/getting-api-key"]
     },
     {
@@ -115,7 +138,7 @@
   ],
   "footerSocials": {
     "github": "https://github.com/AgentaOS/agentaos",
-    "twitter": "https://twitter.com/agentokratia"
+    "twitter": "https://twitter.com/agentaOS"
   },
   "seo": {
     "indexHiddenPages": false
