@@ -1,0 +1,77 @@
+---
+title: Using AgentaOS with AI
+description: Agent Banking for AI companies. Get paid by AI agents, 5x cheaper than Stripe.
+---
+
+## Install
+
+<Tabs>
+  <Tab title="Claude Code">
+    ```bash
+    claude -p "Read https://agentaos.ai/SKILL.md and set up AgentaOS"
+    ```
+  </Tab>
+  <Tab title="Terminal">
+    ```bash
+    curl -fsSL https://agentaos.ai/install | bash
+    agenta login
+    ```
+  </Tab>
+</Tabs>
+
+## Create a checkout, let an agent pay it
+
+```bash
+# You create a checkout
+agenta pay checkout -a 50 -c USD
+
+# An AI agent pays it
+agenta sub create --name my-agent
+agenta sub x402 fetch <x402Url>
+```
+
+That's it. `checkoutUrl` for humans, `x402Url` for machines.
+
+## Give your agent access to these docs
+
+**Skill**: Teaches your agent the full CLI:
+```bash
+npx skills add AgentaOS/skills@agenta
+```
+
+**Markdown**: Append `.md` to any docs page:
+```
+https://docs.agentaos.ai/pay/checkouts.md
+```
+
+**llms.txt**: Machine-readable overview:
+```bash
+curl -fsSL https://docs.agentaos.ai/llms.txt
+```
+
+**[MCP](/mcp/setup)**: 21 tools for Claude Desktop, Cursor, Windsurf:
+
+<Tabs>
+  <Tab title="Claude Code">
+    ```bash
+    claude mcp add agenta npx -y agentaos
+    ```
+  </Tab>
+  <Tab title="JSON config">
+    ```json
+    {
+      "mcpServers": {
+        "agenta": {
+          "command": "npx",
+          "args": ["-y", "agentaos"],
+          "env": {
+            "AGENTA_API_KEY": "your-api-key",
+            "AGENTA_API_SECRET": "your-api-secret",
+            "AGENTAOS_GATEWAY_KEY": "sk_live_..."
+          }
+        }
+      }
+    }
+    ```
+  </Tab>
+</Tabs>

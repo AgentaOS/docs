@@ -1,0 +1,35 @@
+---
+title: x402 Payments
+description: Pay for 402-protected resources from your sub-account.
+---
+
+# x402 Payments
+
+AI agents can discover, check, and pay for x402-protected APIs.
+
+## Check
+
+```bash
+agenta sub x402 check <url>
+```
+
+Returns `requires402`, payment options (scheme, network, amount, asset).
+
+## Discover
+
+```bash
+agenta sub x402 discover <domain>
+```
+
+Probes a domain for all x402 endpoints.
+
+## Fetch & Pay
+
+```bash
+agenta sub x402 fetch <url>
+agenta sub x402 fetch <url> --max-amount 1000000
+```
+
+Automatically pays and returns the response. `--max-amount` caps spending in atomic units (1000000 = 1 USDC).
+
+Returns: `paid`, `transaction`, `status`, `body`.

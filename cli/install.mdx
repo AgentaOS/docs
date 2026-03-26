@@ -1,0 +1,46 @@
+---
+title: Install
+description: Install the AgentaOS CLI in one command.
+---
+
+# Install
+
+## One-liner
+
+```bash
+curl -fsSL https://agentaos.ai/install | bash
+```
+
+## Via npm
+
+If you already have Node.js 20+:
+
+```bash
+npm install -g agentaos
+```
+
+## Verify
+
+```bash
+agenta --version
+```
+
+## No Node.js?
+
+```bash
+curl -fsSL https://fnm.vercel.app/install | bash
+fnm install 20
+fnm use 20
+```
+
+Then re-run the installer.
+
+## AI Agent Setup
+
+Install our skill for guided AI setup:
+
+```bash
+npx skills add AgentaOS/skills@agenta
+```
+
+Or read the skill directly: [agentaos.ai/SKILL.md](https://agentaos.ai/SKILL.md)

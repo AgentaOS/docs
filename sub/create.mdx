@@ -1,0 +1,67 @@
+---
+title: Create & Import
+description: Create or import agent sub-accounts.
+---
+
+# Create & Import
+
+Sub-accounts are autonomous agent wallets secured by MPC threshold signing (CGGMP24). Each sub-account has its own Ethereum address, API key, and spending policies. The private key never exists; any 2 of 3 shares sign together.
+
+Use sub-accounts when your AI agent needs to spend autonomously: pay for APIs, settle invoices, execute trades, all under human-set guardrails.
+
+<Note>
+Sub-accounts use MPC threshold signing. Your organization wallet (created during `agenta login`) uses passkey/WebAuthn with OPRF, a different security model for receiving payments.
+</Note>
+
+## Create a sub-account
+
+```bash
+agenta sub create --name trading-bot
+```
+
+| Flag | Description |
+|------|-------------|
+| `--name <name>` | Required. Alphanumeric + hyphens |
+| `--server <url>` | Custom server URL |
+| `--storage <type>` | Recovery key: `keychain` (default) or `file` |
+
+### Response
+
+```json
+{
+  "name": "trading-bot",
+  "address": "0x23Af...9C80",
+  "signerId": "941fecfb-...",
+  "apiKey": "gw_live_...",
+  "configPath": "/Users/you/.agenta/signers/trading-bot.json"
+}
+```
+
+## Import existing
+
+```bash
+agenta sub import --name bot1 --api-key gw_live_... --api-secret <base64>
+```
+
+| Flag | Description |
+|------|-------------|
+| `--name <name>` | Required |
+| `--api-key <key>` | Required. API key from dashboard |
+| `--api-secret <secret>` | Required. API secret base64 |
+| `--server <url>` | Custom server URL |
+
+## Switch active sub-account
+
+```bash
+agenta sub switch trading-bot   # set active
+agenta sub switch               # list all
+```
+
+## Multiple sub-accounts
+
+Each gets its own address, API key, and policies. Use `--signer` to target a specific one:
+
+```bash
+agenta --signer trading-bot sub send 0x... 0.01
+agenta --signer my-agent sub balance
+```

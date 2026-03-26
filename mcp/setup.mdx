@@ -1,0 +1,57 @@
+---
+title: MCP Server
+description: Connect AI assistants to AgentaOS via MCP.
+---
+
+# MCP Server
+
+21 tools for Claude Desktop, Cursor, Windsurf, and any MCP-compatible client.
+
+## Claude Desktop
+
+```json
+{
+  "mcpServers": {
+    "agenta": {
+      "command": "npx",
+      "args": ["-y", "agentaos"],
+      "env": {
+        "AGENTA_API_KEY": "your-api-key",
+        "AGENTA_API_SECRET": "your-api-secret",
+        "AGENTAOS_GATEWAY_KEY": "sk_live_your-gateway-key"
+      }
+    }
+  }
+}
+```
+
+- **API Key + Secret**: For wallet tools. From sub-account creation.
+- **Gateway Key**: For payment tools. From [app.agentaos.ai](https://app.agentaos.ai) → API Keys.
+
+## Tools
+
+### Payments
+| Tool | What it does |
+|------|-------------|
+| `agenta_pay_create_checkout` | Create a checkout session |
+| `agenta_pay_get_checkout` | Get checkout status |
+| `agenta_pay_list_checkouts` | List checkouts |
+
+### Wallet
+| Tool | What it does |
+|------|-------------|
+| `agenta_wallet_overview` | Address, balance, network |
+| `agenta_get_balances` | ETH + ERC-20 balances |
+| `agenta_send_eth` | Send ETH |
+| `agenta_send_token` | Send ERC-20 tokens |
+| `agenta_sign_message` | Sign a message |
+| `agenta_call_contract` | Write to a contract |
+| `agenta_read_contract` | Read contract state |
+| `agenta_simulate` | Simulate a transaction |
+
+### x402
+| Tool | What it does |
+|------|-------------|
+| `agenta_x402_check` | Check if URL requires payment |
+| `agenta_x402_discover` | Find x402 endpoints |
+| `agenta_x402_fetch` | Pay and fetch resource |

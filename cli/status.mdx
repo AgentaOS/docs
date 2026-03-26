@@ -1,0 +1,32 @@
+---
+title: Status
+description: Check account, wallet, and tool readiness.
+---
+
+# Status
+
+```bash
+agenta status
+```
+
+Returns account info, wallet status, payment tool readiness, and sub-account list.
+
+## Response fields
+
+| Field | Description |
+|-------|-------------|
+| `account.authenticated` | Logged in |
+| `account.email` | Account email |
+| `account.organization` | Org name |
+| `account.walletAddress` | Wallet address (null if not activated) |
+| `account.walletActivated` | Ready for payments |
+| `account.paymentTools.ready` | Can create checkouts |
+| `account.paymentTools.hint` | What to do next |
+| `subAccounts.count` | Number of sub-accounts |
+| `subAccounts.items[]` | Name, address, isDefault |
+
+## Aliases
+
+```bash
+agenta whoami   # same as agenta status
+```

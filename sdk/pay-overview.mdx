@@ -1,0 +1,49 @@
+---
+title: Payment SDK
+description: Accept payments with @agentaos/pay: Create checkouts, track payments, manage webhooks.
+---
+
+# Payment SDK
+
+```bash
+npm install @agentaos/pay
+```
+
+## Create a checkout
+
+```typescript
+import { AgentaOS } from '@agentaos/pay';
+
+const client = new AgentaOS('sk_live_your-key');
+
+const checkout = await client.checkouts.create({
+  amount: 50,
+  currency: 'EUR',
+  description: 'Consulting fee',
+});
+
+console.log(checkout.checkoutUrl);  // share with customer
+console.log(checkout.x402Url);      // for AI agents
+```
+
+## Retrieve
+
+```typescript
+const session = await client.checkouts.retrieve('session-id');
+console.log(session.status); // open, completed, expired, cancelled
+```
+
+## List
+
+```typescript
+const { items, total } = await client.checkouts.list({
+  status: 'completed',
+  limit: 10,
+});
+```
+
+## Auth
+
+The SDK auto-detects auth type:
+- `sk_live_...` or `sk_test_...` → API key (`x-api-key` header)
+- JWT token → Bearer auth (`Authorization` header)
