@@ -94,6 +94,14 @@
       ]
     },
     {
+      "group": "Banking",
+      "pages": [
+        "banking/activate-eur",
+        "banking/activate-eur-individual",
+        "banking/activate-eur-business"
+      ]
+    },
+    {
       "group": "Agent Sub-accounts",
       "pages": [
         "sub/create",
