@@ -41,7 +41,7 @@
     "suggestEdit": true
   },
   "announcement": {
-    "title": "AgentaOS is the Merchant of Record for AI native founders. Sell software globally →",
+    "title": "AgentaOS is the Merchant of Record for AI founders. Sell software globally →",
     "url": "https://agentaos.ai"
   },
   "topbarLinks": [
@@ -62,6 +62,10 @@
     {
       "name": "API Reference",
       "url": "api-reference"
+    },
+    {
+      "name": "Changelog",
+      "url": "changelog"
     }
   ],
   "anchors": [
@@ -222,6 +226,10 @@
         },
         "api-reference/webhooks"
       ]
+    },
+    {
+      "group": "Changelog",
+      "pages": ["changelog/overview"]
     }
   ],
   "footerSocials": {

@@ -14,7 +14,7 @@ Every payment you accept, card, bank transfer, or stablecoin, settles to one Age
 Money doesn't move from "buyer paid" to "in your bank account" instantly. It passes through a few states first, mirroring how card networks and banking rails actually clear funds.
 
 <CardGroup cols={2}>
-  <Card title="On the way" icon="clock">
+  <Card title="Incoming" icon="clock">
     A payment has been confirmed, but it's still clearing. New card and bank sales clear over about 14 days before they're payable, the same way they would through any card acquirer.
   </Card>
   <Card title="Available" icon="wallet">
@@ -30,7 +30,7 @@ Money doesn't move from "buyer paid" to "in your bank account" instantly. It pas
 
 ```mermaid
 flowchart LR
-  A[Buyer pays<br/>card, bank, or stablecoin] --> B[On the way<br/>clearing ~14 days]
+  A[Buyer pays<br/>card, bank, or stablecoin] --> B[Incoming<br/>clearing ~14 days]
   B --> C[Available]
   C --> D[Payout<br/>bank, EUR or USD]
   B -.->|newer accounts| E[In reserve]
@@ -60,7 +60,7 @@ Payout fees are a **pass-through, at cost, with no markup**. AgentaOS doesn't ad
     Any completed checkout, card, bank, or stablecoin, adds to your balance. See [Checkouts](/payments/checkouts) and [Payment links](/payments/payment-links).
   </Step>
   <Step title="Let it clear">
-    Funds move from **On the way** to **Available** automatically, over about 14 days for new card and bank sales. No action needed on your end.
+    Funds move from **Incoming** to **Available** automatically, over about 14 days for new card and bank sales. No action needed on your end.
   </Step>
   <Step title="Add a bank account">
     Add the bank account where you want to receive your payouts, in EUR or USD.

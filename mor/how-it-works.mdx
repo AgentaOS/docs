@@ -53,7 +53,7 @@ flowchart LR
 | What you integrate | Payments only | Payments, tax, invoicing, and payouts, in one |
 
 <Note>
-A processor and a Merchant of Record aren't mutually exclusive. AgentaOS uses our card processor under the hood to move card and bank payments. We also carry the legal and tax weight that using a processor directly would leave with you.
+A payment processor and a Merchant of Record aren't the same thing, and they aren't mutually exclusive. Under the hood we use a payment processor to move the money, the same rails you could plug into directly. The difference is that we sit in front of it as the legal seller, so we carry the tax, compliance, and chargeback liability that going direct would leave with you.
 </Note>
 
 ## What stays yours
