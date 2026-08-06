@@ -9,6 +9,16 @@ Every confirmed payment issues an invoice automatically: seller and buyer detail
 Amounts on the `Invoice` object (`amount`, `fiatAmount`, `taxAmount`) are decimal currency units, same as everywhere else in this API. `19.99` means €19.99, not cents.
 </Info>
 
+## Create and send an invoice
+
+Bill a customer directly from the dashboard, no code required. Open **Finance → Invoices** and click **New invoice**. Add your line items, fill in the customer's details and country (we calculate the right VAT), set your payment terms, and send. Your customer pays on the same secure checkout, by card, Apple Pay, or Google Pay.
+
+<Frame caption="The invoice builder. AgentaOS is the merchant of record, so VAT is calculated from the customer's country.">
+  <img src="/images/product/invoice-builder.png" alt="AgentaOS invoice builder showing seller and buyer details, a line item, and the VAT breakdown" />
+</Frame>
+
+Every invoice you send, and every invoice issued automatically when a payment clears, is available over the API below.
+
 ## List invoices
 
 Paginated: every list call returns `{ items, total, hasMore }`. Filter by date range and status.
