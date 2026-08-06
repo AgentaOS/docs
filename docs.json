@@ -194,20 +194,6 @@
     "global": {
       "anchors": [
         {
-          "anchor": "AI Skill",
-          "href": "https://agentaos.ai/SKILL.md",
-          "icon": "robot",
-          "color": {
-            "light": "#4F46E5",
-            "dark": "#4F46E5"
-          }
-        },
-        {
-          "anchor": "GitHub",
-          "href": "https://github.com/AgentaOS/agentaos",
-          "icon": "github"
-        },
-        {
           "anchor": "llms.txt",
           "href": "/llms-full.txt",
           "icon": "file-lines"
