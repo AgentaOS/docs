@@ -1,0 +1,278 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "AgentaOS",
+  "colors": {
+    "primary": "#4F46E5",
+    "light": "#A5B4FC",
+    "dark": "#3F37C9"
+  },
+  "favicon": "/images/agentaos-icon.png",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "introduction",
+              "getting-started/quickstart",
+              "getting-started/test-mode",
+              "getting-started/dashboard",
+              "getting-started/glossary"
+            ]
+          },
+          {
+            "group": "Build with AI agents",
+            "pages": [
+              "agents/overview",
+              "mcp/setup",
+              "sub/x402"
+            ]
+          },
+          {
+            "group": "Sell",
+            "pages": [
+              "payments/payment-links",
+              "payments/checkouts",
+              "payments/subscriptions",
+              "payments/invoices",
+              "payments/receipts",
+              "payments/customers"
+            ]
+          },
+          {
+            "group": "Merchant of Record",
+            "pages": [
+              "mor/how-it-works",
+              "mor/supported-countries",
+              "mor/tax",
+              "mor/pricing",
+              "mor/account-review",
+              "payouts/overview"
+            ]
+          },
+          {
+            "group": "Webhooks",
+            "pages": [
+              "payments/webhooks",
+              "webhooks/events"
+            ]
+          },
+          {
+            "group": "For customers",
+            "pages": [
+              "for-customers/why-charged"
+            ]
+          },
+          {
+            "group": "Legacy",
+            "pages": [
+              "legacy/stablecoin-payouts"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Guides",
+        "groups": [
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/introduction",
+              "guides/accept-your-first-payment",
+              "guides/sell-a-subscription",
+              "guides/go-live",
+              "guides/handle-webhooks",
+              "guides/ai-agent"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Reference",
+        "groups": [
+          {
+            "group": "SDK",
+            "pages": [
+              "sdk/pay-overview",
+              "sdk/pay-checkouts",
+              "sdk/pay-payment-links",
+              "sdk/pay-subscriptions",
+              "sdk/pay-invoices",
+              "sdk/pay-customers",
+              "sdk/pay-webhooks",
+              "sdk/pay-errors"
+            ]
+          },
+          {
+            "group": "CLI",
+            "pages": [
+              "cli/install",
+              "cli/login",
+              "cli/pay",
+              "cli/subscriptions",
+              "cli/customers",
+              "cli/invoices",
+              "cli/status"
+            ]
+          },
+          {
+            "group": "API Reference",
+            "pages": [
+              "api-reference/introduction",
+              "api-reference/error-codes",
+              {
+                "group": "Payment Links",
+                "pages": [
+                  "api-reference/payment-links/create",
+                  "api-reference/payment-links/list",
+                  "api-reference/payment-links/retrieve",
+                  "api-reference/payment-links/update",
+                  "api-reference/payment-links/cancel"
+                ]
+              },
+              {
+                "group": "Checkouts",
+                "pages": [
+                  "api-reference/checkouts/create",
+                  "api-reference/checkouts/list",
+                  "api-reference/checkouts/retrieve",
+                  "api-reference/checkouts/cancel"
+                ]
+              },
+              {
+                "group": "Subscriptions",
+                "pages": [
+                  "api-reference/subscriptions/list",
+                  "api-reference/subscriptions/cancel"
+                ]
+              },
+              {
+                "group": "Customers",
+                "pages": [
+                  "api-reference/customers/list"
+                ]
+              },
+              {
+                "group": "Invoices",
+                "pages": [
+                  "api-reference/invoices/list",
+                  "api-reference/invoices/retrieve",
+                  "api-reference/invoices/void",
+                  "api-reference/invoices/pdf",
+                  "api-reference/invoices/receipt",
+                  "api-reference/invoices/send-receipt",
+                  "api-reference/invoices/statement",
+                  "api-reference/invoices/export"
+                ]
+              },
+              {
+                "group": "Transactions",
+                "pages": [
+                  "api-reference/transactions/list"
+                ]
+              },
+              "api-reference/webhooks"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Changelog",
+        "groups": [
+          {
+            "group": "Changelog",
+            "pages": [
+              "changelog/overview"
+            ]
+          }
+        ]
+      }
+    ],
+    "global": {
+      "anchors": [
+        {
+          "anchor": "AI Skill",
+          "href": "https://agentaos.ai/SKILL.md",
+          "icon": "robot",
+          "color": {
+            "light": "#4F46E5",
+            "dark": "#4F46E5"
+          }
+        },
+        {
+          "anchor": "GitHub",
+          "href": "https://github.com/AgentaOS/agentaos",
+          "icon": "github"
+        },
+        {
+          "anchor": "llms.txt",
+          "href": "/llms-full.txt",
+          "icon": "file-lines"
+        },
+        {
+          "anchor": "Support",
+          "href": "mailto:contact@agentaos.ai",
+          "icon": "life-ring"
+        }
+      ]
+    }
+  },
+  "logo": {
+    "light": "/images/agentaos-icon.png",
+    "dark": "/images/agentaos-icon.png",
+    "href": "https://agentaos.ai"
+  },
+  "api": {
+    "openapi": "openapi.json"
+  },
+  "appearance": {
+    "default": "light"
+  },
+  "contextual": {
+    "options": ["copy", "view", "chatgpt", "claude"]
+  },
+  "banner": {
+    "content": "AgentaOS is the Merchant of Record for AI founders. [Sell software globally →](https://agentaos.ai)",
+    "dismissible": true
+  },
+  "background": {
+    "color": {
+      "light": "#FFFFFF",
+      "dark": "#0B1533"
+    }
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Website",
+        "href": "https://agentaos.ai"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Log in",
+      "href": "https://app.agentaos.ai"
+    }
+  },
+  "search": {
+    "prompt": "Search docs..."
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/AgentaOS/agentaos",
+      "x": "https://x.com/agentaos",
+      "linkedin": "https://linkedin.com/company/agentaos"
+    }
+  },
+  "fonts": {
+    "heading": {
+      "family": "Bricolage Grotesque"
+    },
+    "body": {
+      "family": "Inter"
+    }
+  }
+}
