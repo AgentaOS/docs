@@ -110,7 +110,7 @@ If you don't pre-populate, the hosted checkout asks the buyer for name and email
 
 ## How the buyer pays
 
-The hosted checkout offers card, Apple Pay, and Google Pay through our card processor. Card details are entered directly into the secure card form, never handled by your server or ours. Some checkouts also expose an `x402Url` for agent-to-agent payment over the [x402 protocol](/sub/x402); most integrations can ignore it.
+The hosted checkout offers card, Apple Pay, and Google Pay through our card processor. Card details are entered directly into the secure card form, never handled by your server or ours.
 
 <Warning>
 Don't trust `successUrl` as proof of payment. The buyer's browser might close before the redirect fires. Use [webhooks](/payments/webhooks) as the source of truth for "did this checkout actually get paid."
@@ -266,7 +266,6 @@ These are the SDK (camelCase) field names; the raw REST response uses snake_case
 <ResponseField name="id" type="string">Session UUID.</ResponseField>
 <ResponseField name="sessionId" type="string">Public session ID, used in the checkout URL.</ResponseField>
 <ResponseField name="checkoutUrl" type="string">URL to send your buyer to.</ResponseField>
-<ResponseField name="x402Url" type="string">x402 protocol URL, for agent payments.</ResponseField>
 <ResponseField name="status" type="string">`open`, `completed`, `expired`, or `cancelled`.</ResponseField>
 <ResponseField name="sellerMode" type="string">`mor` (card + bank) or `crypto` (on-chain). Inherited from the link, or derived from your account for standalone checkouts.</ResponseField>
 <ResponseField name="amountOverride" type="number | null">Amount for this checkout, if overridden.</ResponseField>

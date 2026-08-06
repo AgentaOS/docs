@@ -55,13 +55,12 @@ agenta pay checkout -a 49.99 -c EUR -d "Consulting fee, August"
   "amount": 49.99,
   "currency": "EUR",
   "checkoutUrl": "https://app.agentaos.ai/checkout/mZrESFyR7RC9RPsJfZCVkg",
-  "x402Url": null,
   "expiresAt": "2026-08-06T15:32:00.000Z",
   "hint": "Share the checkoutUrl with your customer."
 }
 ```
 
-Checkouts expire in 30 minutes by default. Share `checkoutUrl` with a human buyer, or `x402Url` (when present) if an AI agent is paying programmatically.
+Checkouts expire in 30 minutes by default. Share the `checkoutUrl` with your buyer.
 
 ## Get a checkout
 
@@ -87,7 +86,6 @@ agenta pay get mZrESFyR7RC9RPsJfZCVkg
   "amount": 49.99,
   "currency": "EUR",
   "checkoutUrl": "https://app.agentaos.ai/checkout/mZrESFyR7RC9RPsJfZCVkg",
-  "x402Url": null,
   "expiresAt": "2026-08-06T15:32:00.000Z",
   "createdAt": "2026-08-06T15:02:00.000Z"
 }

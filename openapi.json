@@ -3,7 +3,7 @@
   "info": {
     "title": "AgentaOS Gateway API",
     "version": "1.0.0",
-    "description": "The AgentaOS REST API: payment links, checkouts, subscriptions, customers, invoices, and the unified transactions feed. This is the same API the TypeScript SDK (`@agentaos/pay`) and the `agenta` CLI call underneath.\n\n## Money model\n\n- **Decimal currency units (`number`)**: a plain `amount` field (on a create body, a Payment Link, a Checkout's `amount_override`, or an Invoice's `amount`/`fiat_amount`/`tax_amount`) is in currency units. `49.99` means EUR 49.99, never cents.\n- **Integer minor units (`number`)**: exactly one field breaks that rule: `unitAmountMinor` on a Subscription. It is an integer count of the smallest currency unit (`1999` means EUR 19.99), named with a `Minor` suffix specifically so it is never confused with a plain `amount`. The `money` object on Transactions and the `earnings` object on a retrieved Invoice are also integer minor units, computed server-side.\n- **String, on webhooks**: the `amount` inside a webhook payload's `data` object is a string (e.g. `\"49.99\"`), since JSON numbers silently drop trailing zeros and this value must round-trip exactly for accounting.\n\n## Naming convention\n\nMost response fields mirror the underlying database column and are `snake_case` (`created_at`, `seller_mode`, `buyer_email`, ...). A small number of computed convenience fields are camelCase with no snake_case equivalent: `checkoutUrl` and `x402Url` on Checkouts, `checkoutUrl` on Payment Links, `sellerMode` on Payment Links specifically, `money` on Transactions, and `earnings` on a single retrieved Invoice. Two resources (Subscriptions and Customers) are fully camelCase end to end.\n\n## Pagination\n\nEvery list endpoint takes `limit` and `offset` and returns `{ items, total, hasMore }`. `hasMore` is computed server-side (`offset + items.length < total`); never derive it client-side.",
+    "description": "The AgentaOS REST API: payment links, checkouts, subscriptions, customers, invoices, and the unified transactions feed. This is the same API the TypeScript SDK (`@agentaos/pay`) and the `agenta` CLI call underneath.\n\n## Money model\n\n- **Decimal currency units (`number`)**: a plain `amount` field (on a create body, a Payment Link, a Checkout's `amount_override`, or an Invoice's `amount`/`fiat_amount`/`tax_amount`) is in currency units. `49.99` means EUR 49.99, never cents.\n- **Integer minor units (`number`)**: exactly one field breaks that rule: `unitAmountMinor` on a Subscription. It is an integer count of the smallest currency unit (`1999` means EUR 19.99), named with a `Minor` suffix specifically so it is never confused with a plain `amount`. The `money` object on Transactions and the `earnings` object on a retrieved Invoice are also integer minor units, computed server-side.\n- **String, on webhooks**: the `amount` inside a webhook payload's `data` object is a string (e.g. `\"49.99\"`), since JSON numbers silently drop trailing zeros and this value must round-trip exactly for accounting.\n\n## Naming convention\n\nMost response fields mirror the underlying database column and are `snake_case` (`created_at`, `seller_mode`, `buyer_email`, ...). A small number of computed convenience fields are camelCase with no snake_case equivalent: `checkoutUrl` on Checkouts and Payment Links, `sellerMode` on Payment Links specifically, `money` on Transactions, and `earnings` on a single retrieved Invoice. Two resources (Subscriptions and Customers) are fully camelCase end to end.\n\n## Pagination\n\nEvery list endpoint takes `limit` and `offset` and returns `{ items, total, hasMore }`. `hasMore` is computed server-side (`offset + items.length < total`); never derive it client-side.",
     "contact": {
       "name": "AgentaOS",
       "url": "https://agentaos.ai"
@@ -850,7 +850,6 @@
           "seller_mode": "mor",
           "environment": "live",
           "checkoutUrl": "https://app.agentaos.ai/checkout/mZrESFyR7RC9RPsJfZCVkg",
-          "x402Url": "https://api.agentaos.ai/gateway/v1/x402/mZrESFyR7RC9RPsJfZCVkg",
           "invoiceId": "b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e",
           "invoiceNumber": "INV-2026-0142"
         }
@@ -1256,10 +1255,6 @@
           "seller_mode": { "type": "string", "enum": ["mor", "crypto"] },
           "environment": { "type": "string", "enum": ["test", "live"] },
           "checkoutUrl": { "type": "string", "description": "Send your buyer here. Computed, camelCase." },
-          "x402Url": {
-            "type": "string",
-            "description": "Agent-to-agent payment URL via the x402 protocol. Computed, camelCase. Most integrations can ignore it."
-          },
           "invoiceId": {
             "type": ["string", "null"],
             "format": "uuid",
@@ -1271,7 +1266,7 @@
           "id", "payment_link_id", "org_id", "session_id", "idempotency_key", "amount_override",
           "currency", "metadata", "webhook_url", "success_url", "cancel_url", "tax_rate_id",
           "supported_networks", "expires_at", "status", "created_at", "updated_at", "seller_mode",
-          "environment", "checkoutUrl", "x402Url"
+          "environment", "checkoutUrl"
         ]
       },
       "CheckoutListResponse": {
