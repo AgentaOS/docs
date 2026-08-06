@@ -1,0 +1,169 @@
+---
+title: "Pay"
+description: "Create, check, and list checkout sessions from the terminal with agenta pay."
+---
+
+`agenta pay` wraps the same checkout flow as the `@agentaos/pay` SDK and the dashboard: create a checkout, get back a payment link, and track its status, all without leaving the terminal. Useful for one-off invoicing, quick testing, and scripting payment creation into whatever tool you already use.
+
+<Note>
+`agenta pay` commands authenticate with your `agenta login` session, not an API key. For key-based auth in a backend or script, use [`@agentaos/pay`](/sdk/pay-overview) or the REST API with an `sk_live_`/`sk_test_` key instead.
+</Note>
+
+## Create a checkout
+
+```bash
+agenta pay checkout -a <amount> [-c <currency>] [-d <description>] [--email <email>] [--json]
+```
+
+<ParamField query="-a, --amount" type="number" required>
+  Payment amount **in currency units**, e.g. `-a 49.99` for €49.99. Not cents.
+</ParamField>
+<ParamField query="-c, --currency" type="string" default="org default">
+  Currency code, e.g. `EUR`, `USD`.
+</ParamField>
+<ParamField query="-d, --description" type="string">
+  Shown to the buyer on the checkout page.
+</ParamField>
+<ParamField query="--email" type="string">
+  Pre-fills the buyer's email on the checkout page.
+</ParamField>
+<ParamField query="--json" type="boolean">
+  Output a single JSON object instead of the human-readable summary.
+</ParamField>
+
+```bash
+agenta pay checkout -a 49.99 -c EUR -d "Consulting fee, August"
+```
+
+```bash Output
+  Session Id: mZrESFyR7RC9RPsJfZCVkg
+  Status: open
+  Amount: 49.99
+  Currency: EUR
+  Checkout Url: https://app.agentaos.ai/checkout/mZrESFyR7RC9RPsJfZCVkg
+  Expires At: 2026-08-06T15:32:00.000Z
+  Hint: Share the checkoutUrl with your customer.
+✓ Checkout created
+```
+
+### `--json`
+
+```json
+{
+  "sessionId": "mZrESFyR7RC9RPsJfZCVkg",
+  "status": "open",
+  "amount": 49.99,
+  "currency": "EUR",
+  "checkoutUrl": "https://app.agentaos.ai/checkout/mZrESFyR7RC9RPsJfZCVkg",
+  "x402Url": null,
+  "expiresAt": "2026-08-06T15:32:00.000Z",
+  "hint": "Share the checkoutUrl with your customer."
+}
+```
+
+Checkouts expire in 30 minutes by default. Share `checkoutUrl` with a human buyer, or `x402Url` (when present) if an AI agent is paying programmatically.
+
+## Get a checkout
+
+```bash
+agenta pay get <sessionId> [--json]
+```
+
+<ParamField path="sessionId" type="string" required>
+  The checkout session ID, e.g. `mZrESFyR7RC9RPsJfZCVkg`.
+</ParamField>
+<ParamField query="--json" type="boolean">
+  Output a single JSON object instead of the human-readable summary.
+</ParamField>
+
+```bash
+agenta pay get mZrESFyR7RC9RPsJfZCVkg
+```
+
+```json --json
+{
+  "sessionId": "mZrESFyR7RC9RPsJfZCVkg",
+  "status": "completed",
+  "amount": 49.99,
+  "currency": "EUR",
+  "checkoutUrl": "https://app.agentaos.ai/checkout/mZrESFyR7RC9RPsJfZCVkg",
+  "x402Url": null,
+  "expiresAt": "2026-08-06T15:32:00.000Z",
+  "createdAt": "2026-08-06T15:02:00.000Z"
+}
+```
+
+<Note>
+`amount` here reflects a per-checkout override and can be `null` if this checkout used its payment link's own amount rather than overriding it. `status` is one of `open`, `completed`, `expired`, `cancelled`.
+</Note>
+
+## List checkouts
+
+```bash
+agenta pay list [--status <status>] [--limit <n>] [--json]
+```
+
+<ParamField query="--status" type="string">
+  Filter by `open`, `completed`, `expired`, or `cancelled`. Omit to list all.
+</ParamField>
+<ParamField query="--limit" type="number" default="10">
+  Results per page, 1 to 100.
+</ParamField>
+<ParamField query="--json" type="boolean">
+  Output a single JSON object instead of a table.
+</ParamField>
+
+```bash
+agenta pay list --status completed --limit 5
+```
+
+```bash Output
+  Checkouts (14 total)
+
+  completed   49.99    EUR    mZrESFyR7RC9RPsJfZCVkg   Consulting fee, August
+  completed   199.00   USD    Oz1cpiHki8gAawFAHgYh1w   Annual plan renewal
+  open        49.99    EUR    lLd0Kl04lC3hvPH_7AQ20A
+
+  3 of 14 shown.
+```
+
+### `--json`
+
+```json
+{
+  "total": 14,
+  "hasMore": true,
+  "items": [
+    {
+      "sessionId": "mZrESFyR7RC9RPsJfZCVkg",
+      "status": "completed",
+      "currency": "EUR",
+      "amount": 49.99,
+      "description": "Consulting fee, August",
+      "checkoutUrl": "https://app.agentaos.ai/checkout/mZrESFyR7RC9RPsJfZCVkg",
+      "expiresAt": "2026-08-06T15:32:00.000Z"
+    }
+  ]
+}
+```
+
+<Tip>
+Every `agenta pay` command supports `--json`, and JSON output kicks in automatically whenever stdout isn't a terminal. Pipe to `jq` or a file without the flag: `agenta pay list --status open | jq '.items[].checkoutUrl'`.
+</Tip>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Subscriptions" icon="arrows-rotate" href="/cli/subscriptions">
+    List and cancel recurring subscribers.
+  </Card>
+  <Card title="Invoices" icon="file-invoice-dollar" href="/cli/invoices">
+    Pull receipts once a checkout is paid.
+  </Card>
+  <Card title="Checkouts (SDK)" icon="code" href="/sdk/pay-checkouts">
+    Create checkouts from your own backend.
+  </Card>
+  <Card title="Checkouts (concept)" icon="book" href="/payments/checkouts">
+    How checkouts, payment links, and settlement fit together.
+  </Card>
+</CardGroup>

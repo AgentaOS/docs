@@ -1,33 +1,94 @@
 ---
-title: Login
-description: Sign in via browser with device-code authentication.
+title: "Login"
+description: "Authenticate the CLI with your AgentaOS account using the device-code browser flow."
 ---
 
-# Login
+Every CLI command that touches your data (`pay`, `subscriptions`, `customers`, `invoices`, `status`) runs against the account you're logged into, not an API key. Log in once and the session persists across terminal restarts.
 
 ```bash
 agenta login
 ```
 
-Opens your browser for sign-in + wallet activation. The CLI polls until you approve.
-
 ## How it works
 
-1. CLI generates a device code and opens a browser URL
-2. You sign in (email + OTP or passkey) in the browser
-3. Activate your wallet (business name, address, biometric)
-4. CLI receives your JWT automatically
+`agenta login` uses a device-code flow, the same pattern GitHub CLI and similar tools use: the terminal and the browser are two different places, so the CLI hands you a short code to confirm in the browser instead of asking for a password on the command line.
 
-## After login
+<Steps>
+  <Step title="CLI requests a device code">
+    `agenta` calls your server and gets back a `deviceCode`, a short human-readable `userCode`, and a `verificationUrl`.
+  </Step>
+  <Step title="Browser opens automatically">
+    The CLI opens `verificationUrl` in your default browser and prints the same URL and `userCode` in the terminal, in case it can't open a browser for you (SSH sessions, headless boxes).
+  </Step>
+  <Step title="You confirm in the browser">
+    Sign in and approve the code. Nothing else happens in the browser: no wallet setup, no extra onboarding step, just confirming that this terminal should be allowed to act as you.
+  </Step>
+  <Step title="CLI polls until you approve">
+    `agenta` polls the server every few seconds for up to 10 minutes. Once you approve, it receives a session token and a refresh token and stores them locally.
+  </Step>
+</Steps>
+
+## Usage
 
 ```bash
-agenta status   # verify account + readiness
+agenta login [--server <url>]
 ```
 
-Sessions last 7 days. JWT auto-refreshes transparently.
+| Flag | Description |
+|---|---|
+| `--server <url>` | Server to authenticate against. Defaults to `$AGENTA_SERVER`, or `https://api.agentaos.ai` if that's unset. |
+
+<Note>
+If you're already logged in, `agenta login` doesn't re-authenticate. It tells you to run `agenta logout` first if you want to switch accounts.
+</Note>
+
+## Example output
+
+```bash Output
+  Open this URL in your browser:
+  https://app.agentaos.ai/cli-auth?code=WDJK-QPXR
+
+  Verification code: WDJK-QPXR
+
+  ✓ Logged in
+
+  ✓ Authenticated as demo@founder.dev
+  Organization: Acme Freelance
+  Wallet: 0x71C7...976F
+  Session stored in /Users/you/.agenta
+
+  Next: agenta status
+```
+
+## Where the session lives
+
+Login writes a session file to `~/.agenta/session.json` (mode `0600`, readable only by you) containing the session token, refresh token, and the server URL you logged into. It's plain file storage, not your OS keychain: a short-lived session token doesn't need biometric protection, and keychain prompts would add friction to every command.
+
+Every command that needs a session (`agenta status`, `agenta pay ...`, and so on) reads this file and refreshes the token automatically in the background when it's close to expiring. You only need to run `agenta login` again if the refresh token itself has expired or been revoked, in which case the CLI tells you to.
+
+<Note>
+The CLI authenticates with a browser-confirmed session, not an API key. If you need key-based auth for a server or script instead of an interactive login, use the `@agentaos/pay` SDK or the REST API directly with an `sk_live_`/`sk_test_` key. See [Payment SDK](/sdk/pay-overview).
+</Note>
 
 ## Logout
 
 ```bash
 agenta logout
 ```
+
+Clears the local session file and best-effort revokes it on the server. Safe to run even if you're not sure whether you're logged in.
+
+```bash Output
+  ✓ Logged out
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Status" icon="gauge-high" href="/cli/status">
+    Confirm your account, wallet, and tool readiness after logging in.
+  </Card>
+  <Card title="Pay" icon="credit-card" href="/cli/pay">
+    Create your first checkout from the terminal.
+  </Card>
+</CardGroup>

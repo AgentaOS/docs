@@ -1,0 +1,78 @@
+---
+title: "Receipts"
+description: "Every paid invoice gets a receipt automatically. Download the PDF, or resend the email to the buyer."
+---
+
+The moment a payment is confirmed, AgentaOS emails the buyer a receipt. You don't trigger it and don't need to build it: it's automatic, tied to the invoice, and always available to re-send if the buyer loses it.
+
+<Info>
+A receipt exists for every paid invoice. If an invoice was issued before receipts existed on your account, `getReceipt` falls back to the invoice PDF, so the method always returns something useful.
+</Info>
+
+## Download the receipt PDF
+
+<Tabs>
+  <Tab title="SDK">
+    ```typescript
+    import { writeFileSync } from 'fs';
+
+    const pdf = await agentaos.invoices.getReceipt('invoice-uuid');
+    writeFileSync('receipt.pdf', pdf);
+    ```
+  </Tab>
+  <Tab title="CLI">
+    ```bash
+    agenta invoices receipt invoice-uuid -o receipt.pdf
+    ```
+  </Tab>
+  <Tab title="cURL">
+    ```bash
+    curl https://api.agentaos.ai/api/v1/gateway/invoices/invoice-uuid/receipt \
+      -H "x-api-key: sk_live_..." \
+      -o receipt.pdf
+    ```
+  </Tab>
+</Tabs>
+
+## Resend the receipt email
+
+Re-sends to whichever email address is on file for the buyer, the same address the original receipt went to. Only works for paid invoices: there's nothing to send a receipt for on an unpaid or voided one.
+
+<Tabs>
+  <Tab title="SDK">
+    ```typescript
+    const result = await agentaos.invoices.sendReceipt('invoice-uuid');
+    console.log(result.sentTo); // the email it was sent to
+    ```
+  </Tab>
+  <Tab title="CLI">
+    ```bash
+    agenta invoices send-receipt invoice-uuid
+    ```
+  </Tab>
+  <Tab title="cURL">
+    ```bash
+    curl -X POST https://api.agentaos.ai/api/v1/gateway/invoices/invoice-uuid/send-receipt \
+      -H "x-api-key: sk_live_..."
+    ```
+  </Tab>
+</Tabs>
+
+## Response
+
+<ResponseField name="ok" type="boolean">Always `true` on success.</ResponseField>
+<ResponseField name="sentTo" type="string">The email address the receipt was (re-)sent to.</ResponseField>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Invoices" icon="file-invoice" href="/payments/invoices">
+    Every receipt is tied to an underlying invoice.
+  </Card>
+  <Card title="Customers" icon="users" href="/payments/customers">
+    Where the buyer's email on file comes from.
+  </Card>
+  <Card title="Webhooks" icon="bell" href="/payments/webhooks">
+    React to `checkout.session.completed` the moment a receipt goes out.
+  </Card>
+</CardGroup>

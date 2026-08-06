@@ -1,0 +1,163 @@
+---
+title: "Subscriptions"
+description: "Recurring billing. Created when a buyer pays a subscription payment link, managed from the API, CLI, or dashboard."
+---
+
+A subscription is a running, recurring commitment: card on file, billed automatically every cycle. AgentaOS manages the billing for you (retries on failed cards, prorations, cancellations) via our card processor under the hood.
+
+<Warning>
+**There is no `subscriptions.create()`.** Subscriptions are created by the buyer, not by you. You create a [payment link](/payments/payment-links) with `type: 'subscription'`, the buyer pays it at the hosted checkout, and that payment starts the subscription. This resource is the merchant-side management surface: list what's running, cancel what shouldn't be.
+</Warning>
+
+## How a subscription gets created
+
+<Steps>
+  <Step title="Create a subscription payment link">
+    ```typescript
+    const plan = await agentaos.paymentLinks.create({
+      amount: 19.99,
+      currency: 'EUR',
+      description: 'Pro plan, monthly',
+      type: 'subscription',
+      billingInterval: 'month',
+    });
+    ```
+  </Step>
+  <Step title="Share checkoutUrl">
+    The buyer opens `plan.checkoutUrl` and pays with a card at the hosted checkout, exactly like a one-time payment.
+  </Step>
+  <Step title="First cycle books, subscription goes active">
+    AgentaOS creates a customer and subscription with our card processor behind the scenes, charges cycle 1, and the subscription becomes visible to `subscriptions.list()`.
+  </Step>
+  <Step title="Renews automatically">
+    Every `billingInterval`, the card on file is charged again. No action from you unless the charge fails or the buyer cancels.
+  </Step>
+</Steps>
+
+## Money model: `unitAmountMinor`
+
+Every other amount in this API is decimal currency units (`amount: 49.99` means €49.99). Subscriptions are the one exception: `unitAmountMinor` is an **integer of the smallest currency unit**, mirroring how our card processor represents recurring prices internally.
+
+```typescript
+subscription.unitAmountMinor; // 1999
+// → €19.99 per cycle (1999 minor units, EUR has 2 decimals)
+```
+
+<Tip>
+The field name is the signal: anything ending in `Minor` is an integer of cents/pence, not decimal currency. Everywhere else in this API (payment links, checkouts, invoices), a plain `amount` is already in currency units, no conversion needed.
+</Tip>
+
+## Statuses
+
+`status` is the raw subscription status from the card processor, passed through unchanged:
+
+| Status | Meaning |
+|---|---|
+| `incomplete` | First payment hasn't succeeded yet (e.g. card requires authentication). |
+| `incomplete_expired` | First payment failed and the authentication window lapsed. Subscription never activated. |
+| `trialing` | In a free trial period, not yet charged. |
+| `active` | Paid and current. |
+| `past_due` | A renewal charge failed; the card processor is retrying. |
+| `canceled` | Ended, no further charges. |
+| `unpaid` | Retries exhausted without a successful charge. |
+| `paused` | Billing paused; no charges while in this state. |
+
+## List subscriptions
+
+Paginated: every list call returns `{ items, total, hasMore }`.
+
+<Tabs>
+  <Tab title="SDK">
+    ```typescript
+    const page = await agentaos.subscriptions.list({ limit: 20, offset: 0 });
+    console.log(page.total, page.hasMore);
+    ```
+  </Tab>
+  <Tab title="CLI">
+    ```bash
+    agenta subscriptions list --limit 20
+    ```
+  </Tab>
+  <Tab title="cURL">
+    ```bash
+    curl "https://api.agentaos.ai/api/v1/gateway/subscriptions?limit=20&offset=0" \
+      -H "x-api-key: sk_live_..."
+    ```
+  </Tab>
+</Tabs>
+
+## Cancel a subscription
+
+Defaults to cancel-at-period-end: the buyer keeps what they already paid for until `currentPeriodEnd`, and there's no refund. Pass `atPeriodEnd: false` to cancel immediately instead. Calling cancel on an already-canceled subscription is a no-op, safe to retry.
+
+<Tabs>
+  <Tab title="SDK">
+    ```typescript
+    // Cancel at period end (default): buyer keeps access until currentPeriodEnd
+    await agentaos.subscriptions.cancel('sub-uuid');
+
+    // Cancel immediately: access revoked now, no refund
+    await agentaos.subscriptions.cancel('sub-uuid', { atPeriodEnd: false });
+    ```
+  </Tab>
+  <Tab title="CLI">
+    ```bash
+    # At period end (default)
+    agenta subscriptions cancel sub-uuid
+
+    # Immediately
+    agenta subscriptions cancel sub-uuid --now
+    ```
+  </Tab>
+  <Tab title="cURL">
+    ```bash
+    curl -X POST https://api.agentaos.ai/api/v1/gateway/subscriptions/sub-uuid/cancel \
+      -H "x-api-key: sk_live_..." \
+      -H "Content-Type: application/json" \
+      -d '{ "atPeriodEnd": true }'
+    ```
+  </Tab>
+</Tabs>
+
+<Note>
+Cancellation never issues a refund. It only stops future renewals. If you owe the buyer money back for the current period, that's a separate, manual step on your side.
+</Note>
+
+## Response
+
+**Subscription object** (from `list`):
+
+<ResponseField name="id" type="string">Subscription UUID.</ResponseField>
+<ResponseField name="customerEmail" type="string | null">Subscriber email.</ResponseField>
+<ResponseField name="customerName" type="string | null">Subscriber name.</ResponseField>
+<ResponseField name="planName" type="string | null">The plan's name or description, from the payment link.</ResponseField>
+<ResponseField name="billingInterval" type="string | null">`month` or `year`.</ResponseField>
+<ResponseField name="status" type="string">One of the statuses above.</ResponseField>
+<ResponseField name="unitAmountMinor" type="number">Per-cycle amount in integer minor units (e.g. `1999` = €19.99).</ResponseField>
+<ResponseField name="currency" type="string">Settlement currency.</ResponseField>
+<ResponseField name="currentPeriodEnd" type="string | null">ISO 8601 end of the current paid period. `null` before the first cycle books.</ResponseField>
+<ResponseField name="stripeSubscriptionId" type="string | null">Underlying subscription ID from the card processor.</ResponseField>
+
+**Cancel result:**
+
+<ResponseField name="status" type="string">Status after cancellation.</ResponseField>
+<ResponseField name="currentPeriodEnd" type="string | null">ISO 8601 end of the current paid period.</ResponseField>
+<ResponseField name="cancelAtPeriodEnd" type="boolean">Whether the subscription is scheduled to end at period end.</ResponseField>
+<ResponseField name="effectiveCancelDate" type="string | null">ISO date the cancellation takes effect.</ResponseField>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Payment links" icon="link" href="/payments/payment-links">
+    Create the `type: 'subscription'` link that starts this flow.
+  </Card>
+  <Card title="Customers" icon="users" href="/payments/customers">
+    See who's subscribed to you.
+  </Card>
+  <Card title="Invoices" icon="file-invoice" href="/payments/invoices">
+    Every renewal charge issues its own invoice.
+  </Card>
+  <Card title="Webhooks" icon="bell" href="/payments/webhooks">
+    Get notified when a subscription payment lands.
+  </Card>
+</CardGroup>

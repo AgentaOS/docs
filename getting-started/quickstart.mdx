@@ -1,0 +1,159 @@
+---
+title: "Quickstart"
+description: "Start accepting payments in minutes with AgentaOS. Everything below runs in test mode, with test money."
+---
+
+Both paths below run in **test mode** with test money, so there is nothing to verify and nothing to lose. Pick the one that fits how you build:
+
+<CardGroup cols={2}>
+  <Card title="Code integration" icon="code" href="#code-integration">
+    Integrate AgentaOS into your app with the SDK, CLI, or REST API.
+  </Card>
+  <Card title="No-code" icon="wand-magic-sparkles" href="#no-code">
+    Create a payment link and start selling without writing code.
+  </Card>
+</CardGroup>
+
+## Code integration
+
+<Steps>
+  <Step title="Get access and your API key">
+    Sign up at [app.agentaos.ai](https://app.agentaos.ai). No card required. Then go to **Settings → Developers → API Keys** and click **Generate Test Key**. It is shown once, so copy it now.
+
+    Test keys are prefixed `sk_test_` and only ever touch test-mode data. Prefer the terminal? Skip the key and run `agenta login` instead.
+  </Step>
+  <Step title="Install and create a checkout">
+    Amounts are in currency units: `49.99` means €49.99, never cents.
+
+    <CodeGroup>
+    ```typescript TypeScript SDK
+    // npm install @agentaos/pay
+    import { AgentaOS } from '@agentaos/pay';
+
+    const agentaos = new AgentaOS('sk_test_...');
+
+    const checkout = await agentaos.checkouts.create({
+      amount: 49.00,
+      currency: 'EUR',
+      description: 'Pro plan',
+      successUrl: 'https://yoursite.com/success',
+    });
+
+    console.log(checkout.checkoutUrl); // send your customer here
+    ```
+    ```bash CLI
+    # curl -fsSL https://agentaos.ai/install | bash && agenta login
+    agenta pay checkout -a 49 -c EUR -d "Pro plan"
+    ```
+    ```bash REST API
+    curl https://api.agentaos.ai/api/v1/gateway/sessions \
+      -H "x-api-key: sk_test_..." \
+      -H "Content-Type: application/json" \
+      -d '{ "amount": 49.00, "currency": "EUR", "description": "Pro plan" }'
+    ```
+    </CodeGroup>
+  </Step>
+  <Step title="Take the payment">
+    Open the `checkoutUrl`. In test mode the page renders the secure card form. Pay with the standard test card:
+
+    | Field | Value |
+    |---|---|
+    | Card number | `4242 4242 4242 4242` |
+    | Expiry | Any future date |
+    | CVC | Any 3 digits |
+
+    <Warning>
+    Only ever type a card number into the checkout page (the secure card form). Never send a card number to any API, in test mode or live.
+    </Warning>
+  </Step>
+  <Step title="Handle successful payments">
+    After payment the buyer is redirected to your `successUrl`. For anything that matters (granting access, provisioning, emails), do not rely on the redirect. Listen for the `checkout.session.completed` [webhook](/payments/webhooks) on your server instead.
+  </Step>
+</Steps>
+
+### Complete working example
+
+A full Node.js and Express app: create a checkout, and receive the payment event reliably over a signed webhook. Copy, set two env vars, and run.
+
+<CodeGroup>
+```bash .env
+AGENTAOS_API_KEY=sk_test_your_key
+AGENTAOS_WEBHOOK_SECRET=whsec_your_webhook_secret
+APP_URL=http://localhost:3000
+```
+```typescript server.ts
+import express from 'express';
+import { AgentaOS } from '@agentaos/pay';
+
+const app = express();
+const agentaos = new AgentaOS(process.env.AGENTAOS_API_KEY!);
+
+// 1. Create a checkout and hand back its URL.
+app.post('/checkout', express.json(), async (_req, res) => {
+  const checkout = await agentaos.checkouts.create({
+    amount: 49.00,
+    currency: 'EUR',
+    description: 'Pro plan',
+    successUrl: `${process.env.APP_URL}/success`,
+  });
+  res.json({ checkoutUrl: checkout.checkoutUrl });
+});
+
+// 2. Receive payment events. Use the RAW body so the signature verifies.
+app.post('/webhooks', express.raw({ type: 'application/json' }), (req, res) => {
+  try {
+    const event = agentaos.webhooks.verify(
+      req.body,                                 // raw Buffer
+      req.header('X-AgentaOS-Signature')!,      // format: t=<ts>,v1=<hmac>
+      process.env.AGENTAOS_WEBHOOK_SECRET!,
+    );
+
+    if (event.type === 'checkout.session.completed') {
+      const { amount, currency } = event.data; // amount is a string
+      console.log(`Paid ${amount} ${currency}`);
+      // Fulfil the order: grant access, send an email, update your database.
+      // `payer` and `txHash` are also on event.data, but only populated on
+      // stablecoin checkouts; they are null for card payments.
+    }
+
+    res.json({ received: true });
+  } catch {
+    res.status(401).json({ error: 'Invalid signature' });
+  }
+});
+
+app.listen(3000, () => console.log('Listening on :3000'));
+```
+</CodeGroup>
+
+To run it: `npm install express @agentaos/pay`, add a webhook endpoint pointing at `/webhooks` in **Settings → Developers → Webhooks** and copy its signing secret into `AGENTAOS_WEBHOOK_SECRET`, then `node server.ts`. `POST /checkout` returns a `checkoutUrl`, pay it with the test card, and your `/webhooks` handler fires.
+
+## No-code
+
+Perfect for creators and anyone who wants to start selling without writing code.
+
+<Steps>
+  <Step title="Create a product">
+    Open the **Products** page in the dashboard and create your first product with a name, description, and price.
+  </Step>
+  <Step title="Share your link">
+    Click **Share** to copy the product's payment link. Send it by email, social, or anywhere else. That is it, you are ready to get paid.
+  </Step>
+</Steps>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Test mode and live mode" icon="flask" href="/getting-started/test-mode">
+    How test and live keys differ, and what going live requires.
+  </Card>
+  <Card title="Checkouts" icon="basket-shopping" href="/payments/checkouts">
+    Checkout sessions and payment links in depth.
+  </Card>
+  <Card title="Subscriptions" icon="rotate" href="/payments/subscriptions">
+    Recurring billing, renewals, and cancellation.
+  </Card>
+  <Card title="Webhooks" icon="bell" href="/payments/webhooks">
+    Receive and verify real-time payment events.
+  </Card>
+</CardGroup>

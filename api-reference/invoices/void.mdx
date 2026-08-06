@@ -1,0 +1,8 @@
+---
+title: "Void an invoice"
+openapi: "POST /gateway/invoices/{invoiceId}/void"
+---
+
+<Warning>
+Voiding is irreversible. There's no "un-void." An already-voided invoice returns `400` on a repeat call.
+</Warning>

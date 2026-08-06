@@ -1,0 +1,154 @@
+---
+title: "Webhooks"
+description: "Verify signed webhook payloads locally with agentaos.webhooks.verify(). HMAC-SHA256, timing-safe."
+---
+
+`agentaos.webhooks` makes no network call, `verify()` runs entirely in your process. It checks a payload's HMAC-SHA256 signature against your webhook secret, rejects stale or malformed signatures, and returns the parsed, camelCased event. Configure the destination URL and copy the signing secret from **Settings → Developers → Webhooks** in the dashboard (or set `webhookUrl` per checkout/link, see [Checkouts](/sdk/pay-checkouts)).
+
+## `webhooks.verify(payload, signature, secret, toleranceSec?)`
+
+```typescript
+import express from 'express';
+import { AgentaOS, WebhookVerificationError } from '@agentaos/pay';
+
+const agentaos = new AgentaOS(process.env.AGENTAOS_API_KEY!);
+
+// IMPORTANT: express.raw(), not express.json(). Verification needs the
+// exact bytes that were signed. Parsing JSON first breaks the signature.
+app.post('/webhooks', express.raw({ type: 'application/json' }), (req, res) => {
+  let event;
+  try {
+    event = agentaos.webhooks.verify(
+      req.body,                                       // raw body: string | Buffer
+      req.headers['x-agentaos-signature'] as string,   // signature header
+      process.env.AGENTAOS_WEBHOOK_SECRET!,            // whsec_... from the dashboard
+    );
+  } catch (err) {
+    if (err instanceof WebhookVerificationError) {
+      return res.status(400).send('Invalid signature');
+    }
+    throw err;
+  }
+
+  switch (event.type) {
+    case 'checkout.session.completed':
+      console.log('Paid:', event.data.amount, event.data.currency);
+      break;
+    case 'send.completed':
+      console.log('Sent:', event.data.amount, event.data.token);
+      break;
+    case 'send.failed':
+      console.log('Send failed:', event.data.transactionId);
+      break;
+  }
+
+  res.sendStatus(200);
+});
+```
+
+<ParamField body="payload" type="string | Buffer" required>
+  The raw, unparsed request body. If it's a `Buffer`, it's decoded as UTF-8 before verifying.
+</ParamField>
+
+<ParamField body="signature" type="string" required>
+  The `x-agentaos-signature` header value.
+</ParamField>
+
+<ParamField body="secret" type="string" required>
+  Your webhook signing secret (`whsec_...`).
+</ParamField>
+
+<ParamField body="toleranceSec" type="number" default="300">
+  Max age of the signature's timestamp, in seconds. A signature older than this (or with a timestamp in the future) throws `WebhookVerificationError`.
+</ParamField>
+
+Returns a typed `WebhookEvent`, throws [`WebhookVerificationError`](/sdk/pay-errors) on any failure.
+
+### Signature format
+
+The header is `t=<unix_timestamp>,v1=<hmac_hex>`. `verify()`:
+
+1. Parses `t` and `v1` out of the header, throws if either is missing.
+2. Checks `now - t` is between `0` and `toleranceSec` seconds, throws `Webhook signature expired` if not (this rejects both stale replays and clock-skewed future timestamps).
+3. Recomputes `HMAC-SHA256(secret, "${t}.${payload}")` and compares it to `v1` with `crypto.timingSafeEqual` (constant-time, no early-exit on mismatch).
+4. `JSON.parse`s the payload and deep-transforms it from snake_case to camelCase before returning it as a `WebhookEvent`.
+
+Every failure at any step throws `WebhookVerificationError`, there's no partial or "unverified" event returned.
+
+## `WebhookEvent`
+
+A discriminated union on `type`. `switch`/narrow on it to get typed `data`.
+
+<ResponseField name="id" type="string">
+  Unique event ID, `evt_<uuid>`. Present on every event, both on the wire and on the object `verify()` returns.
+</ResponseField>
+<ResponseField name="type" type="'checkout.session.completed' | 'send.completed' | 'send.failed'" />
+
+<Warning>
+Inside every event's `data`, **`amount` is a string**, e.g. `"49.99"`, not the `number` you get back from `checkouts.create()` or `paymentLinks.create()`. Parse it before doing math. See the [money model](/sdk/pay-overview#the-money-model).
+</Warning>
+
+### `checkout.session.completed`
+
+Fires when a checkout session's payment confirms.
+
+<ResponseField name="linkId" type="string">The payment link's secure ID.</ResponseField>
+<ResponseField name="sessionId" type="string" />
+<ResponseField name="amount" type="string">e.g. `"49.99"`.</ResponseField>
+<ResponseField name="currency" type="string" />
+<ResponseField name="txHash" type="string">On-chain settlement hash.</ResponseField>
+<ResponseField name="payer" type="string">Payer wallet address.</ResponseField>
+<ResponseField name="payerType" type="'human' | 'agent'" />
+<ResponseField name="network" type="string">CAIP-2 network ID.</ResponseField>
+<ResponseField name="metadata" type="object">Whatever `metadata` you passed at `checkouts.create()`.</ResponseField>
+
+### `send.completed`
+
+Fires when an outbound send (a payout or transfer you initiated) is broadcast successfully.
+
+<ResponseField name="transactionId" type="string" />
+<ResponseField name="txHash" type="string" />
+<ResponseField name="from" type="string" />
+<ResponseField name="to" type="string" />
+<ResponseField name="amount" type="string" />
+<ResponseField name="token" type="string" />
+<ResponseField name="chainId" type="number" />
+<ResponseField name="network" type="string" />
+<ResponseField name="description" type="string | null" />
+
+### `send.failed`
+
+Same shape as `send.completed`, but `txHash` is always `null` and no broadcast succeeded.
+
+<ResponseField name="transactionId" type="string" />
+<ResponseField name="txHash" type="null" />
+<ResponseField name="from" type="string" />
+<ResponseField name="to" type="string" />
+<ResponseField name="amount" type="string" />
+<ResponseField name="token" type="string" />
+<ResponseField name="chainId" type="number" />
+<ResponseField name="network" type="string" />
+<ResponseField name="description" type="string | null" />
+
+<AccordionGroup>
+  <Accordion title="Don't fulfill on the success page redirect">
+    `successUrl` is best-effort, the customer might close their browser before the redirect lands. Fulfill orders from the webhook (server-to-server, reliable), not the redirect.
+  </Accordion>
+  <Accordion title="Webhooks can be delivered more than once">
+    Treat delivery as at-least-once. Use `event.data.sessionId` (or `transactionId`) to check whether you've already processed it before fulfilling again.
+  </Accordion>
+  <Accordion title="Poll as a fallback, not a replacement">
+    If your endpoint is ever down, poll [`checkouts.retrieve()`](/sdk/pay-checkouts) for `status === 'completed'` as a backstop. Don't build your primary flow on polling, it's slower and burns rate limit budget.
+  </Accordion>
+</AccordionGroup>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Checkouts" icon="credit-card" href="/sdk/pay-checkouts">
+    Set `webhookUrl` to receive `checkout.session.completed`.
+  </Card>
+  <Card title="Errors" icon="triangle-exclamation" href="/sdk/pay-errors">
+    `WebhookVerificationError` and the rest of the error hierarchy.
+  </Card>
+</CardGroup>

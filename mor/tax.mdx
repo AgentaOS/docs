@@ -1,0 +1,93 @@
+---
+title: "How Tax Works"
+description: "How AgentaOS calculates, collects, and remits VAT and sales tax as your Merchant of Record."
+---
+
+Tax on a sale is normally owed based on where your buyer is, not where you are. As your Merchant of Record, AgentaOS calculates that tax at checkout, collects it as part of the payment, and remits it to the right authority. You don't register, file, or send a payment to a tax office yourself.
+
+<Note>
+This page explains how tax works on sales made through AgentaOS. It isn't advice on your own company's corporate or income tax, talk to your accountant for that.
+</Note>
+
+## Destination tax, in short
+
+Most consumption taxes (VAT in the EU, sales tax or GST elsewhere) are charged based on the buyer's location and what's being sold, not the seller's. Sell a subscription to a buyer in Germany, and German VAT rules apply, even if your company has never set foot there. This is why cross-border software sales create a tax obligation in every country you have customers, not just your own.
+
+## How AgentaOS handles it
+
+<Steps>
+  <Step title="Tax is calculated at checkout">
+    Based on the buyer's location and what's being sold, before the payment is confirmed.
+  </Step>
+  <Step title="Tax is collected with the payment">
+    Your buyer pays one total price, tax included, in a single transaction.
+  </Step>
+  <Step title="AgentaOS remits it">
+    We register with tax authorities, file returns, and remit what's owed in the jurisdictions we cover. You never file anything yourself.
+  </Step>
+  <Step title="Your invoice shows the breakdown">
+    Every payment gets a tax-correct invoice with our Estonian entity as the seller of record, and tax broken out as its own line. See [Invoices](/payments/invoices).
+  </Step>
+</Steps>
+
+## Where we're registered today
+
+<CardGroup cols={1}>
+  <Card title="European Union" icon="earth-europe">
+    Destination VAT via Estonia's OSS (One-Stop Shop) scheme. Our Estonian entity is the registered seller.
+  </Card>
+</CardGroup>
+
+<Note>
+We calculate VAT for the jurisdictions where we are registered today, the EU (via Estonia OSS), and add more as we grow.
+</Note>
+
+## Selling to businesses (B2B)
+
+When your buyer is a business rather than a consumer, VAT treatment can differ. In some jurisdictions, the reverse-charge mechanism applies, where the buyer accounts for the VAT instead of AgentaOS collecting it. Business buyers can typically provide a VAT or tax number at checkout, which the invoice then reflects.
+
+## FAQ
+
+<AccordionGroup>
+  <Accordion title="Do I need to register for VAT myself?">
+    No. AgentaOS is the seller of record, so we register, collect, and remit VAT and sales tax on the sales you make through us.
+  </Accordion>
+  <Accordion title="What tax rate will my buyer be charged?">
+    It depends on the buyer's country and what's being sold, and is calculated automatically at checkout. Exact rates and thresholds by country are being finalized before we publish a full table here.
+  </Accordion>
+  <Accordion title="What if my buyer is a business, not a consumer?">
+    B2B sales can be treated differently for VAT purposes, including reverse charge in some jurisdictions. We're finalizing the exact rules to publish here, see the note above.
+  </Accordion>
+  <Accordion title="Whose name is on the tax invoice?">
+    Our Estonian entity, your Merchant of Record, appears as the seller of record. See [Invoices](/payments/invoices).
+  </Accordion>
+  <Accordion title="What happens when you add a new country?">
+    We register there and start collecting and remitting automatically. You don't need to do anything on your side.
+  </Accordion>
+  <Accordion title="Does this cover my own company's taxes?">
+    No. This covers tax on the sales made through AgentaOS. Your own company's income tax and bookkeeping are still yours to handle.
+  </Accordion>
+</AccordionGroup>
+
+## Next steps
+
+<CardGroup cols={3}>
+  <Card title="Getting started" icon="rocket" href="/introduction">
+    The AgentaOS overview, if you're just getting started.
+  </Card>
+  <Card title="How it works" icon="handshake" href="/mor/how-it-works">
+    What a Merchant of Record is and why it matters.
+  </Card>
+  <Card title="Supported countries" icon="earth-europe" href="/mor/supported-countries">
+    Where you can sell and where you can get paid.
+  </Card>
+  <Card title="Pricing" icon="credit-card" href="/mor/pricing">
+    How the per-transaction fee works.
+  </Card>
+  <Card title="Invoices" icon="file-invoice" href="/payments/invoices">
+    What a tax-correct invoice looks like, and how to export one.
+  </Card>
+  <Card title="Payouts" icon="money-bill-transfer" href="/payouts/overview">
+    Move your balance to your bank or wallet.
+  </Card>
+</CardGroup>

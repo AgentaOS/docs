@@ -1,0 +1,85 @@
+---
+title: "Customers"
+description: "List the people who have paid you, from the terminal."
+---
+
+`agenta customers` is a quick lookup for anyone who has ever completed a checkout with you: email, name, country, VAT number if they gave one. Read-only from the CLI today.
+
+```bash
+agenta customers list
+```
+
+## Usage
+
+```bash
+agenta customers list [--limit <n>] [--json]
+```
+
+<ParamField query="--limit" type="number" default="10">
+  Results per page, 1 to 100.
+</ParamField>
+<ParamField query="--json" type="boolean">
+  Output a single JSON object instead of a table.
+</ParamField>
+
+```bash Output
+  Customers (2 total)
+
+  jane@startup.io               Jane Cooper              DE   10f6f205-0f31-44c3-ad1a-240af6177e74
+  ana@example.com                Ana Reyes                 ES   f5100f77-fd73-4c33-a6e7-c1c5db53804c
+
+  2 of 2 shown.
+```
+
+### `--json`
+
+```json
+{
+  "total": 2,
+  "hasMore": false,
+  "items": [
+    {
+      "id": "10f6f205-0f31-44c3-ad1a-240af6177e74",
+      "email": "jane@startup.io",
+      "name": "Jane Cooper",
+      "country": "DE",
+      "vatNumber": "DE123456789",
+      "stripeCustomerId": "cus_Q4f...",
+      "createdAt": "2026-06-11T09:15:00.000Z"
+    }
+  ]
+}
+```
+
+## Fields
+
+| Field | Description |
+|---|---|
+| `id` | Customer ID, e.g. `10f6f205-0f31-44c3-ad1a-240af6177e74`. |
+| `email` | Buyer's email. |
+| `name` | Buyer's name, `null` if never provided. |
+| `country` | ISO 3166-1 alpha-2 country code (`DE`, `US`), `null` if unknown. |
+| `vatNumber` | Buyer's VAT number if they entered one at checkout. |
+| `stripeCustomerId` | Underlying customer from the card processor, for card and bank payments. |
+| `createdAt` | When this customer record was first created. |
+
+<Tip>
+Piping `agenta customers list` to a file or another command switches to JSON automatically, no `--json` needed: `agenta customers list --limit 100 > customers.json`.
+</Tip>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Subscriptions" icon="arrows-rotate" href="/cli/subscriptions">
+    See what a customer is subscribed to.
+  </Card>
+  <Card title="Invoices" icon="file-invoice-dollar" href="/cli/invoices">
+    Pull a customer's paid invoices and receipts.
+  </Card>
+  <Card title="Customers (SDK)" icon="code" href="/sdk/pay-customers">
+    Look up customers from your own backend.
+  </Card>
+  <Card title="Customers (concept)" icon="book" href="/payments/customers">
+    How customer records are created and used.
+  </Card>
+</CardGroup>

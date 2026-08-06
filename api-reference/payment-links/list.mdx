@@ -1,0 +1,16 @@
+---
+title: "List payment links"
+openapi: "GET /gateway/payment-links"
+---
+
+<CardGroup cols={2}>
+  <Card title="Checkouts" icon="cart-shopping" href="/api-reference/checkouts/create">
+    Start a checkout from a link with `linkId`.
+  </Card>
+  <Card title="Subscriptions" icon="rotate" href="/api-reference/subscriptions/list">
+    Paying a `type: subscription` link starts a subscription automatically.
+  </Card>
+  <Card title="Webhooks" icon="bell" href="/api-reference/webhooks">
+    Get notified when a link is paid.
+  </Card>
+</CardGroup>

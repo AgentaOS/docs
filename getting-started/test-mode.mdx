@@ -1,0 +1,95 @@
+---
+title: "Test mode and live mode"
+description: "Build and test your integration safely in test mode, with test money, before you go live."
+---
+
+Test mode lets you build and test your AgentaOS integration in a completely isolated environment. Payments, webhooks, customers, and invoices are kept separate from live, so you can develop with confidence and never risk a real charge.
+
+<Note>
+Always build and test in test mode first. Every new account starts there, so there is nothing to switch on.
+</Note>
+
+## Test and live are chosen by your key
+
+AgentaOS has one base URL. The **key prefix** decides which environment you hit, so you never point at the wrong host.
+
+| Key prefix | Environment | Data |
+|---|---|---|
+| `sk_test_` | Test mode | Test money, isolated |
+| `sk_live_` | Production | Real money |
+
+```typescript
+import { AgentaOS } from '@agentaos/pay';
+
+const test = new AgentaOS('sk_test_...'); // test mode
+const live = new AgentaOS('sk_live_...');  // production
+```
+
+Find both keys under **Settings → Developers → API Keys**. Store them as environment variables and never commit them.
+
+```bash .env
+AGENTAOS_API_KEY=sk_test_your_key
+```
+
+## Testing payments
+
+Test-mode checkouts render the secure card form. Use these test cards with any future expiry and any CVC:
+
+| Card number | Behavior |
+|---|---|
+| `4242 4242 4242 4242` | Successful payment |
+| `4000 0000 0000 0002` | Card declined |
+| `4000 0000 0000 9995` | Insufficient funds |
+| `4000 0025 0000 3155` | Requires 3D Secure authentication |
+
+<Warning>
+Only type a card number into the checkout page (the secure card form). Never send a card number to any API, in test mode or live.
+</Warning>
+
+## Testing webhooks
+
+In test mode, events go to the webhook URL you register in **Settings → Developers → Webhooks**. To receive them on your machine, expose your local server with a tunnel like ngrok and register the tunnel URL. This lets you verify signature validation and your event handlers before going live. See [Webhooks](/payments/webhooks).
+
+## Going live
+
+<Steps>
+  <Step title="Finish testing in test mode">
+    Run your full flow with the test cards above, including a webhook round-trip, until every path behaves.
+  </Step>
+  <Step title="Verify your business">
+    Complete business verification (KYB) in the dashboard. This is required before you can accept real money as Merchant of Record.
+  </Step>
+  <Step title="Add a payout account">
+    Add a bank account or wallet so your earnings have somewhere to settle. See [Payouts](/payouts/overview).
+  </Step>
+  <Step title="Swap to your live key">
+    Replace `sk_test_` with `sk_live_` in your environment variables. Nothing else changes.
+  </Step>
+  <Step title="Register your live webhook">
+    Add your production webhook URL and copy its live signing secret.
+  </Step>
+  <Step title="Watch your first payments">
+    Keep an eye on your first live transactions to confirm everything behaves as it did in test mode.
+  </Step>
+</Steps>
+
+<Warning>
+Never use a `sk_test_` key in production. Test-key calls never touch live money and will not settle.
+</Warning>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Checkouts" icon="basket-shopping" href="/payments/checkouts">
+    Create checkout sessions and payment links.
+  </Card>
+  <Card title="Go live guide" icon="rocket" href="/guides/go-live">
+    The full test-to-production checklist.
+  </Card>
+  <Card title="Subscriptions" icon="rotate" href="/payments/subscriptions">
+    Recurring billing and cancellation.
+  </Card>
+  <Card title="Webhooks" icon="bell" href="/payments/webhooks">
+    Receive and verify real-time events.
+  </Card>
+</CardGroup>

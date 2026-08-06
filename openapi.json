@@ -1,0 +1,1540 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "AgentaOS Gateway API",
+    "version": "1.0.0",
+    "description": "The AgentaOS REST API: payment links, checkouts, subscriptions, customers, invoices, and the unified transactions feed. This is the same API the TypeScript SDK (`@agentaos/pay`) and the `agenta` CLI call underneath.\n\n## Money model\n\n- **Decimal currency units (`number`)**: a plain `amount` field (on a create body, a Payment Link, a Checkout's `amount_override`, or an Invoice's `amount`/`fiat_amount`/`tax_amount`) is in currency units. `49.99` means EUR 49.99, never cents.\n- **Integer minor units (`number`)**: exactly one field breaks that rule: `unitAmountMinor` on a Subscription. It is an integer count of the smallest currency unit (`1999` means EUR 19.99), named with a `Minor` suffix specifically so it is never confused with a plain `amount`. The `money` object on Transactions and the `earnings` object on a retrieved Invoice are also integer minor units, computed server-side.\n- **String, on webhooks**: the `amount` inside a webhook payload's `data` object is a string (e.g. `\"49.99\"`), since JSON numbers silently drop trailing zeros and this value must round-trip exactly for accounting.\n\n## Naming convention\n\nMost response fields mirror the underlying database column and are `snake_case` (`created_at`, `seller_mode`, `buyer_email`, ...). A small number of computed convenience fields are camelCase with no snake_case equivalent: `checkoutUrl` and `x402Url` on Checkouts, `checkoutUrl` on Payment Links, `sellerMode` on Payment Links specifically, `money` on Transactions, and `earnings` on a single retrieved Invoice. Two resources (Subscriptions and Customers) are fully camelCase end to end.\n\n## Pagination\n\nEvery list endpoint takes `limit` and `offset` and returns `{ items, total, hasMore }`. `hasMore` is computed server-side (`offset + items.length < total`); never derive it client-side.",
+    "contact": {
+      "name": "AgentaOS",
+      "url": "https://agentaos.ai"
+    },
+    "license": {
+      "name": "Proprietary",
+      "url": "https://agentaos.ai"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.agentaos.ai/api/v1",
+      "description": "Production"
+    }
+  ],
+  "security": [
+    {
+      "ApiKeyAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Payment Links",
+      "description": "Reusable, shareable payment products: a fixed amount and description behind one URL."
+    },
+    {
+      "name": "Checkouts",
+      "description": "One attempt to collect one payment, standalone or built from a payment link. Wire path is `/gateway/sessions`; the SDK and CLI call this resource \"checkout\"."
+    },
+    {
+      "name": "Subscriptions",
+      "description": "Merchant-side read and management surface for recurring plans. Created automatically when a buyer pays a `type: subscription` payment link."
+    },
+    {
+      "name": "Customers",
+      "description": "Read-only surface: everyone who has paid you or been sent an invoice."
+    },
+    {
+      "name": "Invoices",
+      "description": "Every checkout issues an invoice. List, retrieve, void, export, and download PDFs/receipts."
+    },
+    {
+      "name": "Transactions",
+      "description": "The unified activity feed: every inbound payment and outbound send, across every rail, in one list."
+    }
+  ],
+  "paths": {
+    "/gateway/payment-links": {
+      "post": {
+        "tags": ["Payment Links"],
+        "operationId": "createPaymentLink",
+        "summary": "Create a payment link",
+        "description": "Creates a reusable, shareable payment link.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PaymentLinkCreateRequest" },
+              "example": {
+                "amount": 49.99,
+                "currency": "EUR",
+                "name": "Pro plan",
+                "description": "Monthly access to Pro features"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Payment link created.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PaymentLink" },
+                "examples": { "default": { "$ref": "#/components/examples/PaymentLinkExample" } }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      },
+      "get": {
+        "tags": ["Payment Links"],
+        "operationId": "listPaymentLinks",
+        "summary": "List payment links",
+        "description": "Paginated. See the Money model / Pagination notes on this spec's top-level description.",
+        "parameters": [
+          { "$ref": "#/components/parameters/Limit100" },
+          { "$ref": "#/components/parameters/Offset" },
+          { "$ref": "#/components/parameters/NetworksFilter" }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of payment links.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PaymentLinkListResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/gateway/payment-links/{id}": {
+      "get": {
+        "tags": ["Payment Links"],
+        "operationId": "getPaymentLink",
+        "summary": "Retrieve a payment link",
+        "description": "Same fields as create, plus `transactions`: every payment (inbound or outbound) recorded against this link, newest first, same row shape as a Transaction but without the computed `money` breakdown.",
+        "parameters": [{ "$ref": "#/components/parameters/PaymentLinkId" }],
+        "responses": {
+          "200": {
+            "description": "The payment link, with its transaction history.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PaymentLinkDetail" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "patch": {
+        "tags": ["Payment Links"],
+        "operationId": "updatePaymentLink",
+        "summary": "Update a payment link",
+        "description": "Partial update: only send the fields you want to change.",
+        "parameters": [{ "$ref": "#/components/parameters/PaymentLinkId" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PaymentLinkUpdateRequest" },
+              "example": { "amount": 59.99 }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated payment link.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PaymentLink" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "delete": {
+        "tags": ["Payment Links"],
+        "operationId": "cancelPaymentLink",
+        "summary": "Cancel a payment link",
+        "description": "Deactivates the link. Existing checkouts already in progress are unaffected; no new checkout can be started from it afterward. This is a state change, not a delete: the link and its payment history stay readable.",
+        "parameters": [{ "$ref": "#/components/parameters/PaymentLinkId" }],
+        "responses": {
+          "200": {
+            "description": "The link was cancelled.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SuccessResponse" },
+                "example": { "success": true }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
+    "/gateway/sessions": {
+      "post": {
+        "tags": ["Checkouts"],
+        "operationId": "createCheckout",
+        "summary": "Create a checkout",
+        "description": "Creates a checkout session, standalone or built from a payment link with `linkId`. The create and list responses do **not** include a plain `amount`, only `amount_override` (`null` unless you passed one). Call \"Retrieve a checkout\" for a computed, ready-to-display `amount`. Accepts an `Idempotency-Key` header (wins over a body `idempotencyKey` if both are sent); a repeat call with the same key returns the same checkout instead of creating a second one.",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "description": "Alternative to the body's `idempotencyKey` field. The header wins if both are sent.",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CheckoutCreateRequest" },
+              "example": {
+                "amount": 49.99,
+                "currency": "EUR",
+                "description": "Order #123",
+                "successUrl": "https://myshop.com/success",
+                "cancelUrl": "https://myshop.com/cart",
+                "webhookUrl": "https://myshop.com/webhooks",
+                "buyerEmail": "john@example.com"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Checkout created.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Checkout" },
+                "examples": { "default": { "$ref": "#/components/examples/CheckoutExample" } }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      },
+      "get": {
+        "tags": ["Checkouts"],
+        "operationId": "listCheckouts",
+        "summary": "List checkouts",
+        "description": "Paginated. Same fields as create, per item.",
+        "parameters": [
+          { "$ref": "#/components/parameters/Limit100" },
+          { "$ref": "#/components/parameters/Offset" },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "enum": ["open", "completed", "expired", "cancelled"] }
+          },
+          { "$ref": "#/components/parameters/NetworksFilter" }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of checkouts.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CheckoutListResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/gateway/sessions/{sessionId}": {
+      "get": {
+        "tags": ["Checkouts"],
+        "operationId": "getCheckout",
+        "summary": "Retrieve a checkout",
+        "description": "Adds a computed `amount` (the effective price: `amount_override`, else the linked payment link's amount), plus the link's own `link_amount`/`link_currency`/`link_description`, and the checkout's `transactions` and `invoices` arrays.",
+        "parameters": [{ "$ref": "#/components/parameters/SessionId" }],
+        "responses": {
+          "200": {
+            "description": "The checkout, with computed amount and related rows.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CheckoutDetail" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/gateway/sessions/{sessionId}/cancel": {
+      "post": {
+        "tags": ["Checkouts"],
+        "operationId": "cancelCheckout",
+        "summary": "Cancel a checkout",
+        "description": "Stops the buyer from paying. If a payment already cleared before the cancel call lands, it still completes: cancelling doesn't reach into the card processor or on-chain state after the fact. Only works while the checkout is `open` (`400` otherwise).",
+        "parameters": [{ "$ref": "#/components/parameters/SessionId" }],
+        "responses": {
+          "200": {
+            "description": "The checkout was cancelled.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SuccessResponse" },
+                "example": { "success": true }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
+    "/gateway/subscriptions": {
+      "get": {
+        "tags": ["Subscriptions"],
+        "operationId": "listSubscriptions",
+        "summary": "List subscriptions",
+        "description": "Paginated. A subscription is created automatically when a buyer pays a payment link with `type: \"subscription\"` at checkout: there is no `POST` create endpoint by design. Every field on this resource is camelCase on the wire.",
+        "parameters": [
+          { "$ref": "#/components/parameters/Limit100" },
+          { "$ref": "#/components/parameters/Offset" }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of subscriptions.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SubscriptionListResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/gateway/subscriptions/{id}/cancel": {
+      "post": {
+        "tags": ["Subscriptions"],
+        "operationId": "cancelSubscription",
+        "summary": "Cancel a subscription",
+        "description": "Cancels at the end of the current paid period by default: the subscriber keeps what they already paid for, no refund. Pass `atPeriodEnd: false` to cancel immediately instead. Calling cancel again on an already-`canceled` subscription is a no-op. Returns `400` if the subscription never completed a first successful charge (`stripeSubscriptionId` is `null`).",
+        "parameters": [{ "$ref": "#/components/parameters/SubscriptionId" }],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CancelSubscriptionRequest" },
+              "example": { "atPeriodEnd": true }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The subscription's updated cancellation state.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CancelSubscriptionResponse" },
+                "example": {
+                  "status": "active",
+                  "currentPeriodEnd": "2026-09-06T12:00:00.000Z",
+                  "cancelAtPeriodEnd": true,
+                  "effectiveCancelDate": "2026-09-06T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/gateway/customers": {
+      "get": {
+        "tags": ["Customers"],
+        "operationId": "listCustomers",
+        "summary": "List customers",
+        "description": "Paginated, newest first, no filters beyond pagination. A customer record is created automatically the first time someone pays you (or you issue them an invoice) with an email attached. There is no `POST` create endpoint: this is a read-only surface. Every field on this resource is camelCase on the wire.",
+        "parameters": [
+          { "$ref": "#/components/parameters/Limit100" },
+          { "$ref": "#/components/parameters/Offset" }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of customers.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CustomerListResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/gateway/invoices": {
+      "get": {
+        "tags": ["Invoices"],
+        "operationId": "listInvoices",
+        "summary": "List invoices",
+        "description": "Paginated. Every checkout issues an invoice: `issued` the moment the checkout is created, `paid` once the payment settles, or `voided` if cancelled. The seller of record is our Estonian entity, AgentaOS's Merchant of Record entity, unless the payment settled to your own on-chain wallet (`seller_mode: \"crypto\"`), in which case you're the seller.",
+        "parameters": [
+          { "$ref": "#/components/parameters/Limit5000" },
+          { "$ref": "#/components/parameters/Offset" },
+          { "$ref": "#/components/parameters/From" },
+          { "$ref": "#/components/parameters/To" },
+          { "$ref": "#/components/parameters/InvoiceStatus" },
+          { "$ref": "#/components/parameters/FiatCurrency" },
+          { "$ref": "#/components/parameters/NetworksFilter" }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of invoices.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/InvoiceListResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/gateway/invoices/statement": {
+      "get": {
+        "tags": ["Invoices"],
+        "operationId": "downloadStatement",
+        "summary": "Download a statement PDF",
+        "description": "A statement-style PDF covering a date range: opening/closing balance, every transaction in the ledger, and a VAT summary grouped by rate. `from` and `to` are both required, unlike the other date filters in this API.",
+        "parameters": [
+          { "$ref": "#/components/parameters/FromRequired" },
+          { "$ref": "#/components/parameters/ToRequired" },
+          { "$ref": "#/components/parameters/FiatCurrency" },
+          { "$ref": "#/components/parameters/NetworksFilter" }
+        ],
+        "responses": {
+          "200": {
+            "description": "The statement PDF.",
+            "content": {
+              "application/pdf": {
+                "schema": { "type": "string", "format": "binary" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/gateway/invoices/export": {
+      "get": {
+        "tags": ["Invoices"],
+        "operationId": "exportInvoices",
+        "summary": "Export invoices as CSV",
+        "description": "Up to 5000 rows for the matching filter, built for accounting software: date, invoice number, description, amount and currency, exchange rate and source, tax name/rate/amount, buyer name/company/country/VAT, and status.",
+        "parameters": [
+          { "$ref": "#/components/parameters/From" },
+          { "$ref": "#/components/parameters/To" },
+          { "$ref": "#/components/parameters/InvoiceStatus" },
+          { "$ref": "#/components/parameters/FiatCurrency" },
+          { "$ref": "#/components/parameters/NetworksFilter" }
+        ],
+        "responses": {
+          "200": {
+            "description": "The invoices CSV.",
+            "content": {
+              "text/csv": {
+                "schema": { "type": "string" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/gateway/invoices/{invoiceId}": {
+      "get": {
+        "tags": ["Invoices"],
+        "operationId": "getInvoice",
+        "summary": "Retrieve an invoice",
+        "description": "Same fields as the list, plus `earnings`: a fee/VAT/net breakdown, present only for a card/bank Merchant-of-Record sale with a linked, settled transaction. `null` otherwise (crypto sales, or a not-yet-paid `issued` invoice).",
+        "parameters": [{ "$ref": "#/components/parameters/InvoiceId" }],
+        "responses": {
+          "200": {
+            "description": "The invoice, with its earnings breakdown.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/InvoiceDetail" },
+                "examples": { "default": { "$ref": "#/components/examples/InvoiceDetailExample" } }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/gateway/invoices/{invoiceId}/void": {
+      "post": {
+        "tags": ["Invoices"],
+        "operationId": "voidInvoice",
+        "summary": "Void an invoice",
+        "description": "Marks the accounting record void. It never touches the payment itself: if the buyer already paid, nothing is refunded. Use it to correct a bookkeeping mistake, not to reverse a charge. Irreversible: there is no \"un-void\"; an already-voided invoice returns `400` on a repeat call.",
+        "parameters": [{ "$ref": "#/components/parameters/InvoiceId" }],
+        "responses": {
+          "200": {
+            "description": "The invoice was voided.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SuccessResponse" },
+                "example": { "success": true }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/gateway/invoices/{invoiceId}/pdf": {
+      "get": {
+        "tags": ["Invoices"],
+        "operationId": "downloadInvoicePdf",
+        "summary": "Download the invoice PDF",
+        "description": "Response is `application/pdf` (binary), not JSON. Includes seller and buyer details, the amount (plus fiat equivalent and exchange rate for stablecoin payments), and a tax breakdown.",
+        "parameters": [{ "$ref": "#/components/parameters/InvoiceId" }],
+        "responses": {
+          "200": {
+            "description": "The invoice PDF.",
+            "content": {
+              "application/pdf": {
+                "schema": { "type": "string", "format": "binary" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/gateway/invoices/{invoiceId}/receipt": {
+      "get": {
+        "tags": ["Invoices"],
+        "operationId": "downloadReceiptPdf",
+        "summary": "Download the receipt PDF",
+        "description": "Same document family as the invoice PDF, but titled as a receipt with its own receipt number, for a **paid** invoice. Falls back to the plain invoice PDF (still valid proof of payment) for invoices issued before receipts existed on your account, rather than `404`ing.",
+        "parameters": [{ "$ref": "#/components/parameters/InvoiceId" }],
+        "responses": {
+          "200": {
+            "description": "The receipt PDF (or the invoice PDF, on fallback).",
+            "content": {
+              "application/pdf": {
+                "schema": { "type": "string", "format": "binary" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/gateway/invoices/{invoiceId}/send-receipt": {
+      "post": {
+        "tags": ["Invoices"],
+        "operationId": "resendReceipt",
+        "summary": "Re-send the receipt email",
+        "description": "Sends the paid receipt to the buyer email on file. Only works for a `paid` invoice with a `buyer_email`: returns `400` otherwise.",
+        "parameters": [{ "$ref": "#/components/parameters/InvoiceId" }],
+        "responses": {
+          "200": {
+            "description": "The receipt email was sent.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SendReceiptResponse" },
+                "example": { "ok": true, "sentTo": "john@example.com" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/gateway/all-transactions": {
+      "get": {
+        "tags": ["Transactions"],
+        "operationId": "listTransactions",
+        "summary": "List transactions",
+        "description": "One unified list of everything that moved money on your account: inbound payments (from checkouts and payment links) and outbound sends, across every rail (card, SEPA bank transfer, stablecoins on-chain), in one feed. Only `confirmed` rows are returned: a pending or failed attempt never appears here; `status` on each item is always `confirmed`.",
+        "parameters": [
+          {
+            "name": "direction",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "enum": ["all", "inbound", "outbound"], "default": "all" }
+          },
+          { "$ref": "#/components/parameters/From" },
+          { "$ref": "#/components/parameters/To" },
+          { "$ref": "#/components/parameters/FiatCurrency" },
+          { "$ref": "#/components/parameters/NetworksFilter" },
+          { "$ref": "#/components/parameters/Limit5000" },
+          { "$ref": "#/components/parameters/Offset" }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of transactions.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TransactionListResponse" },
+                "examples": { "default": { "$ref": "#/components/examples/TransactionListExample" } }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key",
+        "description": "Your secret key, from app.agentaos.ai -> Settings -> Developers -> API Keys. The key's prefix is both its identity and its environment: `sk_test_...` (sandbox, free, no verification) or `sk_live_...` (real money, requires business verification). A missing or invalid key returns 401."
+      }
+    },
+    "parameters": {
+      "PaymentLinkId": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "description": "Payment link UUID.",
+        "schema": { "type": "string", "format": "uuid" }
+      },
+      "SessionId": {
+        "name": "sessionId",
+        "in": "path",
+        "required": true,
+        "description": "The public `session_id` (not the internal `id` UUID).",
+        "schema": { "type": "string" }
+      },
+      "SubscriptionId": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "description": "Subscription UUID (the `id` field from the list response, not `stripeSubscriptionId`).",
+        "schema": { "type": "string", "format": "uuid" }
+      },
+      "InvoiceId": {
+        "name": "invoiceId",
+        "in": "path",
+        "required": true,
+        "description": "Invoice UUID.",
+        "schema": { "type": "string", "format": "uuid" }
+      },
+      "Limit100": {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "description": "Items per page. Capped server-side at 100.",
+        "schema": { "type": "integer", "default": 20, "minimum": 1, "maximum": 100 }
+      },
+      "Limit5000": {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "description": "Items per page. Capped server-side at 5000.",
+        "schema": { "type": "integer", "default": 20, "minimum": 1, "maximum": 5000 }
+      },
+      "Offset": {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "description": "Number of items to skip, for the next page.",
+        "schema": { "type": "integer", "default": 0, "minimum": 0 }
+      },
+      "NetworksFilter": {
+        "name": "networks",
+        "in": "query",
+        "required": false,
+        "description": "Comma-separated CAIP-2 network IDs to filter by, e.g. `eip155:8453,eip155:84532`. Ignored if your API key is network-scoped.",
+        "schema": { "type": "string" }
+      },
+      "From": {
+        "name": "from",
+        "in": "query",
+        "required": false,
+        "description": "ISO 8601 date or datetime, inclusive lower bound.",
+        "schema": { "type": "string" }
+      },
+      "To": {
+        "name": "to",
+        "in": "query",
+        "required": false,
+        "description": "ISO 8601 date or datetime, inclusive upper bound.",
+        "schema": { "type": "string" }
+      },
+      "FromRequired": {
+        "name": "from",
+        "in": "query",
+        "required": true,
+        "description": "ISO 8601 date.",
+        "schema": { "type": "string" }
+      },
+      "ToRequired": {
+        "name": "to",
+        "in": "query",
+        "required": true,
+        "description": "ISO 8601 date.",
+        "schema": { "type": "string" }
+      },
+      "FiatCurrency": {
+        "name": "fiatCurrency",
+        "in": "query",
+        "required": false,
+        "description": "Filter to rows settled/presented in this fiat currency.",
+        "schema": { "type": "string", "enum": ["EUR", "USD"] }
+      },
+      "InvoiceStatus": {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "schema": { "type": "string", "enum": ["all", "issued", "paid", "voided"] }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "A required field is missing, out of range, or the wrong type. `ValidationPipe` also rejects any field not in the documented schema.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" },
+            "example": {
+              "statusCode": 400,
+              "message": "amount is required when creating a session without a link",
+              "timestamp": "2026-08-06T12:00:00.000Z"
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Missing or invalid `x-api-key`.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" },
+            "example": {
+              "statusCode": 401,
+              "message": "Invalid API key",
+              "timestamp": "2026-08-06T12:00:00.000Z"
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "The key is valid but the resource belongs to a different organization.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" },
+            "example": {
+              "statusCode": 403,
+              "message": "Payment link belongs to another organization",
+              "timestamp": "2026-08-06T12:00:00.000Z"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Resource not found (or not visible to your key; the two are not distinguished).",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" },
+            "example": {
+              "statusCode": 404,
+              "message": "Payment link not found",
+              "timestamp": "2026-08-06T12:00:00.000Z"
+            }
+          }
+        }
+      },
+      "Conflict": {
+        "description": "The resource was modified concurrently, or the action doesn't apply to its current state.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" },
+            "example": {
+              "statusCode": 409,
+              "message": "Payment link was modified concurrently",
+              "timestamp": "2026-08-06T12:00:00.000Z"
+            }
+          }
+        }
+      }
+    },
+    "examples": {
+      "PaymentLinkExample": {
+        "value": {
+          "id": "3f1a2b4c-5d6e-7f8a-9b0c-1d2e3f4a5b6c",
+          "org_id": "9a8b7c6d-5e4f-3a2b-1c0d-9e8f7a6b5c4d",
+          "user_id": "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
+          "secure_link_id": "mZrESFyR7RC9RPsJfZCVkg",
+          "amount": 49.99,
+          "currency": "EUR",
+          "description": "Monthly access to Pro features",
+          "metadata": {},
+          "checkout_fields": [],
+          "webhook_url": null,
+          "success_url": null,
+          "cancel_url": null,
+          "tax_rate_id": null,
+          "status": "active",
+          "payment_count": 0,
+          "supported_networks": ["eip155:8453"],
+          "expires_at": null,
+          "created_at": "2026-08-06T12:00:00.000Z",
+          "updated_at": "2026-08-06T12:00:00.000Z",
+          "name": "Pro plan",
+          "image_url": null,
+          "max_uses": null,
+          "seller_mode": "mor",
+          "type": "one_time",
+          "billing_interval": null,
+          "environment": "live",
+          "checkoutUrl": "https://app.agentaos.ai/pay/mZrESFyR7RC9RPsJfZCVkg",
+          "sellerMode": "mor"
+        }
+      },
+      "CheckoutExample": {
+        "value": {
+          "id": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+          "payment_link_id": null,
+          "org_id": "9a8b7c6d-5e4f-3a2b-1c0d-9e8f7a6b5c4d",
+          "session_id": "mZrESFyR7RC9RPsJfZCVkg",
+          "idempotency_key": "order-48213",
+          "amount_override": 49.99,
+          "currency": "EUR",
+          "metadata": { "payer": { "email": "john@example.com" } },
+          "webhook_url": "https://myshop.com/webhooks",
+          "success_url": "https://myshop.com/success",
+          "cancel_url": "https://myshop.com/cart",
+          "tax_rate_id": null,
+          "supported_networks": ["eip155:8453"],
+          "expires_at": "2026-08-06T12:30:00.000Z",
+          "status": "open",
+          "created_at": "2026-08-06T12:00:00.000Z",
+          "updated_at": "2026-08-06T12:00:00.000Z",
+          "seller_mode": "mor",
+          "environment": "live",
+          "checkoutUrl": "https://app.agentaos.ai/checkout/mZrESFyR7RC9RPsJfZCVkg",
+          "x402Url": "https://api.agentaos.ai/gateway/v1/x402/mZrESFyR7RC9RPsJfZCVkg",
+          "invoiceId": "b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e",
+          "invoiceNumber": "INV-2026-0142"
+        }
+      },
+      "InvoiceDetailExample": {
+        "value": {
+          "id": "b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e",
+          "transaction_id": "8c7d6e5f-4a3b-2c1d-0e9f-8a7b6c5d4e3f",
+          "org_id": "9a8b7c6d-5e4f-3a2b-1c0d-9e8f7a6b5c4d",
+          "session_id": "mZrESFyR7RC9RPsJfZCVkg",
+          "invoice_number": "INV-2026-0142",
+          "amount": 49.99,
+          "currency": "EUR",
+          "payment_token": "EURC",
+          "description": "Order #123",
+          "tx_hash": null,
+          "network": "stripe",
+          "fiat_amount": 49.99,
+          "fiat_currency": "EUR",
+          "exchange_rate": 1,
+          "exchange_rate_source": "1:1 peg",
+          "status": "paid",
+          "issued_at": "2026-08-06T12:00:00.000Z",
+          "voided_at": null,
+          "created_at": "2026-08-06T12:00:00.000Z",
+          "merchant_name": "Acme Inc",
+          "buyer_email": "john@example.com",
+          "buyer_country": "DE",
+          "buyer_name": "John Doe",
+          "buyer_company": null,
+          "buyer_vat": null,
+          "tax_rate": null,
+          "tax_amount": null,
+          "tax_name": null,
+          "tax_inclusive": null,
+          "earnings": {
+            "currency": "EUR",
+            "grossMinor": 4999,
+            "agentaosFeeMinor": 215,
+            "vatMinor": 0,
+            "netMinor": 4784
+          }
+        }
+      },
+      "TransactionListExample": {
+        "value": {
+          "items": [
+            {
+              "id": "8c7d6e5f-4a3b-2c1d-0e9f-8a7b6c5d4e3f",
+              "payment_link_id": "3f1a2b4c-5d6e-7f8a-9b0c-1d2e3f4a5b6c",
+              "session_id": "mZrESFyR7RC9RPsJfZCVkg",
+              "org_id": "9a8b7c6d-5e4f-3a2b-1c0d-9e8f7a6b5c4d",
+              "direction": "inbound",
+              "payer_address": null,
+              "payer_type": "human",
+              "amount": 49.99,
+              "payment_token": "EURC",
+              "settlement_token": "EURC",
+              "status": "confirmed",
+              "tx_hash": null,
+              "vendor_reference": "pi_3P...",
+              "network": "stripe",
+              "to_address": null,
+              "recipient_label": null,
+              "description": "Order #123",
+              "payment_method": "card",
+              "seller_of_record": "aristokrates_ou",
+              "invoice_id": "b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e",
+              "created_at": "2026-08-06T12:05:00.000Z",
+              "environment": "live",
+              "money": {
+                "currency": "EUR",
+                "grossMinor": 4999,
+                "feeMinor": 215,
+                "vatMinor": 0,
+                "netMinor": 4784
+              }
+            }
+          ],
+          "total": 214,
+          "hasMore": true
+        }
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "description": "Every non-2xx response is JSON in this shape. Every response (success or error) also carries an `x-request-id` response header; send that header on your request to have your own id echoed back, otherwise the server mints one. On errors the same id is repeated in the `requestId` body field.",
+        "properties": {
+          "statusCode": { "type": "integer", "description": "Same as the HTTP status code." },
+          "message": {
+            "description": "Human-readable. A validation failure (400) returns an array of per-field messages instead of one string.",
+            "anyOf": [
+              { "type": "string" },
+              { "type": "array", "items": { "type": "string" } }
+            ]
+          },
+          "errors": {
+            "type": "array",
+            "description": "Present on 400 validation failures: one entry per invalid field. The flat human-readable strings stay in `message` for back-compat; this is the machine-readable, per-field view.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "field": {
+                  "type": "string",
+                  "description": "Name of the invalid field, dot-notated for nested properties (e.g. `checkoutFields.0.type`)."
+                },
+                "message": {
+                  "type": "string",
+                  "description": "Validation messages for that field, joined with `, `."
+                }
+              },
+              "required": ["field", "message"]
+            }
+          },
+          "requestId": {
+            "type": "string",
+            "description": "Correlation id, identical to the `x-request-id` response header. Include it when contacting support. On success it is available on the header only, not the body."
+          },
+          "timestamp": { "type": "string", "format": "date-time" }
+        },
+        "required": ["statusCode", "message", "timestamp"]
+      },
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "const": true }
+        },
+        "required": ["success"]
+      },
+      "SendReceiptResponse": {
+        "type": "object",
+        "properties": {
+          "ok": { "type": "boolean", "const": true },
+          "sentTo": { "type": "string", "format": "email" }
+        },
+        "required": ["ok", "sentTo"]
+      },
+      "CheckoutField": {
+        "type": "object",
+        "description": "An extra field collected at checkout.",
+        "properties": {
+          "key": { "type": "string", "maxLength": 64 },
+          "label": { "type": "string", "maxLength": 128 },
+          "type": { "type": "string", "enum": ["text", "email", "tel", "select"] },
+          "required": { "type": "boolean" },
+          "placeholder": { "type": "string", "maxLength": 256 },
+          "options": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "For `type: select` only."
+          }
+        },
+        "required": ["key", "label", "type", "required"]
+      },
+      "PaymentLinkCreateRequest": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number",
+            "minimum": 0.01,
+            "maximum": 1000000,
+            "description": "Amount in currency units, e.g. 49.99."
+          },
+          "currency": {
+            "type": "string",
+            "enum": ["EUR", "USD", "EURC", "EURe", "USDC"],
+            "description": "Defaults to your org's settlement currency. A fiat code is mapped to your org's default settlement token internally; the link stores the resolved token."
+          },
+          "description": { "type": "string", "maxLength": 1000 },
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "description": "Product name, for the catalog-style link surfaces. Separate from `description`."
+          },
+          "imageUrl": { "type": "string", "format": "uri", "maxLength": 2048, "description": "HTTPS only." },
+          "type": {
+            "type": "string",
+            "enum": ["one_time", "subscription"],
+            "default": "one_time",
+            "description": "A `subscription` link requires `billingInterval` and settles on the card/bank rail (Merchant of Record); it can't be a crypto-settlement link."
+          },
+          "billingInterval": {
+            "type": "string",
+            "enum": ["month", "year"],
+            "description": "Required when `type` is `subscription`, must be omitted for `one_time`."
+          },
+          "maxUses": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100000,
+            "description": "1 for single-use, N for a limited quantity, omitted for unlimited."
+          },
+          "taxRateId": { "type": "string", "format": "uuid", "description": "Must belong to your organization." },
+          "checkoutFields": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CheckoutField" }
+          },
+          "webhookUrl": { "type": "string", "format": "uri", "maxLength": 2048 },
+          "successUrl": { "type": "string", "format": "uri", "maxLength": 2048 },
+          "cancelUrl": { "type": "string", "format": "uri", "maxLength": 2048 },
+          "expiresAt": { "type": "string", "format": "date-time" },
+          "metadata": {
+            "type": "object",
+            "description": "Arbitrary key-value data, returned unchanged on webhooks. Up to 8KB serialized."
+          },
+          "supportedNetworks": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "CAIP-2 network IDs (e.g. eip155:8453), for crypto-settlement links. Ignored (and taken from your key's configuration instead) if your API key is scoped to specific networks."
+          }
+        },
+        "required": ["amount"]
+      },
+      "PaymentLinkUpdateRequest": {
+        "type": "object",
+        "description": "Partial update. Every field is optional; only fields present are changed.",
+        "properties": {
+          "name": { "type": "string", "maxLength": 120 },
+          "description": { "type": "string", "maxLength": 1000 },
+          "imageUrl": { "type": "string", "format": "uri", "maxLength": 2048 },
+          "amount": { "type": "number", "minimum": 0.01, "maximum": 1000000 },
+          "type": {
+            "type": "string",
+            "enum": ["one_time", "subscription"],
+            "description": "Checked against the resulting merged state."
+          },
+          "billingInterval": { "type": "string", "enum": ["month", "year"] }
+        }
+      },
+      "PaymentLink": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "id": { "type": "string", "format": "uuid", "description": "Payment link UUID." },
+          "org_id": { "type": "string", "format": "uuid" },
+          "user_id": { "type": "string", "format": "uuid" },
+          "secure_link_id": { "type": "string", "description": "Public ID used in the checkout URL." },
+          "amount": { "type": "number", "description": "Currency units." },
+          "currency": { "type": "string", "description": "Settlement currency or token." },
+          "description": { "type": ["string", "null"] },
+          "metadata": { "type": "object", "description": "Your custom data." },
+          "checkout_fields": { "type": "array", "items": { "$ref": "#/components/schemas/CheckoutField" } },
+          "webhook_url": { "type": ["string", "null"] },
+          "success_url": { "type": ["string", "null"] },
+          "cancel_url": { "type": ["string", "null"] },
+          "tax_rate_id": { "type": ["string", "null"], "format": "uuid" },
+          "status": { "type": "string", "enum": ["active", "cancelled"] },
+          "payment_count": { "type": "integer", "description": "Successful payments against this link so far." },
+          "supported_networks": { "type": "array", "items": { "type": "string" } },
+          "expires_at": { "type": ["string", "null"], "format": "date-time" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" },
+          "name": { "type": ["string", "null"] },
+          "image_url": { "type": ["string", "null"] },
+          "max_uses": { "type": ["integer", "null"], "description": "null means unlimited." },
+          "seller_mode": {
+            "type": "string",
+            "enum": ["mor", "crypto"],
+            "description": "mor (card + bank) or crypto (on-chain). The snake_case column equivalent of the computed `sellerMode`."
+          },
+          "type": { "type": "string", "enum": ["one_time", "subscription"] },
+          "billing_interval": { "type": ["string", "null"], "enum": ["month", "year", null] },
+          "environment": { "type": "string", "enum": ["test", "live"] },
+          "checkoutUrl": {
+            "type": "string",
+            "description": "Full URL to share with buyers. Computed, camelCase, no snake_case equivalent."
+          },
+          "sellerMode": { "type": "string", "enum": ["mor", "crypto"] }
+        },
+        "required": [
+          "id", "org_id", "user_id", "secure_link_id", "amount", "currency", "description",
+          "metadata", "checkout_fields", "webhook_url", "success_url", "cancel_url", "tax_rate_id",
+          "status", "payment_count", "supported_networks", "expires_at", "created_at", "updated_at",
+          "name", "image_url", "max_uses", "seller_mode", "type", "billing_interval", "environment",
+          "checkoutUrl", "sellerMode"
+        ]
+      },
+      "PaymentLinkListResponse": {
+        "type": "object",
+        "properties": {
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/PaymentLink" } },
+          "total": { "type": "integer" },
+          "hasMore": { "type": "boolean" }
+        },
+        "required": ["items", "total", "hasMore"]
+      },
+      "LinkTransactionRow": {
+        "type": "object",
+        "description": "A raw transaction row as nested under a Payment Link or Checkout detail response: same shape as a Transaction, but without the computed `money` breakdown.",
+        "additionalProperties": true,
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "direction": { "type": "string", "enum": ["inbound", "outbound"] },
+          "status": { "type": "string" },
+          "amount": { "type": "number" },
+          "payment_method": { "type": ["string", "null"] },
+          "created_at": { "type": "string", "format": "date-time" }
+        },
+        "required": ["id", "direction", "status", "amount", "created_at"]
+      },
+      "PaymentLinkDetail": {
+        "allOf": [
+          { "$ref": "#/components/schemas/PaymentLink" },
+          {
+            "type": "object",
+            "properties": {
+              "transactions": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/LinkTransactionRow" },
+                "description": "Every payment (inbound or outbound) recorded against this link, newest first."
+              }
+            },
+            "required": ["transactions"]
+          }
+        ]
+      },
+      "CheckoutCreateRequest": {
+        "type": "object",
+        "description": "Either `linkId` or `amount` is required (amount is required when creating a standalone checkout with no link).",
+        "properties": {
+          "linkId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Payment link UUID to create from. Inherits amount, currency, description, taxRateId, and the seller mode. Omit for a standalone checkout."
+          },
+          "amount": {
+            "type": "number",
+            "minimum": 0.01,
+            "maximum": 1000000,
+            "description": "Required if no linkId."
+          },
+          "amountOverride": {
+            "type": "number",
+            "minimum": 0.01,
+            "maximum": 1000000,
+            "description": "With linkId, overrides the link's amount for this checkout only."
+          },
+          "currency": {
+            "type": "string",
+            "enum": ["EUR", "USD", "EURC", "EURe", "USDC"],
+            "description": "Ignored (inherited from the link) when linkId is set."
+          },
+          "description": { "type": "string", "maxLength": 1000 },
+          "taxRateId": { "type": "string", "format": "uuid" },
+          "dueDate": {
+            "type": "string",
+            "format": "date",
+            "description": "YYYY-MM-DD. Presentation only, stamped onto the invoice issued for this checkout."
+          },
+          "buyerEmail": { "type": "string", "format": "email", "maxLength": 320 },
+          "buyerName": { "type": "string", "maxLength": 200 },
+          "buyerCompany": { "type": "string", "maxLength": 200 },
+          "buyerCountry": { "type": "string", "maxLength": 2, "description": "ISO 3166-1 alpha-2, e.g. DE. Drives destination-VAT calculation." },
+          "buyerAddress": { "type": "string", "maxLength": 500 },
+          "buyerVat": { "type": "string", "maxLength": 20 },
+          "webhookUrl": { "type": "string", "format": "uri", "maxLength": 2048 },
+          "successUrl": { "type": "string", "format": "uri", "maxLength": 2048 },
+          "cancelUrl": { "type": "string", "format": "uri", "maxLength": 2048 },
+          "expiresIn": {
+            "type": "integer",
+            "minimum": 300,
+            "maximum": 86400,
+            "default": 1800,
+            "description": "Seconds until expiry. Sessions eligible for SEPA bank transfer get a 48-hour window regardless of this value."
+          },
+          "metadata": { "type": "object", "description": "Up to 8KB serialized." },
+          "supportedNetworks": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "CAIP-2 network IDs. Defaults to Base mainnet for crypto-settlement checkouts."
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "description": "Also settable via the Idempotency-Key request header (the header wins if both are sent)."
+          }
+        }
+      },
+      "Checkout": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "id": { "type": "string", "format": "uuid", "description": "Internal checkout UUID." },
+          "payment_link_id": { "type": ["string", "null"], "format": "uuid" },
+          "org_id": { "type": "string", "format": "uuid" },
+          "session_id": {
+            "type": "string",
+            "description": "Public ID, used in the checkout URL and as the path parameter for every other call on this resource."
+          },
+          "idempotency_key": { "type": ["string", "null"] },
+          "amount_override": { "type": ["number", "null"], "description": "Set only if you passed amount or amountOverride at create." },
+          "currency": { "type": "string" },
+          "metadata": { "type": "object" },
+          "webhook_url": { "type": ["string", "null"] },
+          "success_url": { "type": ["string", "null"] },
+          "cancel_url": { "type": ["string", "null"] },
+          "tax_rate_id": { "type": ["string", "null"], "format": "uuid" },
+          "supported_networks": { "type": "array", "items": { "type": "string" } },
+          "expires_at": { "type": "string", "format": "date-time" },
+          "status": { "type": "string", "enum": ["open", "completed", "expired", "cancelled"] },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" },
+          "seller_mode": { "type": "string", "enum": ["mor", "crypto"] },
+          "environment": { "type": "string", "enum": ["test", "live"] },
+          "checkoutUrl": { "type": "string", "description": "Send your buyer here. Computed, camelCase." },
+          "x402Url": {
+            "type": "string",
+            "description": "Agent-to-agent payment URL via the x402 protocol. Computed, camelCase. Most integrations can ignore it."
+          },
+          "invoiceId": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "Set once an invoice has been issued for this session; null until then."
+          },
+          "invoiceNumber": { "type": ["string", "null"] }
+        },
+        "required": [
+          "id", "payment_link_id", "org_id", "session_id", "idempotency_key", "amount_override",
+          "currency", "metadata", "webhook_url", "success_url", "cancel_url", "tax_rate_id",
+          "supported_networks", "expires_at", "status", "created_at", "updated_at", "seller_mode",
+          "environment", "checkoutUrl", "x402Url"
+        ]
+      },
+      "CheckoutListResponse": {
+        "type": "object",
+        "properties": {
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/Checkout" } },
+          "total": { "type": "integer" },
+          "hasMore": { "type": "boolean" }
+        },
+        "required": ["items", "total", "hasMore"]
+      },
+      "CheckoutDetail": {
+        "allOf": [
+          { "$ref": "#/components/schemas/Checkout" },
+          {
+            "type": "object",
+            "properties": {
+              "amount": {
+                "type": ["number", "null"],
+                "description": "Computed effective price: amount_override, else the linked payment link's amount."
+              },
+              "link_amount": { "type": ["number", "null"] },
+              "link_currency": { "type": ["string", "null"] },
+              "link_description": { "type": ["string", "null"] },
+              "transactions": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/LinkTransactionRow" }
+              },
+              "invoices": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/Invoice" }
+              }
+            },
+            "required": ["amount", "link_amount", "link_currency", "link_description", "transactions", "invoices"]
+          }
+        ]
+      },
+      "Subscription": {
+        "type": "object",
+        "description": "Fully camelCase on the wire.",
+        "properties": {
+          "id": { "type": "string", "format": "uuid", "description": "Use this as the :id path parameter to cancel." },
+          "customerEmail": { "type": ["string", "null"] },
+          "customerName": { "type": ["string", "null"] },
+          "planName": { "type": ["string", "null"], "description": "The payment link's name, falling back to its description." },
+          "billingInterval": { "type": ["string", "null"], "enum": ["month", "year", null] },
+          "status": {
+            "type": "string",
+            "enum": ["incomplete", "incomplete_expired", "trialing", "active", "past_due", "canceled", "unpaid", "paused"],
+            "description": "Mirrored directly from the card processor."
+          },
+          "unitAmountMinor": {
+            "type": "integer",
+            "description": "Per-cycle price, integer minor units (1999 = EUR 19.99)."
+          },
+          "currency": { "type": "string" },
+          "currentPeriodEnd": { "type": ["string", "null"], "format": "date-time", "description": "null before the first cycle books." },
+          "stripeSubscriptionId": { "type": ["string", "null"] }
+        },
+        "required": [
+          "id", "customerEmail", "customerName", "planName", "billingInterval", "status",
+          "unitAmountMinor", "currency", "currentPeriodEnd", "stripeSubscriptionId"
+        ]
+      },
+      "SubscriptionListResponse": {
+        "type": "object",
+        "properties": {
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/Subscription" } },
+          "total": { "type": "integer" },
+          "hasMore": { "type": "boolean" }
+        },
+        "required": ["items", "total", "hasMore"]
+      },
+      "CancelSubscriptionRequest": {
+        "type": "object",
+        "properties": {
+          "atPeriodEnd": {
+            "type": "boolean",
+            "default": true,
+            "description": "true schedules the cancellation for period end. false cancels now."
+          }
+        }
+      },
+      "CancelSubscriptionResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["incomplete", "incomplete_expired", "trialing", "active", "past_due", "canceled", "unpaid", "paused"]
+          },
+          "currentPeriodEnd": { "type": ["string", "null"], "format": "date-time" },
+          "cancelAtPeriodEnd": { "type": "boolean" },
+          "effectiveCancelDate": { "type": ["string", "null"], "format": "date-time" }
+        },
+        "required": ["status", "currentPeriodEnd", "cancelAtPeriodEnd", "effectiveCancelDate"]
+      },
+      "Customer": {
+        "type": "object",
+        "description": "Fully camelCase on the wire.",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "email": { "type": "string", "format": "email" },
+          "name": { "type": ["string", "null"] },
+          "country": { "type": ["string", "null"], "description": "ISO 3166-1 alpha-2, the customer's place of supply for destination-VAT purposes." },
+          "vatNumber": { "type": ["string", "null"], "description": "EU VAT number, if given, for B2B reverse charge." },
+          "stripeCustomerId": {
+            "type": ["string", "null"],
+            "description": "null until this customer's first saved-card charge or subscription (card/bank rail only)."
+          },
+          "createdAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["id", "email", "name", "country", "vatNumber", "stripeCustomerId", "createdAt"]
+      },
+      "CustomerListResponse": {
+        "type": "object",
+        "properties": {
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/Customer" } },
+          "total": { "type": "integer" },
+          "hasMore": { "type": "boolean" }
+        },
+        "required": ["items", "total", "hasMore"]
+      },
+      "Invoice": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "invoice_number": { "type": "string", "description": "Human-readable, e.g. INV-2026-0142." },
+          "transaction_id": { "type": ["string", "null"], "format": "uuid", "description": "Linked settled transaction, once paid." },
+          "session_id": { "type": ["string", "null"], "description": "Linked checkout." },
+          "amount": { "type": "number", "description": "Currency units." },
+          "currency": { "type": "string" },
+          "payment_token": { "type": "string", "description": "What the buyer paid (or will pay) with." },
+          "status": {
+            "type": "string",
+            "enum": ["issued", "paid", "voided"],
+            "description": "issued (created, not yet paid), paid (payment settled), or voided."
+          },
+          "fiat_amount": { "type": ["number", "null"], "description": "EUR/USD equivalent, for stablecoin payments." },
+          "fiat_currency": { "type": ["string", "null"], "enum": ["EUR", "USD", null] },
+          "exchange_rate": { "type": ["number", "null"], "description": "Rate applied at settlement." },
+          "exchange_rate_source": { "type": ["string", "null"] },
+          "tax_rate": { "type": ["number", "null"], "description": "Applied rate, e.g. 19 for 19%." },
+          "tax_amount": { "type": ["number", "null"], "description": "Currency units." },
+          "tax_name": { "type": ["string", "null"], "description": "e.g. DE VAT." },
+          "tax_inclusive": { "type": ["boolean", "null"], "description": "Whether amount already includes tax." },
+          "merchant_name": { "type": ["string", "null"], "description": "Seller name on the document." },
+          "buyer_email": { "type": ["string", "null"] },
+          "buyer_name": { "type": ["string", "null"] },
+          "buyer_company": { "type": ["string", "null"] },
+          "buyer_country": { "type": ["string", "null"], "description": "ISO 3166-1 alpha-2." },
+          "buyer_vat": { "type": ["string", "null"] },
+          "tx_hash": { "type": ["string", "null"], "description": "On-chain hash, for crypto payments." },
+          "issued_at": { "type": "string", "format": "date-time" },
+          "voided_at": { "type": ["string", "null"], "format": "date-time" },
+          "created_at": { "type": "string", "format": "date-time" }
+        },
+        "required": [
+          "id", "invoice_number", "transaction_id", "session_id", "amount", "currency", "payment_token",
+          "status", "fiat_amount", "fiat_currency", "exchange_rate", "exchange_rate_source", "tax_rate",
+          "tax_amount", "tax_name", "tax_inclusive", "merchant_name", "buyer_email", "buyer_name",
+          "buyer_company", "buyer_country", "buyer_vat", "tx_hash", "issued_at", "voided_at", "created_at"
+        ]
+      },
+      "InvoiceListResponse": {
+        "type": "object",
+        "properties": {
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/Invoice" } },
+          "total": { "type": "integer" },
+          "hasMore": { "type": "boolean" }
+        },
+        "required": ["items", "total", "hasMore"]
+      },
+      "Earnings": {
+        "type": "object",
+        "description": "Merchant-only fee/VAT/net breakdown, integer minor units in `currency`. grossMinor is your ex-VAT sale base (agentaosFeeMinor + netMinor); the buyer paid grossMinor + vatMinor.",
+        "properties": {
+          "currency": { "type": "string" },
+          "grossMinor": { "type": "integer" },
+          "agentaosFeeMinor": { "type": "integer" },
+          "vatMinor": { "type": "integer" },
+          "netMinor": { "type": "integer" }
+        },
+        "required": ["currency", "grossMinor", "agentaosFeeMinor", "vatMinor", "netMinor"]
+      },
+      "InvoiceDetail": {
+        "allOf": [
+          { "$ref": "#/components/schemas/Invoice" },
+          {
+            "type": "object",
+            "properties": {
+              "earnings": {
+                "anyOf": [
+                  { "$ref": "#/components/schemas/Earnings" },
+                  { "type": "null" }
+                ],
+                "description": "Present only for a card/bank Merchant-of-Record sale with a linked, settled transaction. null otherwise."
+              }
+            },
+            "required": ["earnings"]
+          }
+        ]
+      },
+      "TransactionMoney": {
+        "type": "object",
+        "description": "Render-ready breakdown, computed server-side so you never sum this yourself. All values integer minor units in money.currency.",
+        "properties": {
+          "currency": { "type": "string", "description": "ISO 4217, upper-case." },
+          "grossMinor": { "type": "integer", "description": "Your ex-VAT sale base (feeMinor + netMinor). The buyer paid grossMinor + vatMinor." },
+          "feeMinor": { "type": "integer", "description": "AgentaOS's commission alone, 0 when none. Never includes VAT." },
+          "vatMinor": { "type": "integer", "description": "Destination VAT AgentaOS collected and remits as Merchant of Record. On top of grossMinor, never your revenue." },
+          "netMinor": { "type": "integer", "description": "What actually reaches your balance (grossMinor - feeMinor)." }
+        },
+        "required": ["currency", "grossMinor", "feeMinor", "vatMinor", "netMinor"]
+      },
+      "Transaction": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "This row carries additional internal ledger fields (settlement batch references, dispute markers, raw card-processor fee) beyond what's documented here. Treat any undocumented field as forward-compatible and safe to ignore.",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "direction": { "type": "string", "enum": ["inbound", "outbound"] },
+          "amount": { "type": "number", "description": "Presentment amount, currency units, in payment_token/settlement_token." },
+          "payment_token": { "type": "string", "description": "What the buyer paid with, e.g. EURC, card." },
+          "settlement_token": { "type": "string", "description": "What settled to your balance." },
+          "status": { "type": "string", "const": "confirmed", "description": "Always confirmed on this endpoint." },
+          "payment_method": {
+            "type": ["string", "null"],
+            "enum": ["card", "sepa", "bank_transfer", "bridge", "wallet", null],
+            "description": "How the buyer actually paid, independent of network."
+          },
+          "payer_type": { "type": "string", "enum": ["human", "agent"] },
+          "payer_address": { "type": ["string", "null"], "description": "On-chain payer wallet. null for card/bank rails." },
+          "tx_hash": { "type": ["string", "null"], "description": "null for card/bank rails, use vendor_reference there instead." },
+          "vendor_reference": { "type": ["string", "null"], "description": "Off-chain audit reference (card-processor payment reference, bank reference). Mutually exclusive with tx_hash." },
+          "network": { "type": "string", "description": "CAIP-2 network ID for on-chain rails, or stripe for card/bank." },
+          "seller_of_record": {
+            "type": "string",
+            "enum": ["aristokrates_ou", "merchant"],
+            "description": "aristokrates_ou for a Merchant of Record card sale, merchant for everything else."
+          },
+          "invoice_id": { "type": ["string", "null"], "format": "uuid", "description": "The matching invoice, joined for convenience. null for outbound rows." },
+          "payment_link_id": { "type": ["string", "null"], "format": "uuid" },
+          "session_id": { "type": ["string", "null"] },
+          "description": { "type": ["string", "null"] },
+          "created_at": { "type": "string", "format": "date-time" },
+          "money": { "$ref": "#/components/schemas/TransactionMoney" }
+        },
+        "required": [
+          "id", "direction", "amount", "payment_token", "settlement_token", "status", "payment_method",
+          "payer_type", "payer_address", "tx_hash", "vendor_reference", "network", "seller_of_record",
+          "invoice_id", "payment_link_id", "session_id", "description", "created_at", "money"
+        ]
+      },
+      "TransactionListResponse": {
+        "type": "object",
+        "properties": {
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/Transaction" } },
+          "total": { "type": "integer" },
+          "hasMore": { "type": "boolean" }
+        },
+        "required": ["items", "total", "hasMore"]
+      }
+    }
+  }
+}

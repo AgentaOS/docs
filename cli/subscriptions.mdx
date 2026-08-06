@@ -1,0 +1,139 @@
+---
+title: "Subscriptions"
+description: "List and cancel recurring subscribers from the terminal with agenta subscriptions."
+---
+
+`agenta subscriptions` is a read-and-cancel view onto everyone paying you on a recurring plan (created from a subscription payment link). It's the fast path for support work: look up a subscriber, check their status, cancel on request.
+
+```bash
+agenta subscriptions list
+agenta subscriptions cancel <id>
+```
+
+## List subscriptions
+
+```bash
+agenta subscriptions list [--limit <n>] [--json]
+```
+
+<ParamField query="--limit" type="number" default="10">
+  Results per page, 1 to 100.
+</ParamField>
+<ParamField query="--json" type="boolean">
+  Output a single JSON object instead of a table.
+</ParamField>
+
+```bash Output
+  Subscriptions (3 total)
+
+  active     €19.99/month  jane@startup.io          253dbe6a-6b4d-4c40-a16f-aae31cfea271
+  past_due   $49.00/month  ana@example.com          0fb760fa-bce8-48e6-a51a-d1c5c06075f5
+  canceled   €199.00/year  team@bigco.eu            46d8d6cf-5281-4fed-b7c2-af1065b21ecc
+
+  3 of 3 shown.
+```
+
+### `--json`
+
+```json
+{
+  "total": 3,
+  "hasMore": false,
+  "items": [
+    {
+      "id": "253dbe6a-6b4d-4c40-a16f-aae31cfea271",
+      "customerEmail": "jane@startup.io",
+      "customerName": null,
+      "planName": "Pro plan",
+      "billingInterval": "month",
+      "status": "active",
+      "unitAmountMinor": 1999,
+      "currency": "EUR",
+      "currentPeriodEnd": "2026-09-06T00:00:00.000Z",
+      "stripeSubscriptionId": "sub_1PQr..."
+    }
+  ]
+}
+```
+
+<Note>
+The human table formats the amount for you (`€19.99/month`). In JSON, `unitAmountMinor` is an **integer of the smallest currency unit** (`1999` = €19.99), the one exception to plain decimal amounts elsewhere in the API. Every other money field you'll see (checkouts, invoices, payment links) is a plain decimal number.
+</Note>
+
+### Status values
+
+| Status | Meaning |
+|---|---|
+| `trialing` | In a free trial period. |
+| `active` | Paying, current. |
+| `past_due` | Latest charge failed, retrying. |
+| `unpaid` | Retries exhausted, not yet cancelled. |
+| `paused` | Billing paused. |
+| `canceled` | Ended. |
+| `incomplete` | First payment hasn't completed yet. |
+| `incomplete_expired` | First payment window expired before completing. |
+
+## Cancel a subscription
+
+```bash
+agenta subscriptions cancel <id> [--now] [--json]
+```
+
+<ParamField path="id" type="string" required>
+  Subscription ID, e.g. `253dbe6a-6b4d-4c40-a16f-aae31cfea271`.
+</ParamField>
+<ParamField query="--now" type="boolean" default="false">
+  Cancel immediately instead of at the end of the current billing period. Without this flag, the subscriber keeps access until their paid period ends and nothing is refunded.
+</ParamField>
+<ParamField query="--json" type="boolean">
+  Output a single JSON object instead of the human-readable summary.
+</ParamField>
+
+```bash
+agenta subscriptions cancel 253dbe6a-6b4d-4c40-a16f-aae31cfea271
+```
+
+```json --json
+{
+  "status": "active",
+  "cancelAtPeriodEnd": true,
+  "effectiveCancelDate": "2026-09-06",
+  "currentPeriodEnd": "2026-09-06T00:00:00.000Z"
+}
+```
+
+Cancel immediately:
+
+```bash
+agenta subscriptions cancel 253dbe6a-6b4d-4c40-a16f-aae31cfea271 --now
+```
+
+```json --json
+{
+  "status": "canceled",
+  "cancelAtPeriodEnd": false,
+  "effectiveCancelDate": "2026-08-06",
+  "currentPeriodEnd": "2026-09-06T00:00:00.000Z"
+}
+```
+
+<Tip>
+Default to the no-flag form. `--now` skips the grace period the subscriber already paid for, so reach for it only when that's actually the ask (fraud, duplicate signup, an explicit "cancel me right now").
+</Tip>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Customers" icon="users" href="/cli/customers">
+    Look up who's behind a subscription.
+  </Card>
+  <Card title="Invoices" icon="file-invoice-dollar" href="/cli/invoices">
+    Pull receipts for a paid billing cycle.
+  </Card>
+  <Card title="Subscriptions (SDK)" icon="code" href="/sdk/pay-subscriptions">
+    Manage subscriptions from your own backend.
+  </Card>
+  <Card title="Subscriptions (concept)" icon="book" href="/payments/subscriptions">
+    How subscription payment links and billing cycles work.
+  </Card>
+</CardGroup>

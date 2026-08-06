@@ -1,0 +1,95 @@
+---
+title: "Error codes"
+description: "How the API reports errors, the status codes you will see, and how to handle them."
+---
+
+When a request fails, the API returns the matching HTTP status code and a JSON body describing what went wrong. Every response also carries an `x-request-id` header (echoed back as `requestId` in error bodies), include it when you contact support. The [TypeScript SDK](/sdk/pay-errors) turns each response into a typed error for you, so most integrations never parse this body by hand.
+
+## Error response format
+
+```json
+{
+  "statusCode": 400,
+  "error": "Bad Request",
+  "message": ["amount must be a positive number"],
+  "errors": [{ "field": "amount", "message": "must be a positive number" }],
+  "timestamp": "2026-08-06T12:00:00.000Z",
+  "requestId": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `statusCode` | number | The HTTP status code, repeated in the body. |
+| `error` | string | Short error category, such as `Bad Request` or `Not Found`. |
+| `message` | string or string[] | Human-readable detail. Validation failures return an array, one entry per problem. |
+| `errors` | array | On `400` validation errors: one `{ field, message }` per invalid field. |
+| `timestamp` | string | ISO 8601 time the error was produced. |
+| `requestId` | string | Correlates the request. Also returned as the `x-request-id` response header. |
+
+## Status codes
+
+| Status | Meaning | When it occurs |
+|---|---|---|
+| `400` | Bad request | Missing or invalid parameters. See the `errors` array. |
+| `401` | Unauthorized | Missing, invalid, or expired API key. |
+| `403` | Forbidden | Valid key, but no access to this resource. |
+| `404` | Not found | The resource does not exist, or is not in your organization or environment. |
+| `409` | Conflict | A concurrent modification. Retry the read, then the write. |
+| `429` | Rate limited | Too many requests. Honor the `Retry-After` header when present. |
+| `5xx` | Server error | Something went wrong on our side. Safe to retry with backoff. |
+
+## Common scenarios
+
+### Validation (400)
+
+`message` lists each problem, and `errors` names the offending `field`.
+
+```json
+{
+  "statusCode": 400,
+  "error": "Bad Request",
+  "message": ["currency must be EUR or USD"],
+  "errors": [{ "field": "currency", "message": "must be EUR or USD" }],
+  "timestamp": "2026-08-06T12:00:00.000Z",
+  "requestId": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+### Authentication (401)
+
+The `x-api-key` header is missing or the key is wrong. Check you are using the right key: `sk_test_` for test mode, `sk_live_` for production.
+
+### Not found (404)
+
+The resource ID is wrong, or it belongs to a different environment. Test and live data are separate.
+
+### Rate limited (429)
+
+Back off and retry. When present, the `Retry-After` header tells you how many seconds to wait.
+
+## Handling errors with the SDK
+
+The [TypeScript SDK](/sdk/pay-errors) maps every response to a typed `AgentaOSError` subclass with `status`, `code`, `message`, `requestId`, and (on validation) `errors`, and retries transient failures for you.
+
+```typescript
+import { AgentaOSError, ValidationError } from '@agentaos/pay';
+
+try {
+  await agentaos.checkouts.create({ amount: -1 });
+} catch (err) {
+  if (err instanceof ValidationError) {
+    console.error(err.errors); // [{ field: 'amount', message: '...' }]
+  } else if (err instanceof AgentaOSError) {
+    console.error(err.status, err.code, err.requestId);
+  }
+}
+```
+
+## Environments
+
+There is one base URL. Your key prefix selects the environment: `sk_test_` uses test mode, `sk_live_` uses production. See [Test mode](/getting-started/test-mode).
+
+## Need help?
+
+Include the `requestId` (or the `x-request-id` header) from the failed response when you contact support. It lets us find the exact request instantly.

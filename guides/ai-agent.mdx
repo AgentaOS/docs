@@ -1,0 +1,132 @@
+---
+title: "Let an AI Agent Run Your Store"
+description: "Point a coding agent at the SKILL.md prompt, or connect the MCP server, so an AI assistant can create checkouts, check status, and manage subscriptions for you."
+---
+
+By the end of this guide an AI assistant, running in your terminal or inside Claude Desktop / Cursor, can create checkouts, check payment status, and manage subscriptions for your store, in plain language instead of code you write yourself.
+
+There are two ways in, and you can set up both, they don't conflict:
+
+<CardGroup cols={2}>
+  <Card title="Coding agents" icon="terminal">
+    Claude Code, Cursor's agent mode, or anything else that can run shell commands. Give it the SKILL.md prompt and the `agenta` CLI directly.
+  </Card>
+  <Card title="Chat assistants" icon="comments">
+    Claude Desktop, Cursor's chat, Windsurf, or any MCP-compatible client. Connect the AgentaOS MCP server instead.
+  </Card>
+</CardGroup>
+
+## Before you start
+
+An AgentaOS account. Neither path needs an API key up front, `agenta login` and the MCP server's gateway key both come from the same dashboard you'd use anyway.
+
+## Path A: a coding agent with the CLI
+
+<Steps>
+  <Step title="Install the CLI and log in">
+    ```bash
+    curl -fsSL https://agentaos.ai/install | bash
+    agenta login
+    ```
+    `agenta login` is the one step that needs you: it opens a browser for sign-in. Every other command an agent runs afterward is non-interactive.
+  </Step>
+
+  <Step title="Give your agent the skill">
+    Tell your coding agent to fetch and follow the skill prompt:
+
+    ```bash
+    curl -fsSL https://agentaos.ai/SKILL.md
+    ```
+
+    It teaches the agent the exact `agenta pay` and `agenta sub` commands, their flags, and how to handle the response, including always running `agenta status --json` first and always passing `--json` so output is machine-parseable instead of full of ANSI color codes.
+  </Step>
+
+  <Step title="Try a prompt">
+    Ask it something like:
+
+    > Create a checkout for 50 EUR for my consulting invoice.
+
+    The agent runs `agenta status --json` to confirm payment tools are ready, then `agenta pay checkout -a 50 --json`, and hands you back the `checkoutUrl` to share with your client.
+  </Step>
+</Steps>
+
+## Path B: a chat assistant with MCP
+
+<Steps>
+  <Step title="Get your keys">
+    A gateway key for payment tools, from [app.agentaos.ai](https://app.agentaos.ai) → **Settings → Developers → API Keys**. If you also want the agent to touch an agent wallet (send tokens, sign messages), you'll additionally need an API key and secret from a sub-account.
+  </Step>
+
+  <Step title="Add the server to your client's config">
+    For Claude Desktop, add this to your MCP server configuration:
+
+    ```json
+    {
+      "mcpServers": {
+        "agenta": {
+          "command": "npx",
+          "args": ["-y", "agentaos"],
+          "env": {
+            "AGENTA_API_KEY": "your-api-key",
+            "AGENTA_API_SECRET": "your-api-secret",
+            "AGENTAOS_GATEWAY_KEY": "sk_live_your-gateway-key"
+          }
+        }
+      }
+    }
+    ```
+
+    See [MCP setup](/mcp/setup) for Cursor and Windsurf equivalents.
+  </Step>
+
+  <Step title="Restart your client and ask it directly">
+    > List my last 5 checkouts.
+
+    > Cancel subscription sub_4f81c0 at the end of the current period.
+
+    The assistant calls the matching tool, `agenta_pay_list_checkouts` or `agenta_pay_cancel_subscription`, and reports back in the chat.
+  </Step>
+</Steps>
+
+## What the assistant can do
+
+The MCP server exposes **25 tools** total: wallet operations, contract calls, x402 payments, and the payment tools below. All 25 are documented in full at [MCP setup](/mcp/setup); the payment-specific ones are the ones most relevant to running a store:
+
+| Tool | What it does |
+|---|---|
+| `agenta_pay_create_checkout` | Create a checkout session. Returns a `checkoutUrl` for a human buyer and an `x402Url` for an AI agent payer. |
+| `agenta_pay_get_checkout` | Get a checkout's status, amount, currency, and expiry. Use it to check whether a payment completed. |
+| `agenta_pay_list_checkouts` | List checkout sessions, filterable by status (`open`, `completed`, `expired`, `cancelled`). |
+| `agenta_pay_list_subscriptions` | List subscriptions: status, amount, billing interval, and subscriber. |
+| `agenta_pay_cancel_subscription` | Cancel a subscription. Defaults to cancel-at-period-end; pass `atPeriodEnd: false` to cancel immediately. |
+| `agenta_pay_list_customers` | List the customers who have paid you: email, name, country, and ID. |
+| `agenta_pay_send_receipt` | Re-send the receipt email for a paid invoice to the buyer on file. |
+
+<Tip>
+Both paths use the same underlying API and respect the same test/live key scoping. An assistant working against a test key can only see and create test-mode data, exactly like a human integration would.
+</Tip>
+
+## Verify it worked
+
+Ask the assistant directly:
+
+> What's my AgentaOS status?
+
+On the CLI path, it should run `agenta status --json` and report `paymentTools.ready: true`, along with your organization and wallet. On the MCP path, ask it to list your most recent checkout and confirm the amount and status match what you see in the dashboard.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="MCP server setup" icon="server" href="/mcp/setup">
+    Every tool the MCP server exposes, and Cursor/Windsurf configuration.
+  </Card>
+  <Card title="x402 payments" icon="robot" href="/sub/x402">
+    Let agents discover, check, and pay for 402-protected resources automatically.
+  </Card>
+  <Card title="CLI install" icon="terminal" href="/cli/install">
+    The full `agenta` CLI reference, for scripting outside an AI assistant too.
+  </Card>
+  <Card title="Handle webhooks" icon="bell" href="/guides/handle-webhooks">
+    Checkouts an agent creates still need your server to fulfil them on completion.
+  </Card>
+</CardGroup>

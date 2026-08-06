@@ -1,0 +1,162 @@
+---
+title: "Sell a Subscription"
+description: "Create a recurring payment link, let a buyer subscribe at the hosted checkout, then list and cancel what's running."
+---
+
+By the end of this guide you'll have a subscription plan buyers can pay into, a real test subscriber, and you'll know how to list who's subscribed and cancel someone who asks. This runs in **test mode**, so the "buyer" is you, paying with the test card.
+
+<Warning>
+**There is no `subscriptions.create()`.** A subscription is created by the buyer, not by you. You create a payment link with `type: 'subscription'`, the buyer pays it at the hosted checkout, and that payment is what starts the subscription. This guide walks through exactly that flow.
+</Warning>
+
+## Before you start
+
+- An AgentaOS account with a test API key, or the CLI logged in. See [Accept your first payment](/guides/accept-your-first-payment) if you haven't set that up yet.
+- Your account needs to accept card and bank (via Merchant of Record), which is the default for most accounts. Only wallet-only, on-chain accounts can't create subscription links. Business verification (KYB) is a separate, later requirement for going **live**; it isn't needed to build and test subscriptions in test mode. See [Going live](/guides/go-live).
+
+<Steps>
+  <Step title="Create a subscription payment link">
+    Set `type: 'subscription'` and a `billingInterval`. Every other field works the same as a one-time link.
+
+    <Tabs>
+      <Tab title="SDK">
+        ```typescript
+        import { AgentaOS } from '@agentaos/pay';
+
+        const agentaos = new AgentaOS(process.env.AGENTAOS_API_KEY!); // sk_test_...
+
+        const plan = await agentaos.paymentLinks.create({
+          amount: 19.99,
+          currency: 'EUR',
+          description: 'Pro plan, monthly',
+          type: 'subscription',
+          billingInterval: 'month', // 'month' | 'year', required for subscriptions
+        });
+
+        console.log(plan.checkoutUrl);
+        // → https://app.agentaos.ai/pay/7rr6S9ml4BMp829wV5WeAA
+        ```
+      </Tab>
+      <Tab title="cURL">
+        ```bash
+        curl -X POST https://api.agentaos.ai/api/v1/gateway/payment-links \
+          -H "x-api-key: sk_test_..." \
+          -H "Content-Type: application/json" \
+          -d '{
+            "amount": 19.99,
+            "currency": "EUR",
+            "description": "Pro plan, monthly",
+            "type": "subscription",
+            "billingInterval": "month"
+          }'
+        ```
+      </Tab>
+    </Tabs>
+
+    <Note>
+    There's no CLI command for payment links yet, one-time or subscription. `agenta pay checkout` only creates single, non-recurring checkouts. Create a subscription link from the SDK, the REST API, or the dashboard's **Catalog → Products** page.
+    </Note>
+  </Step>
+
+  <Step title="Share checkoutUrl, buyer subscribes">
+    Share `plan.checkoutUrl` exactly as you would a one-time link. The buyer opens it and pays with a card at the hosted checkout, using the test card in test mode:
+
+    | Field | Value |
+    |---|---|
+    | Card number | `4242 4242 4242 4242` |
+    | Expiry | Any future date |
+    | CVC | Any 3 digits |
+
+    Behind the scenes, AgentaOS creates a customer and subscription with our card processor, charges the first cycle, and the subscription becomes visible to `subscriptions.list()`.
+  </Step>
+
+  <Step title="Confirm the subscription is active">
+    <Tabs>
+      <Tab title="SDK">
+        ```typescript
+        const page = await agentaos.subscriptions.list({ limit: 20, offset: 0 });
+
+        const sub = page.items.find((s) => s.planName === 'Pro plan, monthly');
+        console.log(sub?.status);           // 'active'
+        console.log(sub?.unitAmountMinor);  // 1999
+        ```
+      </Tab>
+      <Tab title="CLI">
+        ```bash
+        agenta subscriptions list --json
+        ```
+      </Tab>
+      <Tab title="cURL">
+        ```bash
+        curl "https://api.agentaos.ai/api/v1/gateway/subscriptions?limit=20" \
+          -H "x-api-key: sk_test_..."
+        ```
+      </Tab>
+    </Tabs>
+
+    <Info>
+    **Money model exception:** every other amount in this API, including this same payment link's `amount: 19.99`, is decimal currency units. A subscription's `unitAmountMinor` is the one field that breaks that pattern: it's an **integer of the smallest currency unit**. `1999` means €19.99, mirroring how our card processor represents recurring prices internally. The field name is the signal, anything ending in `Minor` is an integer, everything else is already decimal.
+    </Info>
+  </Step>
+
+  <Step title="Cancel the subscription">
+    Defaults to cancel-at-period-end: the subscriber keeps access until `currentPeriodEnd`, no refund. Pass `atPeriodEnd: false` to cancel immediately instead.
+
+    <Tabs>
+      <Tab title="SDK">
+        ```typescript
+        // At period end (default)
+        await agentaos.subscriptions.cancel(sub!.id);
+
+        // Immediately, no grace period
+        await agentaos.subscriptions.cancel(sub!.id, { atPeriodEnd: false });
+        ```
+      </Tab>
+      <Tab title="CLI">
+        <CodeGroup>
+        ```bash At period end
+        agenta subscriptions cancel 7c1e9b2a-4f6d-4a3b-9c8e-2d5f0a1b3c4d
+        ```
+        ```bash Immediately
+        agenta subscriptions cancel 7c1e9b2a-4f6d-4a3b-9c8e-2d5f0a1b3c4d --now
+        ```
+        </CodeGroup>
+      </Tab>
+      <Tab title="cURL">
+        ```bash
+        curl -X POST https://api.agentaos.ai/api/v1/gateway/subscriptions/7c1e9b2a-4f6d-4a3b-9c8e-2d5f0a1b3c4d/cancel \
+          -H "x-api-key: sk_test_..." \
+          -H "Content-Type: application/json" \
+          -d '{ "atPeriodEnd": true }'
+        ```
+      </Tab>
+    </Tabs>
+
+    <Note>
+    Cancellation never issues a refund, it only stops future renewals. Calling cancel again on an already-canceled subscription is a no-op, safe to retry.
+    </Note>
+  </Step>
+</Steps>
+
+## Verify it worked
+
+- `subscriptions.list()` shows your test subscription with `status: 'active'` and the right `unitAmountMinor` and `billingInterval`.
+- After cancelling at period end, `status` is still `active` but `cancelAtPeriodEnd` is `true` and `effectiveCancelDate` is set. After cancelling immediately, `status` becomes `canceled` right away.
+- The buyer now shows up under [Customers](/payments/customers), and the first cycle's charge issued its own invoice.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Payment links" icon="link" href="/payments/payment-links">
+    The full parameter and response reference, one-time and subscription both.
+  </Card>
+  <Card title="Webhooks" icon="bell" href="/payments/webhooks">
+    Get notified the moment a subscription payment lands.
+  </Card>
+  <Card title="Customers" icon="users" href="/payments/customers">
+    See everyone subscribed to you, with email, country, and VAT number.
+  </Card>
+  <Card title="Go live" icon="rocket" href="/guides/go-live">
+    Take this plan from test mode to real, recurring revenue.
+  </Card>
+</CardGroup>

@@ -1,0 +1,21 @@
+---
+title: "List transactions"
+openapi: "GET /gateway/all-transactions"
+---
+
+<Info>
+Only `confirmed` rows are returned. A pending or failed attempt never appears here. There's no `status` filter to request otherwise; `status` on each item is always `confirmed`.
+</Info>
+
+<Note>
+This row carries additional internal ledger fields (settlement batch references, dispute markers, raw card-processor fee) beyond what's documented here. Treat any field not listed as forward-compatible and safe to ignore. Don't build logic against undocumented keys.
+</Note>
+
+<CardGroup cols={2}>
+  <Card title="Invoices" icon="file-invoice" href="/api-reference/invoices/list">
+    Every settled inbound transaction has a matching invoice.
+  </Card>
+  <Card title="Webhooks" icon="bell" href="/api-reference/webhooks">
+    Get notified the moment a transaction settles, instead of polling this list.
+  </Card>
+</CardGroup>

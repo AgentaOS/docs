@@ -1,0 +1,8 @@
+---
+title: "Re-send the receipt email"
+openapi: "POST /gateway/invoices/{invoiceId}/send-receipt"
+---
+
+<Note>
+Returns `400` if the invoice isn't `paid` yet, or has no buyer email on file.
+</Note>

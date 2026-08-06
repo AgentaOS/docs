@@ -1,0 +1,8 @@
+---
+title: "Cancel a subscription"
+openapi: "POST /gateway/subscriptions/{id}/cancel"
+---
+
+<Note>
+Calling cancel again on an already-`canceled` subscription is a no-op. It returns the same result without hitting the card processor a second time. If the subscription never completed a first successful charge (`stripeSubscriptionId` is `null`), cancel returns `400`.
+</Note>

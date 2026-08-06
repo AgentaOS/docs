@@ -1,0 +1,8 @@
+---
+title: "Cancel a payment link"
+openapi: "DELETE /gateway/payment-links/{id}"
+---
+
+<Warning>
+Cancelling is a state change, not a delete. The link and its payment history stay readable. A `409` means the link changed concurrently (retry the read, then the cancel).
+</Warning>
