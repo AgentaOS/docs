@@ -5,6 +5,10 @@ description: "Create a checkout session to collect a single payment. Standalone,
 
 A checkout is one attempt to collect one payment. Create one directly from your backend when you already know the amount, or create one from a [payment link](/payments/payment-links) to reuse a shared template. Either way you get a `checkoutUrl`: send your buyer there to pay.
 
+<Frame caption="What the buyer sees at the checkoutUrl. AgentaOS is the merchant of record, so the page collects the buyer's country, calculates VAT, and shows one total.">
+  <img src="/images/product/checkout.png" alt="AgentaOS checkout page showing the product, buyer details, destination VAT, and the total due" />
+</Frame>
+
 ```mermaid
 stateDiagram-v2
     [*] --> open: checkouts.create()

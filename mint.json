@@ -157,9 +157,6 @@
     {
       "group": "Legacy",
       "pages": [
-        "banking/activate-eur",
-        "banking/activate-eur-individual",
-        "banking/activate-eur-business",
         "legacy/stablecoin-payouts"
       ]
     },
