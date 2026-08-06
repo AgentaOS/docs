@@ -13,7 +13,7 @@ If none of the three is set, nothing is sent. That's not an error, it's silent b
 
 <AccordionGroup>
   <Accordion title="checkout.session.completed">
-    Fired when a checkout's payment is confirmed, on any rail (card, SEPA, stablecoin). Resolved via the checkout's own webhook, then its payment link's, then your org default.
+    Fired when a checkout's payment is confirmed, on any rail (card, wallet, stablecoin). Resolved via the checkout's own webhook, then its payment link's, then your org default.
   </Accordion>
   <Accordion title="send.completed">
     Fired when an outbound on-chain send you initiated is confirmed. Only your org-level webhook URL is checked for this event (there's no per-checkout scope for outbound sends).

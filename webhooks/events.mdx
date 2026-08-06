@@ -29,7 +29,7 @@ The field names below are the literal snake_case keys AgentaOS `POST`s to your `
 
 ## `checkout.session.completed`
 
-Fired when a checkout is paid, by card, bank transfer (SEPA), or stablecoin. This is the event to listen for to fulfill an order.
+Fired when a checkout is paid, by card, wallet, or stablecoin. This is the event to listen for to fulfill an order.
 
 <Expandable title="data fields" defaultOpen>
   <ResponseField name="link_id" type="string | null">
@@ -74,7 +74,7 @@ Fired when a checkout is paid, by card, bank transfer (SEPA), or stablecoin. Thi
 </Expandable>
 
 <Note>
-`tx_hash`, `payer`, and `network` describe on-chain settlement. For checkouts paid by card or bank transfer (SEPA), these fields describe the settlement rail rather than a blockchain and may be empty, use `vendor_reference` for the off-chain reference and don't assume the on-chain fields are always populated. Key fulfillment off `session_id` and `amount`/`currency`, which are present for every payment method.
+`tx_hash`, `payer`, and `network` describe on-chain settlement. For checkouts paid by card, these fields are empty, use `vendor_reference` for the off-chain reference and don't assume the on-chain fields are always populated. Key fulfillment off `session_id` and `amount`/`currency`, which are present for every payment method.
 </Note>
 
 ```json Example

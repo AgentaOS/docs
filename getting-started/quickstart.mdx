@@ -3,9 +3,7 @@ title: "Quickstart"
 description: "Start accepting payments in minutes with AgentaOS. Everything below runs in test mode, with test money."
 ---
 
-Start accepting payments in minutes. Everything here runs in **test mode**, a full test environment with test money, so there is nothing to verify and nothing to lose.
-
-Choose the path that fits how you build:
+Both paths below run in **test mode** with test money, so there is nothing to verify and nothing to lose. Pick the one that fits how you build:
 
 <CardGroup cols={2}>
   <Card title="Code integration" icon="code" href="#code-integration">
@@ -115,7 +113,7 @@ app.post('/webhooks', express.raw({ type: 'application/json' }), (req, res) => {
       console.log(`Paid ${amount} ${currency}`);
       // Fulfil the order: grant access, send an email, update your database.
       // `payer` and `txHash` are also on event.data, but only populated on
-      // stablecoin checkouts, they are null for card and bank transfers.
+      // stablecoin checkouts; they are null for card payments.
     }
 
     res.json({ received: true });

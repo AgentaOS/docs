@@ -33,8 +33,10 @@ By the end of this guide your account is verified, has somewhere to send money, 
     You need somewhere for your balance to go. Set up bank, wallet, or both.
 
     <Tabs>
-      <Tab title="Bank (SEPA)">
-        Get a real European IBAN linked to your AgentaOS balance.
+      <Tab title="Bank account">
+        Add a bank account to receive payouts in EUR or USD across the supported countries. See [Supported countries](/mor/supported-countries).
+
+        Optionally, activate your own self-custody EUR IBAN instead:
 
         <CardGroup cols={2}>
           <Card title="I'm an individual" icon="user" href="/banking/activate-eur-individual">
@@ -73,7 +75,7 @@ By the end of this guide your account is verified, has somewhere to send money, 
 - The **Go live** progress chip in the sidebar shows every step complete.
 - **Settings → Developers → API Keys** shows an active `sk_live_` key, and your server is using it.
 - Your payout destination (bank IBAN or wallet address) appears on the **Payouts** page.
-- Optionally, run one small real checkout end to end: create it with your live key, pay it with a real card or bank transfer, and confirm it lands in **Finance → Payments** with an invoice under **Finance → Invoices**. Unlike test mode, live mode doesn't accept the `4242...` test card, only real payment methods clear.
+- Optionally, run one small real checkout end to end: create it with your live key, pay it with a real card, and confirm it lands in **Finance → Payments** with an invoice under **Finance → Invoices**. Unlike test mode, live mode doesn't accept the `4242...` test card, only real payment methods clear.
 
 ## Go-live checklist
 

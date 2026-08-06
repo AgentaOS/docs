@@ -3,7 +3,7 @@ title: "Overview"
 description: "@agentaos/pay is the server-side TypeScript SDK for AgentaOS. Install, authenticate, and call any resource in a few lines."
 ---
 
-`@agentaos/pay` is a server-side TypeScript SDK for the AgentaOS Payment API. AgentaOS is a Merchant of Record: create a checkout or a payment link, and AgentaOS collects the payment (card, bank transfer, or stablecoin), calculates and remits tax, issues the invoice, and settles to your balance. The SDK is a thin, typed wrapper over the REST API, one class per resource, camelCase in, camelCase out.
+`@agentaos/pay` is a server-side TypeScript SDK for the AgentaOS Payment API. AgentaOS is a Merchant of Record: create a checkout or a payment link, and AgentaOS collects the payment (card or wallet), calculates and remits tax, issues the invoice, and settles to your balance. The SDK is a thin, typed wrapper over the REST API, one class per resource, camelCase in, camelCase out.
 
 <Warning>
 `@agentaos/pay` is **backend-only**. The constructor throws if it detects `window`/`document`, so it cannot run in a browser bundle. Your API key grants full read/write access to your payments, customers, and invoices, never ship it to client-side code.
