@@ -92,7 +92,15 @@
       ]
     },
     {
-      "group": "Features",
+      "group": "Build with AI agents",
+      "pages": [
+        "agents/overview",
+        "mcp/setup",
+        "sub/x402"
+      ]
+    },
+    {
+      "group": "Sell",
       "pages": [
         "payments/payment-links",
         "payments/checkouts",
@@ -100,6 +108,17 @@
         "payments/invoices",
         "payments/receipts",
         "payments/customers"
+      ]
+    },
+    {
+      "group": "Merchant of Record",
+      "pages": [
+        "mor/how-it-works",
+        "mor/supported-countries",
+        "mor/tax",
+        "mor/pricing",
+        "mor/account-review",
+        "payouts/overview"
       ]
     },
     {
@@ -132,24 +151,6 @@
       "pages": [
         "payments/webhooks",
         "webhooks/events"
-      ]
-    },
-    {
-      "group": "Merchant of Record",
-      "pages": [
-        "mor/how-it-works",
-        "mor/supported-countries",
-        "mor/tax",
-        "mor/pricing",
-        "mor/account-review",
-        "payouts/overview"
-      ]
-    },
-    {
-      "group": "AI & Agents",
-      "pages": [
-        "mcp/setup",
-        "sub/x402"
       ]
     },
     {

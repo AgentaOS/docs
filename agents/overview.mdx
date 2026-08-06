@@ -1,0 +1,79 @@
+---
+title: "Build with AI agents"
+description: "Don't integrate by hand. Point your AI agent at AgentaOS and it installs the CLI, creates a product, and hands you a live checkout link."
+---
+
+You build with agents. So don't read an SDK reference and translate it into code yourself. **Hand AgentaOS to your agent and let it do the integration.**
+
+<Card title="Paste this into Claude Code, Cursor, or any coding agent" icon="robot" href="https://agentaos.ai/SKILL.md">
+  ```text
+  Read https://agentaos.ai/SKILL.md and set up AgentaOS for me:
+  install the CLI, log me in, create a test product, and give me the checkout link.
+  ```
+</Card>
+
+It reads [`SKILL.md`](https://agentaos.ai/SKILL.md) (the exact commands, flags, and response shapes), installs the `agenta` CLI, signs you in, creates a product in test mode, and hands you a shareable checkout URL. You approve the browser sign-in once; everything after that is non-interactive.
+
+## Connect the MCP server
+
+For Claude Desktop, Cursor, or Windsurf chat, connect the MCP server and your agent gets **25 tools** to run the store: create checkouts, read customers, manage subscriptions, and pay for 402-protected APIs.
+
+```json
+{
+  "mcpServers": {
+    "agenta": {
+      "command": "npx",
+      "args": ["-y", "agentaos"],
+      "env": { "AGENTAOS_GATEWAY_KEY": "sk_test_your-gateway-key" }
+    }
+  }
+}
+```
+
+Test keys only ever see test data, so an agent on a `sk_test_` key can build and break things safely. See [MCP server](/mcp/setup) for Cursor and Windsurf configs and the full tool list.
+
+## Agents can pay, too
+
+Every checkout returns an `x402Url` next to the human `checkoutUrl`. Your agent can **discover, price, and pay** for pay-per-call APIs on its own, over the [x402 protocol](/sub/x402), no card and no human in the loop. Machine-to-machine commerce, built in.
+
+## Feed the docs to your model
+
+The whole documentation is available as plain markdown for LLMs. Point your model at it or paste it into context:
+
+<CardGroup cols={2}>
+  <Card title="llms.txt" icon="list" href="/llms.txt">
+    A compact index of every page, for grounding a model.
+  </Card>
+  <Card title="llms-full.txt" icon="book" href="/llms-full.txt">
+    The entire docs as one markdown file. Everything, in one paste.
+  </Card>
+</CardGroup>
+
+## What your agent can run
+
+| Tool | What it does |
+|---|---|
+| `agenta_pay_create_checkout` | Create a checkout. Returns a `checkoutUrl` (human) and an `x402Url` (agent payer). |
+| `agenta_pay_get_checkout` | Check whether a payment completed. |
+| `agenta_pay_list_checkouts` | List checkouts by status. |
+| `agenta_pay_list_subscriptions` | List subscriptions: status, amount, interval, subscriber. |
+| `agenta_pay_cancel_subscription` | Cancel, at period end or immediately. |
+| `agenta_pay_list_customers` | Everyone who paid you: email, name, country. |
+| `agenta_pay_send_receipt` | Re-send a receipt email. |
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Run your store from an agent" icon="wand-magic-sparkles" href="/guides/ai-agent">
+    The full walkthrough: coding agent with the CLI, or a chat agent with MCP.
+  </Card>
+  <Card title="MCP server" icon="server" href="/mcp/setup">
+    All 25 tools, and Claude / Cursor / Windsurf setup.
+  </Card>
+  <Card title="Agent-to-agent payments" icon="robot" href="/sub/x402">
+    Let agents pay for 402-protected resources automatically.
+  </Card>
+  <Card title="Take a payment yourself" icon="rocket" href="/guides/accept-your-first-payment">
+    Prefer to do it by hand first? Create a product and get paid.
+  </Card>
+</CardGroup>

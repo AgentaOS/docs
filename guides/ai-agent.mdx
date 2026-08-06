@@ -1,9 +1,9 @@
 ---
 title: "Let an AI Agent Run Your Store"
-description: "Point a coding agent at the SKILL.md prompt, or connect the MCP server, so an AI assistant can create checkouts, check status, and manage subscriptions for you."
+description: "Point a coding agent at the SKILL.md prompt, or connect the MCP server, so an AI agent can create checkouts, check status, and manage subscriptions for you."
 ---
 
-By the end of this guide an AI assistant, running in your terminal or inside Claude Desktop / Cursor, can create checkouts, check payment status, and manage subscriptions for your store, in plain language instead of code you write yourself.
+By the end of this guide an AI agent, running in your terminal or inside Claude Desktop / Cursor, can create checkouts, check payment status, and manage subscriptions for your store, in plain language instead of code you write yourself.
 
 There are two ways in, and you can set up both, they don't conflict:
 
@@ -11,7 +11,7 @@ There are two ways in, and you can set up both, they don't conflict:
   <Card title="Coding agents" icon="terminal">
     Claude Code, Cursor's agent mode, or anything else that can run shell commands. Give it the SKILL.md prompt and the `agenta` CLI directly.
   </Card>
-  <Card title="Chat assistants" icon="comments">
+  <Card title="Chat agents" icon="comments">
     Claude Desktop, Cursor's chat, Windsurf, or any MCP-compatible client. Connect the AgentaOS MCP server instead.
   </Card>
 </CardGroup>
@@ -50,7 +50,7 @@ An AgentaOS account. Neither path needs an API key up front, `agenta login` and 
   </Step>
 </Steps>
 
-## Path B: a chat assistant with MCP
+## Path B: a chat agent with MCP
 
 <Steps>
   <Step title="Get your keys">
@@ -84,11 +84,11 @@ An AgentaOS account. Neither path needs an API key up front, `agenta login` and 
 
     > Cancel subscription sub_4f81c0 at the end of the current period.
 
-    The assistant calls the matching tool, `agenta_pay_list_checkouts` or `agenta_pay_cancel_subscription`, and reports back in the chat.
+    The agent calls the matching tool, `agenta_pay_list_checkouts` or `agenta_pay_cancel_subscription`, and reports back in the chat.
   </Step>
 </Steps>
 
-## What the assistant can do
+## What the agent can do
 
 The MCP server exposes **25 tools** total: wallet operations, contract calls, x402 payments, and the payment tools below. All 25 are documented in full at [MCP setup](/mcp/setup); the payment-specific ones are the ones most relevant to running a store:
 
@@ -103,12 +103,12 @@ The MCP server exposes **25 tools** total: wallet operations, contract calls, x4
 | `agenta_pay_send_receipt` | Re-send the receipt email for a paid invoice to the buyer on file. |
 
 <Tip>
-Both paths use the same underlying API and respect the same test/live key scoping. An assistant working against a test key can only see and create test-mode data, exactly like a human integration would.
+Both paths use the same underlying API and respect the same test/live key scoping. An agent working against a test key can only see and create test-mode data, exactly like a human integration would.
 </Tip>
 
 ## Verify it worked
 
-Ask the assistant directly:
+Ask the agent directly:
 
 > What's my AgentaOS status?
 
@@ -124,7 +124,7 @@ On the CLI path, it should run `agenta status --json` and report `paymentTools.r
     Let agents discover, check, and pay for 402-protected resources automatically.
   </Card>
   <Card title="CLI install" icon="terminal" href="/cli/install">
-    The full `agenta` CLI reference, for scripting outside an AI assistant too.
+    The full `agenta` CLI reference, for scripting outside an AI agent too.
   </Card>
   <Card title="Handle webhooks" icon="bell" href="/guides/handle-webhooks">
     Checkouts an agent creates still need your server to fulfil them on completion.
