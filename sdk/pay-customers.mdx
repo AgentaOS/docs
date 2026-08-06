@@ -1,0 +1,61 @@
+---
+title: "Customers"
+description: "Read the people who have paid you with agentaos.customers."
+---
+
+`agentaos.customers` mirrors the dashboard's Customers list: everyone who has completed a checkout against your org, scoped to the environment (test or live) your API key belongs to. It's read-only. A customer record is created automatically the first time someone pays, there's no `create`, `update`, or `retrieve` by ID, only `list`.
+
+## `customers.list(params?)`
+
+```typescript
+const page = await agentaos.customers.list({
+  limit: 20,   // default 20, max 100
+  offset: 0,
+});
+console.log(page.items.length, page.total, page.hasMore);
+```
+
+<ParamField query="limit" type="number" default="20">Max 100.</ParamField>
+<ParamField query="offset" type="number" default="0" />
+
+Returns `PaginatedList<Customer>`. See [Pagination](/sdk/pay-overview#pagination) for the `{ items, total, hasMore }` shape and how to walk every page.
+
+### Customer fields
+
+<ResponseField name="id" type="string">Customer UUID.</ResponseField>
+<ResponseField name="email" type="string" />
+<ResponseField name="name" type="string | null" />
+<ResponseField name="country" type="string | null">ISO 3166-1 alpha-2, e.g. `'DE'`.</ResponseField>
+<ResponseField name="vatNumber" type="string | null">VAT number on file, if any.</ResponseField>
+<ResponseField name="stripeCustomerId" type="string | null">The underlying customer ID from the card processor, set for card and bank (Merchant of Record) payments.</ResponseField>
+<ResponseField name="createdAt" type="string">ISO 8601.</ResponseField>
+
+```json
+{
+  "id": "9c8b7a6d-5e4f-3a2b-1c0d-e9f8a7b6c5d4",
+  "email": "jane@example.com",
+  "name": "Jane Doe",
+  "country": "DE",
+  "vatNumber": "DE123456789",
+  "stripeCustomerId": "cus_1H...",
+  "createdAt": "2026-08-06T02:00:00.000Z"
+}
+```
+
+<Tip>
+`country`, `vatNumber`, and `name` come from whatever the buyer entered at checkout, or from what you pre-populated via `buyerCountry`/`buyerVat`/`buyerName` on [`checkouts.create()`](/sdk/pay-checkouts#pre-populate-buyer-info). They can be `null` if the buyer skipped optional fields.
+</Tip>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Checkouts" icon="credit-card" href="/sdk/pay-checkouts">
+    Pre-populate buyer info so it lands here correctly.
+  </Card>
+  <Card title="Subscriptions" icon="arrows-rotate" href="/sdk/pay-subscriptions">
+    `customerEmail`/`customerName` on a subscription reference this record.
+  </Card>
+  <Card title="Invoices" icon="receipt" href="/sdk/pay-invoices">
+    Every invoice carries its own snapshot of buyer details at time of payment.
+  </Card>
+</CardGroup>

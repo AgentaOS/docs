@@ -1,0 +1,227 @@
+---
+title: "Events"
+description: "Every webhook event AgentaOS sends: full payload fields, types, and a JSON example for each."
+---
+
+AgentaOS sends three event types today. Every event shares the same envelope, an `id`, a `type`, and a `data` object whose shape depends on the type. See [Webhooks](/payments/webhooks) for how to register a URL and verify the signature before trusting any of this.
+
+<Note>
+Every `amount` field below is a **string** (e.g. `"49.99"`), not a number. This differs from `amount` on SDK create calls (checkouts, payment links), which is a plain number in currency units. Parse it before doing arithmetic.
+</Note>
+
+<Note>
+The field names below are the literal snake_case keys AgentaOS `POST`s to your `webhookUrl`, what you parse in any language. As returned by the SDK `webhooks.verify()` (Node.js) the same fields come back camelCased and typed: `link_id` becomes `linkId`, `session_id` becomes `sessionId`, `tx_hash` becomes `txHash`, `payer_type` becomes `payerType`, `chain_id` becomes `chainId`, `transaction_id` becomes `transactionId`, and so on. This page mirrors the raw body documented in [Webhooks](/api-reference/webhooks).
+</Note>
+
+<ResponseField name="id" type="string">
+  Unique event ID, e.g. `evt_550e8400-e29b-41d4-a716-446655440000`. Always present. For `checkout.session.completed` it is independent of `data.session_id`. For `send.completed` and `send.failed` it is derived as `evt_${data.transaction_id}`, so a redelivered send always carries the same event id. Either way, use `id` to deduplicate the *delivery*, and the data-level ID (`session_id` or `transaction_id`) to deduplicate the *underlying payment or send*.
+</ResponseField>
+
+<ResponseField name="type" type="string">
+  One of `checkout.session.completed`, `send.completed`, `send.failed`. Switch on this to decide how to parse `data`.
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  Event-specific payload. See each event below.
+</ResponseField>
+
+---
+
+## `checkout.session.completed`
+
+Fired when a checkout is paid, by card, bank transfer (SEPA), or stablecoin. This is the event to listen for to fulfill an order.
+
+<Expandable title="data fields" defaultOpen>
+  <ResponseField name="link_id" type="string | null">
+    The payment link's `secure_link_id`. `null` for a standalone checkout created without a link.
+  </ResponseField>
+  <ResponseField name="session_id" type="string">
+    The checkout's public session ID. The stable identifier to key your fulfillment and idempotency logic off.
+  </ResponseField>
+  <ResponseField name="amount" type="string">
+    Amount paid, in currency units, as a string. e.g. `"49.99"`.
+  </ResponseField>
+  <ResponseField name="currency" type="string">
+    Settlement currency, e.g. `"EUR"`.
+  </ResponseField>
+  <ResponseField name="rail" type="string">
+    How the buyer actually paid: `card`, `sepa`, `bank_transfer`, `bridge`, or `wallet`.
+  </ResponseField>
+  <ResponseField name="tx_hash" type="string | null">
+    On-chain transaction hash for stablecoin checkouts. `null` for card/bank rails, use `vendor_reference` instead.
+  </ResponseField>
+  <ResponseField name="vendor_reference" type="string | null">
+    Off-chain audit reference (card-processor payment reference, bank reference). `null` for on-chain rails.
+  </ResponseField>
+  <ResponseField name="payer" type="string | null">
+    The paying wallet address for stablecoin checkouts. `null` for card/bank rails.
+  </ResponseField>
+  <ResponseField name="payer_type" type="string">
+    `human` or `agent`, whether a person or an autonomous agent (e.g. an x402 client) initiated the payment.
+  </ResponseField>
+  <ResponseField name="network" type="string">
+    CAIP-2 network ID for on-chain rails, e.g. `"eip155:8453"` for Base, or `stripe` for card/bank.
+  </ResponseField>
+  <ResponseField name="testnet" type="boolean">
+    `true` on a test-mode checkout, `false` in live.
+  </ResponseField>
+  <ResponseField name="overpaid_by_cents" type="number | null">
+    Set when a bank-transfer buyer sent more than the amount due (beyond a 1-cent tolerance). `null` otherwise.
+  </ResponseField>
+  <ResponseField name="metadata" type="object">
+    The custom key-value data you attached when creating the checkout or payment link.
+  </ResponseField>
+</Expandable>
+
+<Note>
+`tx_hash`, `payer`, and `network` describe on-chain settlement. For checkouts paid by card or bank transfer (SEPA), these fields describe the settlement rail rather than a blockchain and may be empty, use `vendor_reference` for the off-chain reference and don't assume the on-chain fields are always populated. Key fulfillment off `session_id` and `amount`/`currency`, which are present for every payment method.
+</Note>
+
+```json Example
+{
+  "id": "evt_8c7d6e5f-4a3b-2c1d-0e9f-8a7b6c5d4e3f",
+  "type": "checkout.session.completed",
+  "data": {
+    "link_id": "mZrESFyR7RC9RPsJfZCVkg",
+    "session_id": "kR9pQwErTyUiOpAsDfGh",
+    "amount": "49.99",
+    "currency": "EUR",
+    "rail": "card",
+    "tx_hash": null,
+    "vendor_reference": "pi_3P...",
+    "payer": null,
+    "payer_type": "human",
+    "network": "stripe",
+    "testnet": false,
+    "overpaid_by_cents": null,
+    "metadata": { "orderId": "order-123" }
+  }
+}
+```
+
+## `send.completed`
+
+Fired when an outbound stablecoin send you initiated confirms on-chain.
+
+<Expandable title="data fields" defaultOpen>
+  <ResponseField name="transaction_id" type="string">
+    Internal transaction ID. Use this to deduplicate retried deliveries.
+  </ResponseField>
+  <ResponseField name="tx_hash" type="string">
+    On-chain transaction hash of the confirmed send.
+  </ResponseField>
+  <ResponseField name="from" type="string">
+    Sending wallet address (your organization's wallet).
+  </ResponseField>
+  <ResponseField name="to" type="string">
+    Recipient wallet address.
+  </ResponseField>
+  <ResponseField name="amount" type="string">
+    Amount sent, in token units, as a string. e.g. `"49.99"`.
+  </ResponseField>
+  <ResponseField name="token" type="string">
+    Token symbol, e.g. `"USDC"`.
+  </ResponseField>
+  <ResponseField name="chain_id" type="number">
+    EVM chain ID, e.g. `8453` for Base.
+  </ResponseField>
+  <ResponseField name="network" type="string">
+    CAIP-2 network ID, e.g. `"eip155:8453"`.
+  </ResponseField>
+  <ResponseField name="testnet" type="boolean">
+    `true` on a test-mode send, `false` in live.
+  </ResponseField>
+  <ResponseField name="description" type="string | null">
+    Optional description you attached to the send. `null` if none was set.
+  </ResponseField>
+</Expandable>
+
+```json Example
+{
+  "id": "evt_9d8e7f6a-5b4c-3d2e-1f0a-9b8c7d6e5f4a",
+  "type": "send.completed",
+  "data": {
+    "transaction_id": "9d8e7f6a-5b4c-3d2e-1f0a-9b8c7d6e5f4a",
+    "tx_hash": "0xabc123...",
+    "from": "0xorgwallet...",
+    "to": "0xrecipient...",
+    "amount": "100.00",
+    "token": "USDC",
+    "chain_id": 8453,
+    "network": "eip155:8453",
+    "testnet": false,
+    "description": "Payout to contractor"
+  }
+}
+```
+
+## `send.failed`
+
+Fired when an outbound send fails to broadcast, network error, insufficient balance, or the transaction reverted.
+
+<Expandable title="data fields" defaultOpen>
+  <ResponseField name="transaction_id" type="string">
+    Internal transaction ID. Use this to deduplicate retried deliveries.
+  </ResponseField>
+  <ResponseField name="tx_hash" type="null">
+    Always `null`, the send never confirmed on-chain.
+  </ResponseField>
+  <ResponseField name="from" type="string">
+    Sending wallet address (your organization's wallet).
+  </ResponseField>
+  <ResponseField name="to" type="string">
+    Intended recipient wallet address.
+  </ResponseField>
+  <ResponseField name="amount" type="string">
+    Amount that was attempted, in token units, as a string.
+  </ResponseField>
+  <ResponseField name="token" type="string">
+    Token symbol, e.g. `"USDC"`.
+  </ResponseField>
+  <ResponseField name="chain_id" type="number">
+    EVM chain ID, e.g. `8453` for Base.
+  </ResponseField>
+  <ResponseField name="network" type="string">
+    CAIP-2 network ID, e.g. `"eip155:8453"`.
+  </ResponseField>
+  <ResponseField name="testnet" type="boolean">
+    `true` on a test-mode send, `false` in live.
+  </ResponseField>
+  <ResponseField name="description" type="string | null">
+    Optional description you attached to the send. `null` if none was set.
+  </ResponseField>
+</Expandable>
+
+```json Example
+{
+  "id": "evt_8fae0d2b-7d54-4b3e-9a41-2b3f9c1e0aa2",
+  "type": "send.failed",
+  "data": {
+    "transaction_id": "8fae0d2b-7d54-4b3e-9a41-2b3f9c1e0aa2",
+    "tx_hash": null,
+    "from": "0xorgwallet...",
+    "to": "0xrecipient...",
+    "amount": "100.00",
+    "token": "USDC",
+    "chain_id": 8453,
+    "network": "eip155:8453",
+    "testnet": false,
+    "description": null
+  }
+}
+```
+
+<Warning>
+`send.failed` means the transaction never landed on-chain. It's distinct from a payment dispute or a card decline, those don't go through this event, they affect your balance directly. See [Payouts](/payouts/overview).
+</Warning>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Verify signatures" icon="shield-check" href="/payments/webhooks">
+    How to register a URL and verify the HMAC-SHA256 signature, in TypeScript, Python, Go, and PHP.
+  </Card>
+  <Card title="Payment SDK: Webhooks" icon="node-js" href="/sdk/pay-webhooks">
+    The `webhooks` resource in `@agentaos/pay`.
+  </Card>
+</CardGroup>

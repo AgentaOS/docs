@@ -1,0 +1,72 @@
+---
+title: "Customers"
+description: "The buyers who have paid you. Read-only, populated automatically from checkouts."
+---
+
+A customer record is created the moment someone pays you for the first time: email, name, country, and VAT number, pulled from what they entered at checkout. This is a read surface, the same list the [dashboard](https://app.agentaos.ai) Customers page shows. There's no `create` or `update`: you can't add a customer that hasn't paid, and buyer details come from the checkout, not from you editing a record after the fact.
+
+## List customers
+
+Paginated: every list call returns `{ items, total, hasMore }`.
+
+<Tabs>
+  <Tab title="SDK">
+    ```typescript
+    const page = await agentaos.customers.list({ limit: 20, offset: 0 });
+    console.log(page.total, page.hasMore);
+    ```
+  </Tab>
+  <Tab title="CLI">
+    ```bash
+    agenta customers list --limit 20
+    ```
+  </Tab>
+  <Tab title="cURL">
+    ```bash
+    curl "https://api.agentaos.ai/api/v1/gateway/customers?limit=20&offset=0" \
+      -H "x-api-key: sk_live_..."
+    ```
+  </Tab>
+</Tabs>
+
+## Response
+
+<ResponseField name="id" type="string">Customer UUID.</ResponseField>
+<ResponseField name="email" type="string">Customer email.</ResponseField>
+<ResponseField name="name" type="string | null">Customer name.</ResponseField>
+<ResponseField name="country" type="string | null">ISO 3166-1 alpha-2 country code.</ResponseField>
+<ResponseField name="vatNumber" type="string | null">VAT number on file, if provided.</ResponseField>
+<ResponseField name="stripeCustomerId" type="string | null">Underlying customer ID from the card processor, for card/bank payers.</ResponseField>
+<ResponseField name="createdAt" type="string">ISO 8601, when this buyer first paid you.</ResponseField>
+
+```json
+{
+  "items": [
+    {
+      "id": "a1b2c3d4-...",
+      "email": "john@example.com",
+      "name": "John Doe",
+      "country": "DE",
+      "vatNumber": "DE123456789",
+      "stripeCustomerId": "cus_...",
+      "createdAt": "2026-03-17T02:00:00.000Z"
+    }
+  ],
+  "total": 1,
+  "hasMore": false
+}
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Subscriptions" icon="rotate" href="/payments/subscriptions">
+    See which customers have an active subscription.
+  </Card>
+  <Card title="Invoices" icon="file-invoice" href="/payments/invoices">
+    Every invoice a customer has been issued.
+  </Card>
+  <Card title="Checkouts" icon="credit-card" href="/payments/checkouts">
+    Pre-fill buyer details to skip the checkout form next time.
+  </Card>
+</CardGroup>

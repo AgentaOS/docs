@@ -1,49 +1,207 @@
 ---
-title: "Payment SDK"
-description: "Accept payments with @agentaos/pay — create checkouts, track payments, manage webhooks."
+title: "Overview"
+description: "@agentaos/pay is the server-side TypeScript SDK for AgentaOS. Install, authenticate, and call any resource in a few lines."
 ---
 
-# Payment SDK
+`@agentaos/pay` is a server-side TypeScript SDK for the AgentaOS Payment API. AgentaOS is a Merchant of Record: create a checkout or a payment link, and AgentaOS collects the payment (card, bank transfer, or stablecoin), calculates and remits tax, issues the invoice, and settles to your balance. The SDK is a thin, typed wrapper over the REST API, one class per resource, camelCase in, camelCase out.
+
+<Warning>
+`@agentaos/pay` is **backend-only**. The constructor throws if it detects `window`/`document`, so it cannot run in a browser bundle. Your API key grants full read/write access to your payments, customers, and invoices, never ship it to client-side code.
+</Warning>
+
+## Install
 
 ```bash
 npm install @agentaos/pay
 ```
 
-## Create a checkout
+<Note>
+Requires **Node.js 20+**. The package ships as **ESM only** (`"type": "module"`) with zero runtime dependencies, its HTTP layer is the built-in `fetch`.
+</Note>
+
+## Initialize
 
 ```typescript
 import { AgentaOS } from '@agentaos/pay';
 
-const client = new AgentaOS('sk_live_your-key');
+const agentaos = new AgentaOS(process.env.AGENTAOS_API_KEY!);
 
-const checkout = await client.checkouts.create({
-  amount: 50,
+const checkout = await agentaos.checkouts.create({
+  amount: 49.99,
   currency: 'EUR',
-  description: 'Consulting fee',
+  description: 'Pro Plan: Monthly',
+  successUrl: 'https://myshop.com/success',
+  cancelUrl: 'https://myshop.com/cart',
+  webhookUrl: 'https://myshop.com/webhooks',
 });
 
-console.log(checkout.checkoutUrl);  // share with customer
-console.log(checkout.x402Url);      // for AI agents
+console.log(checkout.checkoutUrl);
+// → https://app.agentaos.ai/checkout/mZrESFyR7RC9RPsJfZCVkg
 ```
 
-## Retrieve
+Get a key from the dashboard: **Settings → Developers → API Keys**. See [Test mode and live mode](/getting-started/test-mode) for the difference between a `sk_test_` and `sk_live_` key.
+
+## Authentication
+
+The constructor takes one positional argument, your key, and detects which auth mode to use from its shape. There is no separate flag to set:
+
+| Key looks like | Auth mode | Header sent |
+|---|---|---|
+| Starts with `sk_live_` or `sk_test_` | API key | `x-api-key: <key>` |
+| Three dot-separated segments (a JWT) | Session token | `Authorization: Bearer <token>` |
+| Anything else | - | Constructor throws `Invalid API key format` |
 
 ```typescript
-const session = await client.checkouts.retrieve('session-id');
-console.log(session.status); // open, completed, expired, cancelled
+// API key: the common case for a backend integration
+const agentaos = new AgentaOS('sk_live_51H...');
+
+// JWT: used internally by `agenta login` sessions (CLI), rarely passed directly
+const agentaos = new AgentaOS('eyJhbGciOi....header.payload'); // 3 dot-separated segments
 ```
 
-## List
+<Info>
+A JWT-mode client is how the AgentaOS CLI authenticates its own SDK calls after `agenta login`. If you're building a normal backend integration, use an API key.
+</Info>
+
+## Options
+
+The second constructor argument configures transport behavior. Every field is optional.
 
 ```typescript
-const { items, total } = await client.checkouts.list({
-  status: 'completed',
-  limit: 10,
+const agentaos = new AgentaOS('sk_live_...', {
+  baseUrl: 'https://api.agentaos.ai',
+  timeout: 30_000,
+  maxRetries: 2,
+  debug: false,
 });
 ```
 
-## Auth
+<ParamField body="baseUrl" type="string" default="https://api.agentaos.ai">
+  API origin. Each resource appends its own path (e.g. `/api/v1/gateway/sessions`) to this origin, so set this to override the host, not to add a path prefix. Useful for pointing at a local or staging server.
+</ParamField>
 
-The SDK auto-detects auth type:
-- `sk_live_...` or `sk_test_...` → API key (`x-api-key` header)
-- JWT token → Bearer auth (`Authorization` header)
+<ParamField body="timeout" type="number" default="30000">
+  Per-attempt request timeout in milliseconds. On timeout the call throws [`TimeoutError`](/sdk/pay-errors), which is **not** retried. If `maxRetries` is set, each retry attempt gets its own fresh timeout window, worst-case latency is roughly `(maxRetries + 1) × timeout` plus backoff delay.
+</ParamField>
+
+<ParamField body="maxRetries" type="number" default="2">
+  Max retries on `5xx` responses and network errors, with exponential backoff (`1s, 2s, 4s...`, capped at `10s`). Set `0` to disable. A `429` is retried inline at most once when the server's `Retry-After` is 60s or less; otherwise it throws immediately. See [Errors → Retry behavior](/sdk/pay-errors#retry-behavior).
+</ParamField>
+
+<ParamField body="debug" type="boolean" default="false">
+  Logs each request (`METHOD path -> status (Nms)`) and retry/backoff events to `stderr`. Never logs your API key or request/response bodies.
+</ParamField>
+
+<ParamField body="logger" type="(level: 'debug' | 'info' | 'warn' | 'error', message: string) => void">
+  Custom sink for debug output instead of `stderr`. Only called when `debug: true`.
+</ParamField>
+
+## Resources
+
+The client exposes one property per resource. All of them share the same auth and retry configuration from the constructor.
+
+| Resource | Access | What it's for |
+|---|---|---|
+| `agentaos.checkouts` | `create` `list` `retrieve` `cancel` | Single payment sessions. [Docs →](/sdk/pay-checkouts) |
+| `agentaos.paymentLinks` | `create` `list` `retrieve` `cancel` | Reusable, shareable payment URLs (one-time or subscription). [Docs →](/sdk/pay-payment-links) |
+| `agentaos.subscriptions` | `list` `cancel` | Recurring billing created by buyers at checkout. [Docs →](/sdk/pay-subscriptions) |
+| `agentaos.invoices` | `list` `retrieve` `void` `downloadPdf` `downloadStatement` `exportCsv` `getReceipt` `sendReceipt` | Tax-compliant invoice records and their PDFs/CSV. [Docs →](/sdk/pay-invoices) |
+| `agentaos.customers` | `list` | Buyers who have paid you. [Docs →](/sdk/pay-customers) |
+| `agentaos.transactions` | `list` | Unified ledger of confirmed inbound and outbound payments. |
+| `agentaos.webhooks` | `verify` | Local HMAC signature verification, no network call. [Docs →](/sdk/pay-webhooks) |
+
+<Note>
+`transactions.list()` takes `{ direction?: 'all' | 'inbound' | 'outbound', from?, to?, limit?, offset? }` and returns a `PaginatedList<Transaction>`. It has no `create`, transactions are a read-only ledger produced by checkouts, subscription charges, and outbound sends.
+</Note>
+
+## The money model
+
+The SDK is strict about units, and the field **name** tells you which one you're holding:
+
+| Representation | Where it shows up | Example |
+|---|---|---|
+| **Decimal currency units** (`number`) | `amount` on every create call, `PaymentLink.amount`, `Checkout.amountOverride`, `Invoice.amount` / `fiatAmount` / `taxAmount`, `Transaction.amount` | `amount: 49.99` means €49.99 |
+| **Integer minor units** (`number`) | `Subscription.unitAmountMinor`, the only field with a `Minor` suffix | `unitAmountMinor: 1999` means €19.99 |
+| **String** | `amount` inside every webhook event payload | `"49.99"` |
+
+<Warning>
+Never pass `amount: 4900` to `checkouts.create()` or `paymentLinks.create()` expecting cents, that call means **4,900 units** of the currency. A plain `amount` field is always decimal currency units. Only a field whose name ends in `Minor` is an integer of the smallest unit, and today that's exactly one field: `Subscription.unitAmountMinor`.
+</Warning>
+
+## Pagination
+
+Every `list()` method returns the same shape:
+
+```typescript
+interface PaginatedList<T> {
+  items: T[];
+  total: number;    // total matching records, not just this page
+  hasMore: boolean; // true if offset + items.length < total
+}
+```
+
+```typescript
+const page = await agentaos.customers.list({ limit: 20, offset: 0 });
+console.log(page.items.length, page.total, page.hasMore);
+
+// Walk every page
+let offset = 0;
+const all = [];
+while (true) {
+  const page = await agentaos.customers.list({ limit: 100, offset });
+  all.push(...page.items);
+  if (!page.hasMore) break;
+  offset += page.items.length;
+}
+```
+
+<ParamField query="limit" type="number" default="20">
+  Page size. Capped server-side at **100** for `checkouts`, `paymentLinks`, `subscriptions`, and `customers`; capped at **5000** for `transactions` and `invoices`.
+</ParamField>
+
+<ParamField query="offset" type="number" default="0">
+  Number of records to skip, for the next page pass `offset + items.length` from the previous response.
+</ParamField>
+
+## Field casing
+
+The REST API is snake_case (`checkout_url`); the SDK is camelCase (`checkoutUrl`) both ways: request bodies you pass in are already camelCase and go over the wire as-is (server DTOs accept camelCase), and every response body is deep-transformed from the server's snake_case back to camelCase before it reaches your code, including nested objects and webhook payloads.
+
+## Error handling
+
+Every failed call throws a subclass of `AgentaOSError` (itself an `Error`) with a typed `status`, `code`, and optional `requestId`:
+
+```typescript
+import { AgentaOSError, ValidationError, RateLimitError } from '@agentaos/pay';
+
+try {
+  await agentaos.checkouts.create({ amount: -1 });
+} catch (err) {
+  if (err instanceof ValidationError) {
+    console.log(err.errors); // [{ field: 'amount', message: '...' }]
+  } else if (err instanceof RateLimitError) {
+    console.log('retry after', err.retryAfter, 'ms');
+  } else if (err instanceof AgentaOSError) {
+    console.log(err.status, err.code, err.requestId);
+  }
+}
+```
+
+See [Errors](/sdk/pay-errors) for the full hierarchy and the exact retry/backoff behavior.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Checkouts" icon="credit-card" href="/sdk/pay-checkouts">
+    Create, list, retrieve, and cancel single payment sessions.
+  </Card>
+  <Card title="Payment links" icon="link" href="/sdk/pay-payment-links">
+    Reusable one-time and subscription payment URLs.
+  </Card>
+  <Card title="Webhooks" icon="tower-broadcast" href="/sdk/pay-webhooks">
+    Verify signed event payloads server-side.
+  </Card>
+  <Card title="Errors" icon="triangle-exclamation" href="/sdk/pay-errors">
+    The full error hierarchy and retry/timeout behavior.
+  </Card>
+</CardGroup>

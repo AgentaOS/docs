@@ -1,0 +1,120 @@
+---
+title: "Errors"
+description: "The AgentaOSError hierarchy, what triggers each subclass, and exactly how retries and timeouts work."
+---
+
+Every failure from `@agentaos/pay`, a bad request, an auth problem, a network blip, throws a subclass of `AgentaOSError`. Retries for transient failures (`5xx`, network errors, some `429`s) happen automatically inside the SDK before anything is thrown, so if you see an error, it's already survived the retry budget.
+
+## Hierarchy
+
+```typescript
+class AgentaOSError extends Error {
+  readonly status: number;
+  readonly code: string;
+  readonly requestId?: string;
+}
+```
+
+Every SDK-thrown error extends `AgentaOSError`, so `err instanceof AgentaOSError` catches all of them, `err.status`, `err.code`, and `err.requestId` (from the response's `x-request-id` header, when present) are always there for logging.
+
+| Class | `status` | `code` | Thrown when |
+|---|---|---|---|
+| `AuthenticationError` | `401` | `authentication_error` | Invalid or expired API key. |
+| `PermissionError` | `403` | `permission_error` | The key is valid but can't access this resource. |
+| `NotFoundError` | `404` | `not_found` | The resource doesn't exist, or doesn't belong to your org. |
+| `ValidationError` | `400` | `validation_error` | Request params failed server-side validation. Carries `errors: Array<{ field, message }>`. |
+| `RateLimitError` | `429` | `rate_limit` | Too many requests, exceeded the inline retry budget (see below). Carries `retryAfter` in **milliseconds**. |
+| `IdempotencyError` | `409` | `idempotency_error` | Reserved for a duplicate idempotency-key conflict. In practice, create calls replay the original success instead of throwing this, see [Idempotency](#idempotency) below. |
+| `ApiError` | the actual `5xx` code | `api_error` | A `5xx` response survived every retry attempt. |
+| `TimeoutError` | `0` | `timeout_error` | The request didn't finish within `timeout` ms. Never retried. |
+| `WebhookVerificationError` | `0` | `webhook_verification_error` | `webhooks.verify()` rejected a signature. Never comes from an HTTP call. |
+| `AgentaOSError` (generic) | varies | `network_error` \| `unknown_error` | A connection failure after retries, or a status code with no dedicated subclass. |
+
+## Catching errors
+
+Catch specific subclasses before the generic `AgentaOSError`, they all extend it, so a broad catch first would shadow the specific ones:
+
+```typescript
+import {
+  AgentaOSError,
+  AuthenticationError,
+  NotFoundError,
+  RateLimitError,
+  ValidationError,
+} from '@agentaos/pay';
+
+try {
+  await agentaos.checkouts.create({ amount: -1 });
+} catch (err) {
+  if (err instanceof ValidationError) {
+    console.log('Invalid params:', err.errors); // [{ field: 'amount', message: '...' }]
+  } else if (err instanceof AuthenticationError) {
+    console.log('Bad API key:', err.message);
+  } else if (err instanceof RateLimitError) {
+    console.log('Rate limited, retry after:', err.retryAfter, 'ms');
+  } else if (err instanceof NotFoundError) {
+    console.log('Not found:', err.message);
+  } else if (err instanceof AgentaOSError) {
+    console.log('API error:', err.status, err.code, err.message);
+  } else {
+    throw err; // not an SDK error at all
+  }
+}
+```
+
+## Retry behavior
+
+Retries are controlled by the `maxRetries` [client option](/sdk/pay-overview#options) (default `2`), and only apply to `checkouts`, `paymentLinks`, `transactions`, `invoices`, `subscriptions`, and `customers`, `webhooks.verify()` never touches the network.
+
+<Steps>
+  <Step title="5xx responses">
+    Retried with exponential backoff: `min(1000 × 2^attempt, 10000)` ms, so `1s`, `2s`, `4s`, `8s`, capped at `10s`. After `maxRetries` is exhausted, throws `ApiError`.
+  </Step>
+  <Step title="429 (rate limited)">
+    Retried **once inline**, and only if the response's `Retry-After` header is `60` seconds or less and a retry attempt remains. If `Retry-After` exceeds `60s`, or retries are exhausted, it throws `RateLimitError` immediately with `retryAfter` set from the header (in ms, defaulting to `60000` if the header is missing).
+  </Step>
+  <Step title="Network errors">
+    Same exponential backoff as `5xx`. After `maxRetries`, throws a generic `AgentaOSError` (`code: 'network_error'`, `status: 0`).
+  </Step>
+  <Step title="Timeouts">
+    **Never retried.** Each attempt (including retries of other error types) gets its own `timeout`-ms `AbortController`; if it fires, `TimeoutError` is thrown immediately, no backoff, no further attempts.
+  </Step>
+</Steps>
+
+<Warning>
+Because every attempt gets a fresh timeout window, worst-case latency for a single call is roughly `(maxRetries + 1) × timeout`, plus backoff delay between attempts. With the defaults (`timeout: 30000`, `maxRetries: 2`), a call that keeps hitting `5xx` can take up to roughly 90 seconds plus a few seconds of backoff before it finally throws.
+</Warning>
+
+## Idempotency
+
+Every `POST` the SDK sends (`checkouts.create()`, `paymentLinks.create()`, `subscriptions.cancel()`, and the rest) automatically carries an `idempotency-key` header, a random UUID generated fresh per call. Retry the same call with the same key and the server does not reject it: it replays the original success and hands back the same resource, including its already-issued invoice, if any, instead of creating a second one. There is no global `409` on a duplicate key.
+
+`subscriptions.cancel()` is a `POST`, so it carries an auto-generated key like any other. You rarely need to think about it: the call is safe to retry because cancelling an already-cancelled subscription is a no-op on the server, not an error. The key is sent, but the operation is naturally idempotent either way.
+
+`GET` reads carry no key, they're naturally idempotent.
+
+## Debugging
+
+Set `debug: true` on the client to log every request and retry to `stderr` (or your own `logger`):
+
+```typescript
+const agentaos = new AgentaOS('sk_live_...', {
+  debug: true,
+  logger: (level, message) => myLogger[level]('agentaos', message),
+});
+```
+
+<Info>
+Debug logs are sanitized: they never include your API key or request/response bodies, only method, path, status, timing, and retry/backoff notices.
+</Info>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Overview" icon="code" href="/sdk/pay-overview">
+    Client options, auth, and the resource map.
+  </Card>
+  <Card title="Webhooks" icon="tower-broadcast" href="/sdk/pay-webhooks">
+    `WebhookVerificationError` and signature verification in detail.
+  </Card>
+</CardGroup>

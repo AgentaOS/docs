@@ -1,0 +1,21 @@
+---
+title: "List customers"
+openapi: "GET /gateway/customers"
+---
+
+<Info>
+Every field on this resource is camelCase on the wire, unlike Payment Links, Checkouts, Invoices, and Transactions. See [Naming convention](/api-reference/introduction#naming-convention).
+</Info>
+
+<Note>
+A customer is scoped to one organization *and* one environment: a test-mode buyer and a live-mode buyer with the same email are two separate records. `country`/`vatNumber` are remembered from the most recent checkout that supplied them and never blanked by a later checkout that omits them.
+</Note>
+
+<CardGroup cols={2}>
+  <Card title="Checkouts" icon="cart-shopping" href="/api-reference/checkouts/create">
+    Pre-fill `buyerEmail`, `buyerName`, `buyerCountry`, and `buyerVat` to populate this record.
+  </Card>
+  <Card title="Invoices" icon="file-invoice" href="/api-reference/invoices/list">
+    Every invoice carries the same buyer fields.
+  </Card>
+</CardGroup>

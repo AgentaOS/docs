@@ -1,32 +1,128 @@
 ---
-title: Status
-description: Check account, wallet, and tool readiness.
+title: "Status"
+description: "Check who you're logged in as, whether payment tools are ready, and what to do next."
 ---
 
-# Status
+`agenta status` is the command to run right after `agenta login`, and the one to reach for whenever something isn't working: it tells you exactly what's configured, what's missing, and the next command to run.
 
 ```bash
 agenta status
 ```
 
-Returns account info, wallet status, payment tool readiness, and sub-account list.
+Alias: `agenta whoami`.
+
+## What it checks
+
+- **Account**: are you logged in, and as who (read from your session).
+- **Organization and wallet**: your org name and whether a payout wallet is activated.
+- **Payment tools**: whether `agenta pay checkout` will actually work right now.
+- **Agent sub-accounts**: any `agenta sub create`d signer wallets on this machine, with live balance and status.
+
+## Usage
+
+```bash
+agenta status [--json]
+```
+
+| Flag | Description |
+|---|---|
+| `--json` | Output a single JSON object instead of the human-readable summary. |
+
+## Example output
+
+```bash Output
+  AgentaOS CLI
+  ───────────────────────────────────
+  Account:      demo@founder.dev
+  Organization: Acme Freelance
+  Wallet:       0x71C7...976F
+  JWT expires:  2026-08-06 14:32 UTC (6h 40m remaining)
+  Server:       https://api.agentaos.ai
+  Config:       /Users/you/.agenta
+
+  Payment tools:  ✓ Ready
+  Agent accounts: Run agenta sub create to create a sub-account
+
+  Next: agenta pay checkout -a 50 to create a checkout
+        agenta sub create to create an agent sub-account
+```
+
+If your wallet isn't activated yet, `Payment tools` shows what's blocking you instead of a green check, and `Next` points at `agenta login` to finish activation.
+
+### `--json`
+
+```json
+{
+  "account": {
+    "authenticated": true,
+    "email": "demo@founder.dev",
+    "server": "https://api.agentaos.ai",
+    "configDir": "/Users/you/.agenta",
+    "jwtExpiresAt": "2026-08-06T14:32:00.000Z",
+    "jwtSecondsRemaining": 24000,
+    "organization": "Acme Freelance",
+    "walletAddress": "0x71C7656EC7ab88b098defB751B7401B5f6d8976",
+    "walletActivated": true,
+    "paymentTools": {
+      "ready": true,
+      "hint": "Run agenta pay checkout -a 50 to create a checkout."
+    }
+  },
+  "subAccounts": {
+    "count": 0,
+    "hint": "Run agenta sub create --name <name> to create a sub-account.",
+    "items": []
+  }
+}
+```
+
+<Tip>
+`--json` also kicks in automatically whenever stdout isn't a terminal, so piping to `jq` or writing to a file gives you JSON without the flag: `agenta status | jq .account.walletActivated`.
+</Tip>
 
 ## Response fields
 
 | Field | Description |
-|-------|-------------|
-| `account.authenticated` | Logged in |
-| `account.email` | Account email |
-| `account.organization` | Org name |
-| `account.walletAddress` | Wallet address (null if not activated) |
-| `account.walletActivated` | Ready for payments |
-| `account.paymentTools.ready` | Can create checkouts |
-| `account.paymentTools.hint` | What to do next |
-| `subAccounts.count` | Number of sub-accounts |
-| `subAccounts.items[]` | Name, address, isDefault |
+|---|---|
+| `account.authenticated` | Whether you have a valid session. |
+| `account.email` | Account email, decoded from your session token. |
+| `account.organization` | Your organization's name. |
+| `account.walletAddress` | Payout wallet address, `null` if not activated. |
+| `account.walletActivated` | Whether the wallet is ready to receive funds. |
+| `account.paymentTools.ready` | Whether `agenta pay checkout` will succeed right now. |
+| `account.paymentTools.hint` | What to do if it isn't ready. |
+| `account.jwtExpiresAt` | ISO 8601 timestamp your session token expires at. |
+| `account.jwtSecondsRemaining` | Seconds left before that expiry. |
+| `account.configDir` | Where the CLI stores its local session and signer config. |
+| `subAccounts.count` | Number of agent sub-accounts (`agenta sub create`) on this machine. |
+| `subAccounts.items[]` | Each sub-account's `name`, `address`, and `isDefault`. |
 
-## Aliases
+<Note>
+`subAccounts` are agent signer wallets created with `agenta sub` (for agent-to-agent payments and x402), not your MoR customers. For the people who've paid you, see [`agenta customers list`](/cli/customers).
+</Note>
 
-```bash
-agenta whoami   # same as agenta status
+## Not logged in
+
+```json
+{
+  "account": {
+    "authenticated": false,
+    "reason": "not-logged-in",
+    "hint": "Run agenta login to get started."
+  },
+  "subAccounts": { "count": 0, "hint": "Run agenta sub create --name <name> to create a sub-account.", "items": [] }
+}
 ```
+
+`reason` is either `not-logged-in` or `session-expired`, so scripts can tell the two apart.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Login" icon="key" href="/cli/login">
+    Authenticate or re-authenticate the CLI.
+  </Card>
+  <Card title="Pay" icon="credit-card" href="/cli/pay">
+    Create and track checkouts.
+  </Card>
+</CardGroup>

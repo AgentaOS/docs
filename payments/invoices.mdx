@@ -1,97 +1,186 @@
 ---
-title: "Invoices & Exports"
-description: "Download invoices, monthly statements, and CSV exports for accounting."
+title: "Invoices"
+description: "VAT-correct invoices for every payment. List, retrieve, void, download the PDF, and export for accounting."
 ---
 
+Every confirmed payment issues an invoice automatically: seller and buyer details, tax breakdown, and (for stablecoin payments) the exchange rate used to convert to fiat. The seller of record on every invoice is **Aristokrates OÜ** (Estonia), AgentaOS's Merchant of Record entity, unless the payment settled to your own on-chain wallet, in which case you are the seller.
 
-Every confirmed payment generates a tax-compliant invoice with exchange rates, VAT, and buyer info. Export them for your accountant.
+<Info>
+Amounts on the `Invoice` object (`amount`, `fiatAmount`, `taxAmount`) are decimal currency units, same as everywhere else in this API. `19.99` means €19.99, not cents.
+</Info>
 
-```mermaid
-flowchart LR
-    P[Payment] --> I[Invoice]
-    I --> PDF[PDF per invoice]
-    I --> CSV[CSV export]
-    I --> ST[Monthly statement]
-```
+## List invoices
 
-## List Invoices
+Paginated: every list call returns `{ items, total, hasMore }`. Filter by date range and status.
 
-```typescript
-const invoices = await agentaos.invoices.list({
-  from: '2026-03-01',
-  to: '2026-03-31',
-  status: 'issued',     // 'all' | 'issued' | 'voided'
-  limit: 50,
-});
-```
+<Tabs>
+  <Tab title="SDK">
+    ```typescript
+    const page = await agentaos.invoices.list({
+      from: '2026-03-01',
+      to: '2026-03-31',
+      status: 'issued',   // 'all' | 'issued' | 'paid' | 'voided'
+      limit: 50,
+    });
+    ```
+  </Tab>
+  <Tab title="CLI">
+    ```bash
+    agenta invoices list --limit 50
+    ```
+  </Tab>
+  <Tab title="cURL">
+    ```bash
+    curl "https://api.agentaos.ai/api/v1/gateway/invoices?from=2026-03-01&to=2026-03-31&status=issued" \
+      -H "x-api-key: sk_live_..."
+    ```
+  </Tab>
+</Tabs>
 
-## Download Invoice PDF
+## Retrieve an invoice
 
-```typescript
-import { writeFileSync } from 'fs';
+<Tabs>
+  <Tab title="SDK">
+    ```typescript
+    const invoice = await agentaos.invoices.retrieve('invoice-uuid');
+    ```
+  </Tab>
+  <Tab title="cURL">
+    ```bash
+    curl https://api.agentaos.ai/api/v1/gateway/invoices/invoice-uuid \
+      -H "x-api-key: sk_live_..."
+    ```
+  </Tab>
+</Tabs>
 
-const pdf = await agentaos.invoices.downloadPdf('invoice-uuid');
-writeFileSync('invoice.pdf', pdf);
-```
+## Void an invoice
 
-Each PDF includes:
-- Merchant and buyer details
-- Amount in crypto + fiat equivalent
-- Exchange rate with source and timestamp
-- Tax breakdown (subtotal, tax amount, total)
-- Transaction hash with explorer link
+Voiding marks the accounting record as void. It never touches the payment itself: the buyer already paid, and nothing is refunded. Use it to correct a bookkeeping mistake, not to reverse a charge.
 
-## Download Monthly Statement
+<Tabs>
+  <Tab title="SDK">
+    ```typescript
+    await agentaos.invoices.void('invoice-uuid');
+    ```
+  </Tab>
+  <Tab title="cURL">
+    ```bash
+    curl -X POST https://api.agentaos.ai/api/v1/gateway/invoices/invoice-uuid/void \
+      -H "x-api-key: sk_live_..."
+    ```
+  </Tab>
+</Tabs>
 
-Wise-style monthly statement with balance reconciliation, VAT summary, and transaction ledger.
+<Warning>
+Voiding is irreversible. The invoice stays void forever; there's no "un-void."
+</Warning>
 
-```typescript
-const statement = await agentaos.invoices.downloadStatement({
-  from: '2026-03-01',
-  to: '2026-03-31',
-});
-writeFileSync('march-statement.pdf', statement);
-```
+## Download the invoice PDF
 
-The statement includes:
-- **Summary**: Total received, total sent, net flow, transaction count
-- **Balance reconciliation**: Opening/closing balance from on-chain data
-- **Transaction ledger**: Every inbound and outbound payment with direction, amount, tax
-- **VAT summary**: Taxable supplies by rate + exempt supplies
+<Tabs>
+  <Tab title="SDK">
+    ```typescript
+    import { writeFileSync } from 'fs';
+
+    const pdf = await agentaos.invoices.downloadPdf('invoice-uuid');
+    writeFileSync('invoice.pdf', pdf);
+    ```
+  </Tab>
+  <Tab title="cURL">
+    ```bash
+    curl https://api.agentaos.ai/api/v1/gateway/invoices/invoice-uuid/pdf \
+      -H "x-api-key: sk_live_..." \
+      -o invoice.pdf
+    ```
+  </Tab>
+</Tabs>
+
+The PDF includes merchant and buyer details, the amount (plus the fiat equivalent and exchange rate for stablecoin payments), a tax breakdown (subtotal, tax, total), and a link to the on-chain transaction where relevant.
+
+## Download a statement
+
+A monthly-statement-style PDF covering a date range: opening/closing balance, every transaction in the ledger, and a VAT summary grouped by rate.
+
+<Tabs>
+  <Tab title="SDK">
+    ```typescript
+    const statement = await agentaos.invoices.downloadStatement({
+      from: '2026-03-01',
+      to: '2026-03-31',
+    });
+    writeFileSync('march-statement.pdf', statement);
+    ```
+  </Tab>
+  <Tab title="cURL">
+    ```bash
+    curl "https://api.agentaos.ai/api/v1/gateway/invoices/statement?from=2026-03-01&to=2026-03-31" \
+      -H "x-api-key: sk_live_..." \
+      -o statement.pdf
+    ```
+  </Tab>
+</Tabs>
 
 ## Export CSV
 
-22-column CSV for accounting software (Merit Aktiva, Directo, Xero, etc.):
+A 23-column CSV built for accounting software: date, direction, invoice number, description, crypto amount, token, and token address, chain, exchange rate (and source and timestamp), fiat amount and currency, tax name/rate/amount, `total_eur` (always in EUR), buyer name/company/country/VAT, transaction hash, and status.
 
-```typescript
-const csv = await agentaos.invoices.exportCsv({
-  from: '2026-03-01',
-  to: '2026-03-31',
-});
-writeFileSync('invoices.csv', csv);
-```
+<Tabs>
+  <Tab title="SDK">
+    ```typescript
+    const csv = await agentaos.invoices.exportCsv({
+      from: '2026-03-01',
+      to: '2026-03-31',
+      status: 'issued',
+    });
+    writeFileSync('invoices.csv', csv);
+    ```
+  </Tab>
+  <Tab title="cURL">
+    ```bash
+    curl "https://api.agentaos.ai/api/v1/gateway/invoices/export?from=2026-03-01&to=2026-03-31" \
+      -H "x-api-key: sk_live_..." \
+      -o invoices.csv
+    ```
+  </Tab>
+</Tabs>
 
-**Columns:** date, direction, invoice_number, description, crypto_amount, crypto_token, token_address, chain, exchange_rate, exchange_rate_source, exchange_rate_at, fiat_amount, fiat_currency, tax_name, tax_rate, tax_amount, total_eur, buyer_name, buyer_company, buyer_country, buyer_vat, tx_hash, status
+## Response
 
-## Void an Invoice
+<ResponseField name="id" type="string">Invoice UUID.</ResponseField>
+<ResponseField name="invoiceNumber" type="string">Human-readable, e.g. `INV-2026-0001`.</ResponseField>
+<ResponseField name="amount" type="number">Amount in the payment token/currency.</ResponseField>
+<ResponseField name="currency" type="string">Currency or token code.</ResponseField>
+<ResponseField name="fiatAmount" type="number | null">EUR/USD equivalent, for stablecoin payments.</ResponseField>
+<ResponseField name="fiatCurrency" type="string | null">`EUR` or `USD`.</ResponseField>
+<ResponseField name="exchangeRate" type="number | null">Rate applied at settlement time.</ResponseField>
+<ResponseField name="exchangeRateSource" type="string | null">Where the rate came from.</ResponseField>
+<ResponseField name="taxRate" type="number | null">Applied tax rate, e.g. `19` for 19%.</ResponseField>
+<ResponseField name="taxAmount" type="number | null">Tax amount in currency units.</ResponseField>
+<ResponseField name="taxName" type="string | null">e.g. `DE VAT`.</ResponseField>
+<ResponseField name="taxInclusive" type="boolean | null">Whether `amount` already includes tax.</ResponseField>
+<ResponseField name="merchantName" type="string | null">Seller name on the invoice.</ResponseField>
+<ResponseField name="buyerEmail" type="string | null">Buyer email.</ResponseField>
+<ResponseField name="buyerName" type="string | null">Buyer name.</ResponseField>
+<ResponseField name="buyerCompany" type="string | null">Buyer company.</ResponseField>
+<ResponseField name="buyerCountry" type="string | null">ISO 3166-1 alpha-2.</ResponseField>
+<ResponseField name="buyerVat" type="string | null">Buyer VAT number, if provided.</ResponseField>
+<ResponseField name="status" type="string">`issued`, `paid`, or `voided`.</ResponseField>
+<ResponseField name="issuedAt" type="string">ISO 8601.</ResponseField>
+<ResponseField name="voidedAt" type="string | null">ISO 8601, if voided.</ResponseField>
 
-```typescript
-await agentaos.invoices.void('invoice-uuid');
-```
+## Next steps
 
-<Warning>
-Voiding an invoice is irreversible. The payment is not refunded, only the accounting record is marked as voided.
-</Warning>
-
-## Transactions
-
-List all confirmed payments (inbound received + outbound sent):
-
-```typescript
-const txs = await agentaos.transactions.list({
-  direction: 'inbound',    // 'all' | 'inbound' | 'outbound'
-  from: '2026-03-01',
-  to: '2026-03-31',
-  limit: 50,
-});
-```
+<CardGroup cols={2}>
+  <Card title="Receipts" icon="receipt" href="/payments/receipts">
+    Every paid invoice also gets a receipt, emailed automatically.
+  </Card>
+  <Card title="Customers" icon="users" href="/payments/customers">
+    The buyer behind each invoice.
+  </Card>
+  <Card title="Tax" icon="scale-balanced" href="/mor/tax">
+    How destination VAT is calculated and remitted.
+  </Card>
+  <Card title="Webhooks" icon="bell" href="/payments/webhooks">
+    Know the moment a new invoice is issued.
+  </Card>
+</CardGroup>

@@ -1,0 +1,205 @@
+---
+title: "Payment Links"
+description: "Reusable, shareable payment URLs with agentaos.paymentLinks. One-time or recurring subscriptions."
+---
+
+A payment link is a reusable template: create it once, share the `checkoutUrl`, and every visitor gets their own [checkout](/sdk/pay-checkouts) session at that link's amount and settings. Use a link for anything you'd otherwise re-create per customer, a pricing page button, an emailed invoice, a subscription plan.
+
+## `paymentLinks.create(params)`
+
+```typescript
+const link = await agentaos.paymentLinks.create({
+  amount: 29.99,
+  currency: 'EUR',
+  description: 'Pro plan',
+  successUrl: 'https://shop.com/success',
+  cancelUrl: 'https://shop.com/cancel',
+  webhookUrl: 'https://shop.com/webhooks',
+});
+
+console.log(link.checkoutUrl);
+// → https://app.agentaos.ai/pay/7rr6S9ml4BMp829wV5WeAA
+```
+
+
+### Parameters
+
+<ParamField body="amount" type="number" required>
+  Amount in currency units, e.g. `29.99`. Min `0.01`, max `1,000,000`.
+</ParamField>
+
+<ParamField body="currency" type="string">
+  `'EUR'` or `'USD'`. Defaults to your org's settlement currency.
+</ParamField>
+
+<ParamField body="description" type="string">
+  Max 1000 characters.
+</ParamField>
+
+<ParamField body="type" type="'one_time' | 'subscription'" default="one_time">
+  See [One-time vs subscription](#one-time-vs-subscription) below.
+</ParamField>
+
+<ParamField body="billingInterval" type="'month' | 'year'">
+  **Required when `type: 'subscription'`, omit otherwise.**
+</ParamField>
+
+<ParamField body="taxRateId" type="string">
+  UUID of a pre-created tax rate.
+</ParamField>
+
+<ParamField body="successUrl" type="string">HTTPS only, max 2048 characters.</ParamField>
+<ParamField body="cancelUrl" type="string">HTTPS only, max 2048 characters.</ParamField>
+<ParamField body="webhookUrl" type="string">HTTPS only, max 2048 characters. Inherited by checkouts created from this link.</ParamField>
+
+<ParamField body="expiresAt" type="string">
+  ISO 8601. After this instant, new checkouts can't be created from the link.
+</ParamField>
+
+<ParamField body="metadata" type="object">
+  Max 8KB serialized. Carried onto every checkout created from this link.
+</ParamField>
+
+<ParamField body="checkoutFields" type="CheckoutField[]">
+  Extra fields to collect on the checkout page. Each entry:
+
+  <Expandable title="CheckoutField">
+    <ParamField body="key" type="string" required>Max 64 characters.</ParamField>
+    <ParamField body="label" type="string" required>Max 128 characters.</ParamField>
+    <ParamField body="type" type="'text' | 'email' | 'tel' | 'select'" required />
+    <ParamField body="required" type="boolean" required />
+    <ParamField body="placeholder" type="string">Max 256 characters.</ParamField>
+    <ParamField body="options" type="string[]">For `type: 'select'` only.</ParamField>
+  </Expandable>
+</ParamField>
+
+```typescript
+const link = await agentaos.paymentLinks.create({
+  amount: 29.99,
+  currency: 'EUR',
+  description: 'Pro plan',
+  checkoutFields: [
+    { key: 'email', label: 'Work email', type: 'email', required: true },
+    { key: 'company', label: 'Company', type: 'text', required: false },
+  ],
+});
+```
+
+### One-time vs subscription
+
+<Tabs>
+  <Tab title="One-time">
+    ```typescript
+    const link = await agentaos.paymentLinks.create({
+      amount: 29.99,
+      currency: 'EUR',
+      description: 'Pro plan: lifetime',
+      // type defaults to 'one_time'
+    });
+    ```
+    Each checkout is a single payment. This is the default, `type` and `billingInterval` don't need to be set.
+  </Tab>
+  <Tab title="Subscription">
+    ```typescript
+    const link = await agentaos.paymentLinks.create({
+      amount: 29.99,
+      currency: 'EUR',
+      description: 'Pro plan: monthly',
+      type: 'subscription',
+      billingInterval: 'month', // 'month' | 'year', required
+    });
+    ```
+    A buyer paying this link creates a [`Subscription`](/sdk/pay-subscriptions) that bills every `billingInterval` going forward. Subscriptions bill through Merchant of Record (card and bank), so this requires a verified account; wallet-only, on-chain accounts can't create subscription links.
+  </Tab>
+</Tabs>
+
+### Response
+
+<ResponseField name="id" type="string">Link UUID.</ResponseField>
+<ResponseField name="orgId" type="string" />
+<ResponseField name="amount" type="number">Currency units.</ResponseField>
+<ResponseField name="currency" type="string" />
+<ResponseField name="description" type="string | null" />
+<ResponseField name="status" type="'active' | 'cancelled'" />
+<ResponseField name="sellerMode" type="'mor' | 'crypto'">How this link settles.</ResponseField>
+<ResponseField name="type" type="'one_time' | 'subscription'" />
+<ResponseField name="billingInterval" type="'month' | 'year' | null">`null` for one-time links.</ResponseField>
+<ResponseField name="checkoutUrl" type="string">Shareable payment URL.</ResponseField>
+<ResponseField name="metadata" type="object" />
+<ResponseField name="checkoutFields" type="CheckoutField[]" />
+<ResponseField name="webhookUrl" type="string | null" />
+<ResponseField name="successUrl" type="string | null" />
+<ResponseField name="cancelUrl" type="string | null" />
+<ResponseField name="taxRateId" type="string | null" />
+<ResponseField name="paymentCount" type="number">Times this link has been paid.</ResponseField>
+<ResponseField name="expiresAt" type="string | null" />
+<ResponseField name="createdAt" type="string" />
+<ResponseField name="updatedAt" type="string" />
+
+```json
+{
+  "id": "7rr6S9ml-...",
+  "orgId": "org_...",
+  "amount": 29.99,
+  "currency": "EUR",
+  "description": "Pro plan",
+  "status": "active",
+  "sellerMode": "mor",
+  "type": "one_time",
+  "billingInterval": null,
+  "checkoutUrl": "https://app.agentaos.ai/pay/7rr6S9ml4BMp829wV5WeAA",
+  "metadata": {},
+  "checkoutFields": [],
+  "webhookUrl": null,
+  "successUrl": null,
+  "cancelUrl": null,
+  "taxRateId": null,
+  "paymentCount": 0,
+  "expiresAt": null,
+  "createdAt": "2026-08-06T02:00:00.000Z",
+  "updatedAt": "2026-08-06T02:00:00.000Z"
+}
+```
+
+## `paymentLinks.retrieve(id)`
+
+```typescript
+const link = await agentaos.paymentLinks.retrieve('7rr6S9ml-...');
+console.log(link.paymentCount); // how many times it's been paid
+```
+
+## `paymentLinks.list(params?)`
+
+```typescript
+const page = await agentaos.paymentLinks.list({ limit: 20, offset: 0 });
+```
+
+Takes plain `ListParams` (`limit`, `offset`), no status filter. Returns `PaginatedList<PaymentLink>`, max `limit` is 100. See [Pagination](/sdk/pay-overview#pagination).
+
+## `paymentLinks.cancel(id)`
+
+```typescript
+await agentaos.paymentLinks.cancel('7rr6S9ml-...');
+// → { success: true }
+```
+
+<Note>
+This is a soft cancel, the link's `status` becomes `'cancelled'` and it stops accepting new checkouts, but the record and its payment history stay retrievable via `retrieve()`. It does not affect subscriptions already created from the link.
+</Note>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Checkouts" icon="credit-card" href="/sdk/pay-checkouts">
+    How `checkouts.create({ linkId })` inherits a link's settings.
+  </Card>
+  <Card title="Subscriptions" icon="arrows-rotate" href="/sdk/pay-subscriptions">
+    Managing subscriptions created from a `type: 'subscription'` link.
+  </Card>
+  <Card title="Customers" icon="users" href="/sdk/pay-customers">
+    The buyers who paid your links.
+  </Card>
+  <Card title="Webhooks" icon="tower-broadcast" href="/sdk/pay-webhooks">
+    `checkout.session.completed` fires for every paid link visit.
+  </Card>
+</CardGroup>

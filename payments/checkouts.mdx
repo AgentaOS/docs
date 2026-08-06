@@ -1,10 +1,9 @@
 ---
 title: "Checkouts"
-description: "Create checkout sessions to accept payments. Standalone or from payment link templates."
+description: "Create a checkout session to collect a single payment. Standalone, or from a payment link."
 ---
 
-
-A checkout represents a single payment attempt. Create one to collect a payment from a customer.
+A checkout is one attempt to collect one payment. Create one directly from your backend when you already know the amount, or create one from a [payment link](/payments/payment-links) to reuse a shared template. Either way you get a `checkoutUrl`: send your buyer there to pay.
 
 ```mermaid
 stateDiagram-v2
@@ -17,44 +16,80 @@ stateDiagram-v2
     cancelled --> [*]
 ```
 
-## Create a Checkout
+## Create a checkout
+
+<Tabs>
+  <Tab title="SDK">
+    ```typescript
+    import { AgentaOS } from '@agentaos/pay';
+
+    const agentaos = new AgentaOS(process.env.AGENTAOS_API_KEY!);
+
+    const checkout = await agentaos.checkouts.create({
+      amount: 49.99,
+      currency: 'EUR',
+      description: 'Order #123',
+      successUrl: 'https://myshop.com/success',
+      cancelUrl: 'https://myshop.com/cart',
+      webhookUrl: 'https://myshop.com/webhooks',
+    });
+
+    // Redirect your buyer to pay
+    res.redirect(checkout.checkoutUrl);
+    ```
+  </Tab>
+  <Tab title="CLI">
+    ```bash
+    agenta pay checkout --amount 49.99 --currency EUR --description "Order #123"
+    ```
+  </Tab>
+  <Tab title="cURL">
+    ```bash
+    curl -X POST https://api.agentaos.ai/api/v1/gateway/sessions \
+      -H "x-api-key: sk_live_..." \
+      -H "Content-Type: application/json" \
+      -d '{
+        "amount": 49.99,
+        "currency": "EUR",
+        "description": "Order #123",
+        "successUrl": "https://myshop.com/success",
+        "cancelUrl": "https://myshop.com/cart",
+        "webhookUrl": "https://myshop.com/webhooks"
+      }'
+    ```
+  </Tab>
+</Tabs>
+
+## Money model
+
+A plain `amount` is always in currency units: `49.99` means €49.99, never cents. This holds for every create call, payment link, checkout, and invoice amount in the API. The one exception is `subscription.unitAmountMinor`, which is an integer of the smallest unit (`1999` = €19.99). See [Subscriptions](/payments/subscriptions) for why that field is different. Webhook payloads carry `amount` as a string (`"49.99"`), since JSON numbers lose trailing zeros.
+
+## Create from a payment link
+
+Pass `linkId` to inherit the link's `amount`, `currency`, `description`, `taxRateId`, and URLs. Override anything per-checkout with `amountOverride` or the other fields.
 
 ```typescript
 const checkout = await agentaos.checkouts.create({
-  amount: 100.00,
-  currency: 'EUR',
-  description: 'Order #123',
-  successUrl: 'https://shop.com/success',
-  cancelUrl: 'https://shop.com/cart',
-  webhookUrl: 'https://shop.com/webhooks',
+  linkId: link.id,
+  metadata: { customerId: '12345' },
 });
-
-// Redirect customer to pay
-res.redirect(checkout.checkoutUrl);
 ```
 
-### Parameters
+<Tip>
+**Payment links vs. standalone checkouts:** use a payment link for anything reusable or shareable, a subscription plan, a donation button, a link you paste in chat. Use a standalone checkout when your backend already knows the amount and buyer at the moment of creation, like an e-commerce order at cart checkout.
+</Tip>
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `amount` | `number` | Yes* | Amount in currency units (e.g. `49.99`). *Required if no `linkId`. |
-| `currency` | `string` | No | `'EUR'` or `'USD'`. Defaults to org settlement currency. |
-| `description` | `string` | No | Shown on checkout page (max 1000 chars). |
-| `linkId` | `string` | No | Create from a payment link template (inherits amount/currency). |
-| `successUrl` | `string` | No | Redirect customer here after payment (HTTPS only). |
-| `cancelUrl` | `string` | No | "Cancel" link on checkout page (HTTPS only). |
-| `webhookUrl` | `string` | No | Server notification URL for payment events (HTTPS only). |
-| `taxRateId` | `string` | No | UUID of pre-created tax rate. |
-| `expiresIn` | `number` | No | Seconds until expiry (300–86400, default 1800). |
-| `metadata` | `object` | No | Custom key-value data (max 8KB). |
+<Note>
+A standalone (linkless) checkout is always a **one-time** payment, there's no `type` field on checkout create. To sell a subscription, create a subscription payment link (`type: 'subscription'`) and the buyer subscribes at the hosted checkout, or spin up a checkout from that link with `linkId`.
+</Note>
 
-### Pre-populate Buyer Info
+## Pre-populate buyer info
 
-Skip the checkout form by pre-filling buyer details:
+If you already know the buyer (from your own account system), pre-fill their details to skip the checkout form:
 
 ```typescript
 const checkout = await agentaos.checkouts.create({
-  amount: 100.00,
+  amount: 49.99,
   currency: 'EUR',
   buyerEmail: 'john@example.com',
   buyerName: 'John Doe',
@@ -65,76 +100,191 @@ const checkout = await agentaos.checkouts.create({
 });
 ```
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `buyerEmail` | `string` | Pre-populate email (max 320 chars). |
-| `buyerName` | `string` | Pre-populate name (max 200 chars). |
-| `buyerCompany` | `string` | Pre-populate company (max 200 chars). |
-| `buyerCountry` | `string` | ISO 3166-1 alpha-2, e.g. `'DE'` (max 2 chars). |
-| `buyerAddress` | `string` | Pre-populate address (max 500 chars). |
-| `buyerVat` | `string` | Pre-populate VAT number (max 20 chars). |
-
 <Info>
-**When to pre-populate:** If you already know your customer's details (e.g. from their account), pre-populate to skip the checkout form. If you don't, the checkout page will ask them for name and email. Company, VAT, and address are optional but recommended for EU invoicing compliance.
+If you don't pre-populate, the hosted checkout asks the buyer for name and email directly. Company, VAT, and address are optional but recommended: they land on the invoice.
 </Info>
 
-### Response
+## How the buyer pays
 
-```json
-{
-  "id": "a1b2c3d4-...",
-  "sessionId": "mZrESFyR7RC9RPsJfZCVkg",
-  "checkoutUrl": "https://app.agentaos.ai/checkout/mZrESFyR7RC9RPsJfZCVkg",
-  "status": "open",
-  "amountOverride": 100.00,
-  "currency": "EURe",
-  "expiresAt": "2026-03-17T02:30:00.000Z",
-  "createdAt": "2026-03-17T02:00:00.000Z"
-}
-```
+The hosted checkout offers card and bank transfer (SEPA, EUR) through our card processor. Card details are entered directly into the secure card form, never handled by your server or ours. Some checkouts also expose an `x402Url` for agent-to-agent payment over the [x402 protocol](/sub/x402); most integrations can ignore it.
 
-## Retrieve a Checkout
+<Warning>
+Don't trust `successUrl` as proof of payment. The buyer's browser might close before the redirect fires. Use [webhooks](/payments/webhooks) as the source of truth for "did this checkout actually get paid."
+</Warning>
 
-```typescript
-const checkout = await agentaos.checkouts.retrieve('mZrESFyR7RC9RPsJfZCVkg');
-console.log(checkout.status); // 'open' | 'completed' | 'expired' | 'cancelled'
-```
+## Retrieve a checkout
 
-## List Checkouts
+<Tabs>
+  <Tab title="SDK">
+    ```typescript
+    const checkout = await agentaos.checkouts.retrieve('mZrESFyR7RC9RPsJfZCVkg');
+    console.log(checkout.status); // 'open' | 'completed' | 'expired' | 'cancelled'
+    ```
+  </Tab>
+  <Tab title="CLI">
+    ```bash
+    agenta pay get mZrESFyR7RC9RPsJfZCVkg
+    ```
+  </Tab>
+  <Tab title="cURL">
+    ```bash
+    curl https://api.agentaos.ai/api/v1/gateway/sessions/mZrESFyR7RC9RPsJfZCVkg \
+      -H "x-api-key: sk_live_..."
+    ```
+  </Tab>
+</Tabs>
 
-```typescript
-const checkouts = await agentaos.checkouts.list({
-  status: 'completed',
-  limit: 10,
-  offset: 0,
-});
-```
+## List checkouts
 
-## Cancel a Checkout
+Paginated: every list call returns `{ items, total, hasMore }`.
 
-```typescript
-await agentaos.checkouts.cancel('mZrESFyR7RC9RPsJfZCVkg');
-```
+<Tabs>
+  <Tab title="SDK">
+    ```typescript
+    const page = await agentaos.checkouts.list({
+      status: 'completed',
+      limit: 10,
+      offset: 0,
+    });
+    ```
+  </Tab>
+  <Tab title="CLI">
+    ```bash
+    agenta pay list --status completed --limit 10
+    ```
+  </Tab>
+  <Tab title="cURL">
+    ```bash
+    curl "https://api.agentaos.ai/api/v1/gateway/sessions?status=completed&limit=10" \
+      -H "x-api-key: sk_live_..."
+    ```
+  </Tab>
+</Tabs>
+
+## Cancel a checkout
+
+<Tabs>
+  <Tab title="SDK">
+    ```typescript
+    await agentaos.checkouts.cancel('mZrESFyR7RC9RPsJfZCVkg');
+    ```
+  </Tab>
+  <Tab title="cURL">
+    ```bash
+    curl -X POST https://api.agentaos.ai/api/v1/gateway/sessions/mZrESFyR7RC9RPsJfZCVkg/cancel \
+      -H "x-api-key: sk_live_..."
+    ```
+  </Tab>
+</Tabs>
 
 <Note>
-Cancelling a checkout prevents the customer from paying. If a payment is already in progress on-chain, it may still complete.
+Cancelling stops the buyer from paying. If a payment already cleared before the cancel call lands, it still completes; cancelling doesn't reach into the card processor or on-chain state.
 </Note>
 
-## From a Payment Link
+## Parameters
 
-Payment links are reusable templates. Create a checkout from one to inherit its amount, currency, and configuration:
+<ParamField body="amount" type="number">
+  Amount in currency units (e.g. `49.99`). Required if no `linkId`.
+</ParamField>
 
-```typescript
-const checkout = await agentaos.checkouts.create({
-  linkId: link.id,
-  metadata: { customerId: '12345' },
-});
-```
+<ParamField body="linkId" type="string">
+  Create from a payment link template. Inherits its amount, currency, and configuration.
+</ParamField>
 
-The checkout inherits `amount`, `currency`, `description`, `taxRateId`, `successUrl`, `cancelUrl`, and `webhookUrl` from the link. You can override any of them per-checkout.
+<ParamField body="currency" type="string" default="org default">
+  `EUR` or `USD`.
+</ParamField>
 
-<Tip>
-**When to use payment links vs standalone checkouts:**
-- **Payment links** - recurring or shareable payments. Example: a subscription link you email monthly, or a donation link on your website. Each click creates a new checkout.
-- **Standalone checkouts** - one-time payments from your backend. Example: e-commerce order where you know the amount and customer at checkout time.
-</Tip>
+<ParamField body="description" type="string">
+  Shown on the checkout page. Max 1000 characters.
+</ParamField>
+
+<ParamField body="amountOverride" type="number">
+  Override the link's amount for this checkout only.
+</ParamField>
+
+<ParamField body="successUrl" type="string">
+  Redirect the buyer here after payment. HTTPS only.
+</ParamField>
+
+<ParamField body="cancelUrl" type="string">
+  "Cancel" link on the checkout page. HTTPS only.
+</ParamField>
+
+<ParamField body="webhookUrl" type="string">
+  Server notification URL for payment events. HTTPS only.
+</ParamField>
+
+<ParamField body="taxRateId" type="string">
+  UUID of a pre-created tax rate.
+</ParamField>
+
+<ParamField body="buyerEmail" type="string">
+  Pre-populate buyer email. Max 320 characters.
+</ParamField>
+
+<ParamField body="buyerName" type="string">
+  Pre-populate buyer name. Max 200 characters.
+</ParamField>
+
+<ParamField body="buyerCompany" type="string">
+  Pre-populate company name. Max 200 characters.
+</ParamField>
+
+<ParamField body="buyerCountry" type="string">
+  ISO 3166-1 alpha-2 (e.g. `DE`).
+</ParamField>
+
+<ParamField body="buyerAddress" type="string">
+  Pre-populate buyer address. Max 500 characters.
+</ParamField>
+
+<ParamField body="buyerVat" type="string">
+  Pre-populate VAT number (e.g. `DE123456789`).
+</ParamField>
+
+<ParamField body="dueDate" type="string">
+  ISO date (`YYYY-MM-DD`). Presentation only, stamped onto the invoice once issued.
+</ParamField>
+
+<ParamField body="expiresIn" type="number" default="1800">
+  Seconds until expiry (300 to 86400).
+</ParamField>
+
+<ParamField body="metadata" type="object">
+  Custom key-value data, returned unchanged in webhooks. Max 8KB.
+</ParamField>
+
+## Response
+
+These are the SDK (camelCase) field names; the raw REST response uses snake_case (e.g. `session_id`, `seller_mode`).
+
+<ResponseField name="id" type="string">Session UUID.</ResponseField>
+<ResponseField name="sessionId" type="string">Public session ID, used in the checkout URL.</ResponseField>
+<ResponseField name="checkoutUrl" type="string">URL to send your buyer to.</ResponseField>
+<ResponseField name="x402Url" type="string">x402 protocol URL, for agent payments.</ResponseField>
+<ResponseField name="status" type="string">`open`, `completed`, `expired`, or `cancelled`.</ResponseField>
+<ResponseField name="sellerMode" type="string">`mor` (card + bank) or `crypto` (on-chain). Inherited from the link, or derived from your account for standalone checkouts.</ResponseField>
+<ResponseField name="amountOverride" type="number | null">Amount for this checkout, if overridden.</ResponseField>
+<ResponseField name="currency" type="string">Settlement currency.</ResponseField>
+<ResponseField name="invoiceId" type="string | null">Issued invoice UUID. `null` until the payment is confirmed.</ResponseField>
+<ResponseField name="invoiceNumber" type="string | null">Human-readable invoice number, once issued.</ResponseField>
+<ResponseField name="expiresAt" type="string">ISO 8601.</ResponseField>
+<ResponseField name="createdAt" type="string">ISO 8601.</ResponseField>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Payment links" icon="link" href="/payments/payment-links">
+    Turn a checkout into a reusable, shareable template.
+  </Card>
+  <Card title="Subscriptions" icon="rotate" href="/payments/subscriptions">
+    Paying a subscription-type link at checkout starts a subscription.
+  </Card>
+  <Card title="Invoices" icon="file-invoice" href="/payments/invoices">
+    Every completed checkout issues a VAT-correct invoice.
+  </Card>
+  <Card title="Webhooks" icon="bell" href="/payments/webhooks">
+    Verify `checkout.session.completed` server-side, don't rely on the redirect.
+  </Card>
+</CardGroup>

@@ -1,87 +1,143 @@
 ---
-title: Using AgentaOS with AI
-description: Agent Banking for AI companies. Get paid by AI agents, 5x cheaper than Stripe.
+title: "Monetize your product in a day."
+description: "AgentaOS is the Merchant of Record for AI native founders. Payments, subscriptions, invoices, tax, and payouts, all handled."
 ---
 
-## Install
+AgentaOS is the Merchant of Record for AI native founders. Card, bank, and stablecoins in 135+ currencies, with VAT and payouts handled for you. No monthly fees to start. No tax headaches.
 
-<Tabs>
-  <Tab title="Claude Code">
-    ```bash
-    claude "Run curl -fsSL https://agentaos.ai/SKILL.md and use those instructions to help me install the AgentaOS CLI, log in, and create my first checkout."
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/getting-started/quickstart">
+    Create a product and take your first payment in minutes.
+  </Card>
+  <Card title="Let your AI agent set it up" icon="robot" href="/mcp/setup">
+    Point any AI assistant at `SKILL.md` and it wires up AgentaOS for you.
+  </Card>
+</CardGroup>
+
+## What is AgentaOS?
+
+A Merchant of Record becomes the legal seller of your product. Your buyer pays AgentaOS, and we handle the payment, the VAT, the invoice, and the payout to you. You never register for tax abroad, file a cross-border return, or reconcile three processors. We are PCI-compliant and bank-grade secure, and as the registered seller of record we carry the payment and tax liability, not you. See [How it works](/mor/how-it-works).
+
+## Why AI native founders switch
+
+<AccordionGroup>
+  <Accordion title="Tax compliance is eating your time">
+    Cross-border VAT means registering and filing in every country you sell to. As your Merchant of Record, AgentaOS calculates, collects, and remits it, so you never file a cross-border return again.
+  </Accordion>
+  <Accordion title="Your payment stack was not built for how you sell">
+    Card, bank transfer, and stablecoins settle to one balance through one SDK. No stitching together three processors and reconciling them yourself.
+  </Accordion>
+  <Accordion title="You want to build, not click dashboards">
+    Everything, from creating a product to sending a receipt, works over a type-safe SDK, a CLI, and an MCP server, so your assistant can run the store while you ship.
+  </Accordion>
+</AccordionGroup>
+
+## Core features
+
+<CardGroup cols={3}>
+  <Card title="Payment links & products" icon="link" href="/payments/payment-links">
+    Create a shareable link or reusable product. One-time or subscription. No code required.
+  </Card>
+  <Card title="Subscriptions" icon="rotate" href="/payments/subscriptions">
+    Recurring billing with automatic renewals. List, inspect, and cancel from the API, CLI, or dashboard.
+  </Card>
+  <Card title="Invoices" icon="file-invoice" href="/payments/invoices">
+    Tax-correct invoices issued automatically, with a PDF and a CSV export for accounting.
+  </Card>
+  <Card title="Receipts" icon="receipt" href="/payments/receipts">
+    Every payment gets an emailed receipt. Download or resend the PDF any time.
+  </Card>
+  <Card title="Customers" icon="users" href="/payments/customers">
+    Every buyer who paid you, with email, country, and VAT number.
+  </Card>
+  <Card title="Webhooks" icon="bell" href="/payments/webhooks">
+    Get notified the moment a checkout completes. Signed and verifiable.
+  </Card>
+</CardGroup>
+
+## Developer tools
+
+<CardGroup cols={3}>
+  <Card title="TypeScript SDK" icon="node-js" href="/sdk/pay-overview">
+    `@agentaos/pay`. Type-safe, zero runtime dependencies, full API coverage.
+  </Card>
+  <Card title="CLI" icon="terminal" href="/cli/install">
+    `agenta`. Manage payments, subscriptions, customers, and invoices from the terminal, with `--json` for scripts.
+  </Card>
+  <Card title="MCP server" icon="plug" href="/mcp/setup">
+    Connect Claude, Cursor, or Windsurf and let your assistant run your store.
+  </Card>
+</CardGroup>
+
+## AI agent integration
+
+Your AI assistant can set up and operate AgentaOS on its own. No dashboards, no clicking.
+
+```text
+Read https://agentaos.ai/SKILL.md and set up AgentaOS for me
+```
+
+Give this to any AI coding assistant (Claude, Cursor, Copilot, Windsurf) and it will install the CLI, sign you in, create your first product and share the link, and wire up webhooks in your codebase.
+
+## Quick start
+
+<Steps>
+  <Step title="Create your account">
+    Sign up at [app.agentaos.ai](https://app.agentaos.ai). No card required. You start in test mode.
+  </Step>
+  <Step title="Get your API key">
+    Grab your test key from Settings. Keys prefixed `sk_test_` use test mode; `sk_live_` goes to production.
+  </Step>
+  <Step title="Install the SDK or CLI">
+    <CodeGroup>
+    ```bash SDK
+    npm install @agentaos/pay
     ```
-  </Tab>
-  <Tab title="Codex CLI">
-    ```bash
-    codex "Run curl -fsSL https://agentaos.ai/SKILL.md and use those instructions to help me install the AgentaOS CLI, log in, and create my first checkout."
-    ```
-  </Tab>
-  <Tab title="Amp">
-    ```bash
-    amp "Run curl -fsSL https://agentaos.ai/SKILL.md and use those instructions to help me install the AgentaOS CLI, log in, and create my first checkout."
-    ```
-  </Tab>
-  <Tab title="Terminal">
-    ```bash
+    ```bash CLI
     curl -fsSL https://agentaos.ai/install | bash
     agenta login
     ```
-  </Tab>
-</Tabs>
+    </CodeGroup>
+  </Step>
+  <Step title="Create a product and accept payments">
+    <CodeGroup>
+    ```typescript SDK
+    import { AgentaOS } from '@agentaos/pay';
+    const agenta = new AgentaOS('sk_test_...');
 
-## Create a checkout, let an agent pay it
-
-```bash
-# You create a checkout
-agenta pay checkout -a 50 -c USD
-
-# An AI agent pays it
-agenta sub create --name my-agent
-agenta sub x402 fetch <x402Url>
-```
-
-That's it. `checkoutUrl` for humans, `x402Url` for machines.
-
-## Give your agent access to these docs
-
-**Skill**: Teaches your agent the full CLI:
-```bash
-npx skills add AgentaOS/skills@agenta
-```
-
-**Markdown**: Append `.md` to any docs page:
-```
-https://docs.agentaos.ai/pay/checkouts.md
-```
-
-**llms.txt**: Machine-readable overview:
-```bash
-curl -fsSL https://docs.agentaos.ai/llms.txt
-```
-
-**[MCP](/mcp/setup)**: 21 tools for Claude Desktop, Cursor, Windsurf:
-
-<Tabs>
-  <Tab title="Claude Code">
-    ```bash
-    claude mcp add agenta npx -y agentaos
+    const link = await agenta.paymentLinks.create({
+      amount: 49.00,          // decimal currency units, not cents
+      currency: 'EUR',
+      description: 'Pro plan',
+    });
+    console.log(link.checkoutUrl); // share this anywhere
     ```
-  </Tab>
-  <Tab title="JSON config">
-    ```json
-    {
-      "mcpServers": {
-        "agenta": {
-          "command": "npx",
-          "args": ["-y", "agentaos"],
-          "env": {
-            "AGENTA_API_KEY": "your-api-key",
-            "AGENTA_API_SECRET": "your-api-secret",
-            "AGENTAOS_GATEWAY_KEY": "sk_live_..."
-          }
-        }
-      }
-    }
+    ```bash CLI
+    agenta pay checkout -a 49 -c EUR -d "Pro plan"
     ```
-  </Tab>
-</Tabs>
+    </CodeGroup>
+  </Step>
+  <Step title="Set up webhooks">
+    Listen for `checkout.session.completed` to sync your app. See [Webhooks](/payments/webhooks) for signature verification.
+  </Step>
+</Steps>
+
+## FAQ
+
+<AccordionGroup>
+  <Accordion title="How fast can I start accepting payments?">
+    Minutes in test mode. Create an account, grab a test key, and create your first checkout. Going live needs a short business verification, see [Account review](/mor/account-review).
+  </Accordion>
+  <Accordion title="What payment methods do you support?">
+    Card and bank transfer (SEPA), and stablecoins on-chain. Cards work in 135+ currencies, from buyers worldwide.
+  </Accordion>
+  <Accordion title="Which countries and taxes do you cover?">
+    Cards reach buyers in 135+ currencies. We handle destination VAT for the EU (via Estonia OSS) and the UK today, and add jurisdictions as we grow. See [Supported countries](/mor/supported-countries).
+  </Accordion>
+  <Accordion title="Can my AI agent manage my store?">
+    Yes. Point any AI assistant at `SKILL.md`, or connect the MCP server, and it can create products, read customers and subscriptions, and send receipts on your behalf.
+  </Accordion>
+  <Accordion title="I bought something and see AgentaOS on my statement">
+    AgentaOS is the Merchant of Record, so we appear as the seller. See [Why was I charged](/for-customers/why-charged).
+  </Accordion>
+</AccordionGroup>

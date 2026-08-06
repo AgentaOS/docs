@@ -1,0 +1,174 @@
+---
+title: "Introduction"
+description: "Base URL, authentication, environments, errors, pagination, and rate limits for the AgentaOS REST API."
+---
+
+The AgentaOS REST API lets you create payment links, checkouts, and invoices, read subscriptions, customers, and transactions, and receive webhooks, from any language. It is the same API the [TypeScript SDK](/sdk/pay-overview) and the [`agenta` CLI](/cli/install) call underneath.
+
+<Info>
+Building in TypeScript or Node.js? Use [`@agentaos/pay`](/sdk/pay-overview) instead of raw HTTP. It wraps every endpoint on this page with typed methods, camelCases responses for you, retries on `5xx`, and signs/verifies webhooks. This section documents the wire format the SDK talks to, useful if you're integrating from another language or debugging a raw request.
+</Info>
+
+## Base URL
+
+```
+https://api.agentaos.ai/api/v1
+```
+
+Every path in this reference is relative to this base. `POST /gateway/payment-links` means `POST https://api.agentaos.ai/api/v1/gateway/payment-links`.
+
+## Authentication
+
+Send your secret key in the `x-api-key` header on every request.
+
+```bash
+curl https://api.agentaos.ai/api/v1/gateway/payment-links \
+  -H "x-api-key: sk_live_..."
+```
+
+<ParamField header="x-api-key" type="string" required>
+  Your secret key, from **app.agentaos.ai → Settings → Developers → API Keys**.
+</ParamField>
+
+A missing or invalid key returns `401 Unauthorized`. There's no separate bearer-token flow for API keys, only the CLI's browser login session uses `Authorization: Bearer` internally; server-to-server integrations always use `x-api-key`.
+
+## Environments (test vs live)
+
+A key's prefix is both its identity and its environment. There's no separate "mode" parameter to set.
+
+| Prefix | Environment | Data |
+|---|---|---|
+| `sk_test_` | Test mode | Test data only, free, no verification required |
+| `sk_live_` | Live | Real money, requires business verification (KYB) |
+
+Test and live data never mix: a request authenticated with a test key can only see payment links, checkouts, invoices, customers, and transactions created under a test key, and the same is true for live. See [Test mode and live mode](/getting-started/test-mode) for how to get a key of each kind.
+
+## Pagination
+
+Every list endpoint (`GET /gateway/payment-links`, `/sessions`, `/subscriptions`, `/customers`, `/invoices`, `/all-transactions`) takes the same two query parameters and returns the same envelope.
+
+<ParamField query="limit" type="number" default="20">
+  Items per page. Capped server-side at 100 (invoices cap at 5000 for CSV-style bulk export via `limit`).
+</ParamField>
+
+<ParamField query="offset" type="number" default="0">
+  Number of items to skip, for the next page.
+</ParamField>
+
+```json Pagination envelope
+{
+  "items": [ /* ... */ ],
+  "total": 137,
+  "hasMore": true
+}
+```
+
+<ResponseField name="items" type="array">The page of results. Shape depends on the resource.</ResponseField>
+<ResponseField name="total" type="number">Total matching rows across every page, not just this one.</ResponseField>
+<ResponseField name="hasMore" type="boolean">`true` if `offset + items.length < total`. Computed server-side, don't derive it yourself.</ResponseField>
+
+<Note>
+`hasMore` is camelCase on the wire, not `has_more`. It's a computed envelope field, not a database column, see [Naming convention](#naming-convention) below for why that matters.
+</Note>
+
+## Naming convention
+
+Most response fields mirror the underlying data and are `snake_case`. A handful of computed fields ride along already camelCase, and two resources are fully camelCase. In practice, three kinds of fields appear on responses:
+
+<AccordionGroup>
+  <Accordion title="Persisted fields → snake_case">
+    Anything stored on the record comes back exactly as named in the database: `created_at`, `amount_override`, `billing_interval`, `buyer_email`, `tax_rate_id`, and so on. This is the majority of fields on Payment Links, Checkouts, and Invoices.
+  </Accordion>
+  <Accordion title="Computed convenience fields → camelCase, added on top">
+    A small number of fields are built by the server at response time rather than read from a column, and those are camelCase as written, with no snake_case equivalent:
+    <ul>
+      <li><code>checkoutUrl</code> and <code>x402Url</code> on Checkouts; <code>checkoutUrl</code> on Payment Links</li>
+      <li><code>money</code> (an object: <code>currency</code>, <code>grossMinor</code>, <code>feeMinor</code>, <code>vatMinor</code>, <code>netMinor</code>) on Transactions</li>
+      <li><code>earnings</code> (an object: <code>currency</code>, <code>grossMinor</code>, <code>agentaosFeeMinor</code>, <code>vatMinor</code>, <code>netMinor</code>) on a single retrieved Invoice, same shape as <code>money</code> except the fee field is named <code>agentaosFeeMinor</code> instead of <code>feeMinor</code></li>
+    </ul>
+  </Accordion>
+  <Accordion title="Fully camelCase resources">
+    Two resources are hand-built end to end and never expose a snake_case column name: **Subscriptions** (`GET /gateway/subscriptions`, `POST /gateway/subscriptions/:id/cancel`) and **Customers** (`GET /gateway/customers`). Every field on these two is camelCase.
+  </Accordion>
+</AccordionGroup>
+
+<Tip>
+If any of this sounds like a footgun for a hand-rolled HTTP client, it is exactly why the [TypeScript SDK](/sdk/pay-overview) exists. It recursively camelCases every response, so `checkoutUrl` and `buyer_email` both come back as `checkoutUrl`/`buyerEmail` on the SDK object regardless of which convention the wire used underneath. If you're not on Node.js, treat the tables on each page in this reference as the literal JSON keys, they're taken directly from what the server sends.
+</Tip>
+
+## Money model
+
+<AccordionGroup>
+  <Accordion title="Decimal currency units (number)">
+    A plain `amount` field, on a create body, a Payment Link, a Checkout's `amount_override`, or an Invoice's `amount`/`fiat_amount`/`tax_amount`, is in currency units. `49.99` means €49.99, never cents.
+  </Accordion>
+  <Accordion title="Integer minor units (number)">
+    The decimal rule above applies to plainly-named `amount` fields only. Any field whose name ends in `Minor` is an integer count of the smallest currency unit instead: `unitAmountMinor` on a Subscription (`1999` means €19.99), plus every field inside the `money` breakdown on a Transaction and the `earnings` breakdown on a retrieved Invoice (`grossMinor`, `feeMinor`/`agentaosFeeMinor`, `vatMinor`, `netMinor`). The `Minor` suffix is the signal, it's there so these are never confused with a plain decimal `amount`.
+  </Accordion>
+  <Accordion title="String, on webhooks">
+    The `amount` inside a webhook payload's `data` object is a string, e.g. `"49.99"`, since JSON numbers silently drop trailing zeros and this value has to round-trip exactly for accounting.
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+A non-2xx response is always JSON, and every response carries an `x-request-id` header (echoed as `requestId` in the body):
+
+```json 400
+{
+  "statusCode": 400,
+  "error": "Bad Request",
+  "message": ["amount must be a positive number"],
+  "errors": [{ "field": "amount", "message": "must be a positive number" }],
+  "timestamp": "2026-08-06T12:00:00.000Z",
+  "requestId": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+<ResponseField name="statusCode" type="number">Same as the HTTP status code.</ResponseField>
+<ResponseField name="error" type="string">Short category, e.g. `Bad Request`.</ResponseField>
+<ResponseField name="message" type="string | string[]">Human-readable. A validation failure returns an array, one entry per problem.</ResponseField>
+<ResponseField name="errors" type="array">On a `400` validation error, one `{ field, message }` per invalid field.</ResponseField>
+<ResponseField name="timestamp" type="string">ISO 8601, when the error was generated.</ResponseField>
+<ResponseField name="requestId" type="string">Correlation ID, also returned as the `x-request-id` header.</ResponseField>
+
+| Status | Meaning |
+|---|---|
+| `400` | Bad request: a required field is missing, out of range, or the wrong type. `ValidationPipe` also rejects any field not in the documented schema. |
+| `401` | Missing or invalid `x-api-key`. |
+| `403` | The key is valid but the resource belongs to a different organization. |
+| `404` | Resource not found (or not visible to your key, we don't distinguish the two). |
+| `409` | Conflict: the resource was modified concurrently, or the action doesn't apply to its current state (voiding an already-voided invoice, cancelling an already-cancelled link). |
+| `429` | Rate limited. Back off and retry. |
+| `500` | Server error. Safe to retry with backoff. |
+
+<Tip>
+On a `400`, `errors` gives you per-field detail (`[{ field, message }]`) and `message` carries the same problems as human-readable text. The SDK surfaces these as `ValidationError.errors` and `AgentaOSError.requestId`. See [Error codes](/api-reference/error-codes).
+</Tip>
+
+## Rate limits
+
+60 requests per 60 seconds per client IP, by default, across every endpoint in this reference. A small number of unlisted, higher-risk endpoints (outbound sends, public checkout start) have a tighter dedicated limit; none of the endpoints documented in this section do.
+
+A `429` doesn't currently include a guaranteed `Retry-After` header. Back off and retry (the SDK does this automatically, waiting 1 second by default before its single built-in retry on `429`).
+
+## Idempotency
+
+`POST /gateway/sessions` accepts an `Idempotency-Key` header (or an `idempotencyKey` field in the body). Retry the same call with the same key and you get back the exact same checkout, including its already-issued invoice, instead of creating a second one. The SDK generates a random key automatically on every `POST` if you don't supply one.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Payment Links" icon="link" href="/api-reference/payment-links/create">
+    Create, list, update, and cancel reusable payment links.
+  </Card>
+  <Card title="Checkouts" icon="cart-shopping" href="/api-reference/checkouts/create">
+    Create a one-time checkout session, standalone or from a link.
+  </Card>
+  <Card title="Webhooks" icon="bell" href="/api-reference/webhooks">
+    Events, payload shapes, and signature verification.
+  </Card>
+  <Card title="TypeScript SDK" icon="node-js" href="/sdk/pay-overview">
+    Skip the wire format entirely and use typed methods.
+  </Card>
+</CardGroup>

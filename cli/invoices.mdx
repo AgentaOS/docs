@@ -1,0 +1,143 @@
+---
+title: "Invoices"
+description: "List invoices and manage receipts from the terminal with agenta invoices."
+---
+
+`agenta invoices` covers the paper trail: list what's been issued, download a receipt PDF, or re-send one to a buyer who lost the email. Every paid checkout gets an invoice, issued by our Estonian entity as Merchant of Record.
+
+```bash
+agenta invoices list
+agenta invoices receipt <id>
+agenta invoices send-receipt <id>
+```
+
+## List invoices
+
+```bash
+agenta invoices list [--limit <n>] [--json]
+```
+
+<ParamField query="--limit" type="number" default="10">
+  Results per page, 1 to 100.
+</ParamField>
+<ParamField query="--json" type="boolean">
+  Output a single JSON object instead of a table.
+</ParamField>
+
+```bash Output
+  Invoices (2 total)
+
+  issued     INV-2026-0142    49.99      EUR    jane@startup.io             3332e42e-14ae-4d59-9171-28372c2ac632
+  issued     INV-2026-0141    199.00     USD    ana@example.com             5fd23a28-8c66-4f32-bb7e-964bcce3117d
+
+  2 of 2 shown.
+```
+
+### `--json`
+
+`invoices list --json` returns the full invoice record for each item, not a narrowed subset, so tax and settlement detail come along for the ride:
+
+```json
+{
+  "total": 2,
+  "hasMore": false,
+  "items": [
+    {
+      "id": "3332e42e-14ae-4d59-9171-28372c2ac632",
+      "invoiceNumber": "INV-2026-0142",
+      "amount": 49.99,
+      "currency": "EUR",
+      "description": "Consulting fee, August",
+      "status": "issued",
+      "buyerEmail": "jane@startup.io",
+      "buyerName": "Jane Cooper",
+      "buyerCountry": "DE",
+      "buyerVat": null,
+      "buyerCompany": null,
+      "taxRate": 19,
+      "taxAmount": 7.98,
+      "taxInclusive": true,
+      "taxName": "VAT",
+      "merchantName": "Aristokrates OÜ",
+      "merchantVat": "EE102810130",
+      "fiatAmount": null,
+      "fiatCurrency": null,
+      "issuedAt": "2026-08-06T15:04:00.000Z",
+      "createdAt": "2026-08-06T15:04:00.000Z",
+      "voidedAt": null
+    }
+  ]
+}
+```
+
+<Note>
+`amount`, `taxAmount`, and `fiatAmount` are all plain decimal currency units, same as everywhere else in the API. `fiatAmount`/`fiatCurrency` are only populated on invoices settled from a stablecoin payment, showing the fiat-equivalent value at the exchange rate used.
+</Note>
+
+## Download a receipt
+
+```bash
+agenta invoices receipt <id> [-o <path>]
+```
+
+<ParamField path="id" type="string" required>
+  Invoice ID, e.g. `3332e42e-14ae-4d59-9171-28372c2ac632`.
+</ParamField>
+<ParamField query="-o, --output" type="string" default="./receipt-<id>.pdf">
+  File path to save the PDF to.
+</ParamField>
+
+```bash
+agenta invoices receipt 3332e42e-14ae-4d59-9171-28372c2ac632 -o ./receipts/august.pdf
+```
+
+```bash Output
+  Saved: ./receipts/august.pdf
+```
+
+```json --json
+{ "saved": "./receipts/august.pdf" }
+```
+
+Receipts are only available for paid (issued) invoices.
+
+## Re-send a receipt
+
+```bash
+agenta invoices send-receipt <id>
+```
+
+<ParamField path="id" type="string" required>
+  Invoice ID, e.g. `3332e42e-14ae-4d59-9171-28372c2ac632`.
+</ParamField>
+
+Re-sends the receipt email to the buyer's address on file. Handy when a customer says they never got it.
+
+```bash
+agenta invoices send-receipt 3332e42e-14ae-4d59-9171-28372c2ac632
+```
+
+```bash Output
+  Receipt sent to jane@startup.io
+```
+
+```json --json
+{ "ok": true, "sentTo": "jane@startup.io" }
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Customers" icon="users" href="/cli/customers">
+    Look up who an invoice belongs to.
+  </Card>
+  <Card title="Subscriptions" icon="arrows-rotate" href="/cli/subscriptions">
+    See the recurring plan behind a billing cycle's invoice.
+  </Card>
+  <Card title="Invoices (SDK)" icon="code" href="/sdk/pay-invoices">
+    Pull invoices and receipts from your own backend.
+  </Card>
+  <Card title="Receipts (concept)" icon="book" href="/payments/receipts">
+    What's on a receipt and how VAT is shown.
+  </Card>
+</CardGroup>

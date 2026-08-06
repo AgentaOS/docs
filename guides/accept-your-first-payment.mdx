@@ -1,0 +1,147 @@
+---
+title: "Accept Your First Payment"
+description: "Create a payment link, share it, and confirm the money landed. Start to finish, in test mode, with a real test payment."
+---
+
+By the end of this guide you'll have a shareable payment link, a completed test payment against it, and a confirmed record that it happened, either through a webhook or the dashboard. Every step below runs in **test mode**: test money, no card required, nothing to lose.
+
+## Before you start
+
+You need an AgentaOS account (sign up at [app.agentaos.ai](https://app.agentaos.ai), no card required) and one of:
+
+- **The SDK path:** Node.js 20+ and a test API key (`sk_test_...`) from **Settings → Developers → API Keys**.
+- **The CLI path:** the `agenta` CLI installed and logged in.
+
+Either works. Pick whichever fits how you build; the guide shows both.
+
+<Steps>
+  <Step title="Install the SDK or CLI">
+    <Tabs>
+      <Tab title="SDK">
+        ```bash
+        npm install @agentaos/pay
+        ```
+        `@agentaos/pay` is server-side only (Node.js 20+, ESM). Never ship your API key to a browser.
+      </Tab>
+      <Tab title="CLI">
+        <CodeGroup>
+        ```bash Install
+        curl -fsSL https://agentaos.ai/install | bash
+        ```
+        ```bash Log in
+        agenta login
+        ```
+        </CodeGroup>
+        `agenta login` opens your browser to sign in, no API key needed. See [Login](/cli/login) if you want the details.
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Create a payment link">
+    A payment link is a reusable, shareable URL. Every visitor who opens it gets their own checkout. Amounts are plain currency units: `49.99` means €49.99, never cents.
+
+    <Tabs>
+      <Tab title="SDK">
+        ```typescript
+        import { AgentaOS } from '@agentaos/pay';
+
+        const agentaos = new AgentaOS(process.env.AGENTAOS_API_KEY!); // sk_test_...
+
+        const link = await agentaos.paymentLinks.create({
+          amount: 49.99,
+          currency: 'EUR',
+          description: 'Pro plan',
+          successUrl: 'https://myshop.com/success',
+          webhookUrl: 'https://myshop.com/webhooks',
+        });
+
+        console.log(link.checkoutUrl);
+        // → https://app.agentaos.ai/pay/7rr6S9ml4BMp829wV5WeAA
+        ```
+      </Tab>
+      <Tab title="CLI">
+        ```bash
+        agenta pay checkout -a 49.99 -c EUR -d "Pro plan" --json
+        ```
+
+        <Note>
+        There's no CLI command to create a reusable payment link yet. `agenta pay checkout` creates a one-off checkout instead, good enough for this guide, but every visit to a link's URL is what actually creates a new checkout behind the scenes. Create a real reusable link from the SDK, the REST API, or the dashboard's **Catalog → Products** page.
+        </Note>
+      </Tab>
+      <Tab title="cURL">
+        ```bash
+        curl -X POST https://api.agentaos.ai/api/v1/gateway/payment-links \
+          -H "x-api-key: sk_test_..." \
+          -H "Content-Type: application/json" \
+          -d '{
+            "amount": 49.99,
+            "currency": "EUR",
+            "description": "Pro plan",
+            "successUrl": "https://myshop.com/success",
+            "webhookUrl": "https://myshop.com/webhooks"
+          }'
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Share the checkoutUrl">
+    Every response carries a `checkoutUrl` in the shape `https://app.agentaos.ai/pay/{id}` (or `https://app.agentaos.ai/checkout/{id}` for a standalone checkout). Paste it anywhere: a button, an email, a chat message, a QR code. No integration required on the buyer's end.
+  </Step>
+
+  <Step title="Open the checkout and pay with a test card">
+    Open the URL in a browser. In test mode, the checkout page renders the secure card form, not a mock. Pay with the standard test card:
+
+    | Field | Value |
+    |---|---|
+    | Card number | `4242 4242 4242 4242` |
+    | Expiry | Any future date |
+    | CVC | Any 3 digits |
+
+    <Warning>
+    Type the test card directly into the checkout page. Never send a card number to any AgentaOS API call yourself, in test mode or in live, we (and our card processor) never accept a raw card number over the API.
+    </Warning>
+  </Step>
+
+  <Step title="Confirm the payment landed">
+    <Tabs>
+      <Tab title="Webhook">
+        If you set a `webhookUrl` (as in step 2), AgentaOS POSTs a `checkout.session.completed` event the moment payment clears, with `sessionId`, `amount` (a string, `"49.99"`), and `currency` in the payload. This is the reliable way to confirm a payment server-side. See [Handle webhooks](/guides/handle-webhooks) to build a verified handler for it.
+      </Tab>
+      <Tab title="Dashboard">
+        Open [app.agentaos.ai](https://app.agentaos.ai) → **Home** or **Finance → Payments**. Your test payment shows up in the balance and the activity feed within seconds, and its invoice appears under **Finance → Invoices**.
+      </Tab>
+    </Tabs>
+  </Step>
+</Steps>
+
+## Verify it worked
+
+- The checkout you created moved from `open` to `completed` (check with `checkouts.retrieve()`, `agenta pay get <sessionId>`, or the dashboard).
+- A customer record now exists for the email you paid with.
+- An invoice was issued automatically, visible under **Finance → Invoices**.
+
+<Warning>
+Don't trust the `successUrl` redirect as proof of payment. The buyer's browser might close before it fires. A webhook or a status check against the checkout is the source of truth.
+</Warning>
+
+## What you just built
+
+That one payment created a customer, a transaction, and a tax-correct invoice, all readable back through the SDK, the CLI, or the API. If you had a `webhookUrl` configured, it also fired a `checkout.session.completed` event to your server.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Sell a subscription" icon="rotate" href="/guides/sell-a-subscription">
+    Turn this into a recurring plan buyers pay into every month or year.
+  </Card>
+  <Card title="Handle webhooks" icon="bell" href="/guides/handle-webhooks">
+    Build a verified handler so your server reacts to payments automatically.
+  </Card>
+  <Card title="Go live" icon="rocket" href="/guides/go-live">
+    Move from test mode to accepting real money.
+  </Card>
+  <Card title="Payment links" icon="link" href="/payments/payment-links">
+    Every parameter, response field, and the checkout-fields feature, in full.
+  </Card>
+</CardGroup>

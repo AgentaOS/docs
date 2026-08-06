@@ -1,0 +1,8 @@
+---
+title: "Cancel a checkout"
+openapi: "POST /gateway/sessions/{sessionId}/cancel"
+---
+
+<Note>
+Cancelling only works while the checkout is `open` (`400` otherwise). A `409` means it was modified concurrently.
+</Note>

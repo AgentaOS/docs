@@ -3,7 +3,7 @@ title: x402 Payments
 description: Pay for 402-protected resources from your sub-account.
 ---
 
-# x402 Payments
+x402 is the pay-per-request standard for APIs that answer with HTTP 402 Payment Required. From your sub-account, an agent can probe those endpoints, see exactly what each one charges, settle the payment inline, and read the response. Use these commands when a resource you want to fetch is gated behind x402 and you want the payment handled for you.
 
 AI agents can discover, check, and pay for x402-protected APIs.
 
@@ -33,3 +33,14 @@ agenta sub x402 fetch <url> --max-amount 1000000
 Automatically pays and returns the response. `--max-amount` caps spending in atomic units (1000000 = 1 USDC).
 
 Returns: `paid`, `transaction`, `status`, `body`.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="MCP server" icon="plug" href="/mcp/setup">
+    The same x402 discover, check, and fetch flow as MCP tools for your AI assistant.
+  </Card>
+  <Card title="CLI" icon="terminal" href="/cli/install">
+    Install `agenta` and sign in to your sub-account.
+  </Card>
+</CardGroup>

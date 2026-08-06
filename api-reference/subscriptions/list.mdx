@@ -1,0 +1,17 @@
+---
+title: "List subscriptions"
+openapi: "GET /gateway/subscriptions"
+---
+
+<Info>
+Every field on this resource is camelCase on the wire, unlike Payment Links, Checkouts, Invoices, and Transactions (which are mostly snake_case with a few camelCase extras). See [Naming convention](/api-reference/introduction#naming-convention).
+</Info>
+
+<CardGroup cols={2}>
+  <Card title="Payment Links" icon="link" href="/api-reference/payment-links/create">
+    Create a `type: "subscription"` link to start selling recurring plans.
+  </Card>
+  <Card title="Customers" icon="users" href="/api-reference/customers/list">
+    The buyer behind each subscription.
+  </Card>
+</CardGroup>

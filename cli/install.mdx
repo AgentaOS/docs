@@ -1,23 +1,29 @@
 ---
-title: Install
-description: Install the AgentaOS CLI in one command.
+title: "Install"
+description: "Install the agenta CLI with one command, or via npm if you already run Node."
 ---
 
-# Install
+The `agenta` CLI ships as the `agentaos` npm package and installs two equivalent binary names: `agenta` (used throughout these docs) and `agentaos`. It talks to the same API your `@agentaos/pay` SDK integration uses, so anything you can do in code you can also do from a terminal: create checkouts, list subscriptions, pull receipts, check readiness.
 
-## One-liner
+## Requirements
 
-```bash
+Node.js 20 or later. The installer scripts work on macOS, Linux, and Windows (WSL).
+
+## Install
+
+<CodeGroup>
+
+```bash curl
 curl -fsSL https://agentaos.ai/install | bash
 ```
 
-## Via npm
-
-If you already have Node.js 20+:
-
-```bash
+```bash npm
 npm install -g agentaos
 ```
+
+</CodeGroup>
+
+The curl script downloads a prebuilt binary and puts `agenta` on your `PATH`. The npm install builds the same CLI from the published package and works anywhere `npm install -g` works.
 
 ## Verify
 
@@ -25,7 +31,15 @@ npm install -g agentaos
 agenta --version
 ```
 
+```bash Output
+1.2.0
+```
+
+If `agenta` isn't found after a curl install, open a new shell so your `PATH` picks up the change.
+
 ## No Node.js?
+
+If you're going the npm route and don't have Node 20+ installed:
 
 ```bash
 curl -fsSL https://fnm.vercel.app/install | bash
@@ -33,14 +47,25 @@ fnm install 20
 fnm use 20
 ```
 
-Then re-run the installer.
+Then re-run `npm install -g agentaos`.
 
-## AI Agent Setup
+## AI agent setup
 
-Install our skill for guided AI setup:
+Building an agent or automation that should use AgentaOS on your behalf? Install the skill for guided setup instead of hand-rolling the integration:
 
 ```bash
 npx skills add AgentaOS/skills@agenta
 ```
 
-Or read the skill directly: [agentaos.ai/SKILL.md](https://agentaos.ai/SKILL.md)
+Or read it directly at [agentaos.ai/SKILL.md](https://agentaos.ai/SKILL.md).
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Login" icon="key" href="/cli/login">
+    Authenticate the CLI with your AgentaOS account.
+  </Card>
+  <Card title="Quickstart" icon="rocket" href="/getting-started/quickstart">
+    Create your first checkout end to end.
+  </Card>
+</CardGroup>

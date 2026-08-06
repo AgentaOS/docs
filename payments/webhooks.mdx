@@ -1,92 +1,177 @@
 ---
 title: "Webhooks"
-description: "Receive real-time payment notifications. Verify signatures with HMAC-SHA256."
+description: "Get notified the moment a payment completes. Register a URL, verify the HMAC-SHA256 signature, and never trust an unverified payload."
 ---
 
-
-AgentaOS sends webhook events to your server when payments are confirmed. Always verify the signature before processing.
-
-## Setup
-
-1. Go to [app.agentaos.ai](https://app.agentaos.ai) → Developer → Webhooks
-2. Set your webhook URL (e.g. `https://myshop.com/webhooks`)
-3. Click "Reveal signing secret" → copy the `whsec_...` value
-4. Add it to your server as `AGENTAOS_WEBHOOK_SECRET`
+AgentaOS sends a webhook to your server for every payment event: a checkout completing, an outbound send confirming or failing. Webhooks are how your backend finds out about a payment without polling, and they're the only source of truth you should build on, not the browser redirect after checkout.
 
 <Warning>
-The signing secret is stable - it doesn't change when you update the URL. You can rotate it with the "Rotate" button if compromised.
+**Always verify the signature before you act on a webhook body.** Anyone who knows your webhook URL can POST a fake payload to it. Verification is what proves the request actually came from AgentaOS.
 </Warning>
 
-## Verify Signatures
+## Register a webhook URL
 
-```typescript
+<Steps>
+  <Step title="Open Developer settings">
+    Go to [app.agentaos.ai](https://app.agentaos.ai) → **Developer** → **Webhooks**.
+  </Step>
+  <Step title="Set your endpoint">
+    Enter the HTTPS URL you want events sent to, for example `https://myshop.com/webhooks`.
+  </Step>
+  <Step title="Reveal the signing secret">
+    Click **Reveal signing secret** and copy the `whsec_...` value.
+  </Step>
+  <Step title="Store it as a secret">
+    Add it to your server's environment as `AGENTAOS_WEBHOOK_SECRET`. Never commit it, never log it, never send it to the client.
+  </Step>
+</Steps>
+
+<Warning>
+The signing secret is stable, it doesn't change when you update the URL. If you suspect it's been exposed, click **Rotate** to issue a new one. Rotating invalidates the old secret immediately, so deploy the new value before you rotate if you can't afford downtime.
+</Warning>
+
+<Tip>
+You can also pass a one-off `webhookUrl` when creating a [checkout](/payments/checkouts) or [payment link](/payments/payment-links) to route that specific payment's event to a different endpoint, useful for per-integration or per-customer routing without touching your account-wide URL.
+</Tip>
+
+## Verify the signature
+
+Every webhook request carries an `X-AgentaOS-Signature` header. Verifying it proves two things: the payload came from AgentaOS, and it hasn't been replayed from an old request.
+
+<CodeGroup>
+```typescript SDK (@agentaos/pay)
 import { AgentaOS, WebhookVerificationError } from '@agentaos/pay';
 import express from 'express';
 
 const agentaos = new AgentaOS(process.env.AGENTAOS_API_KEY!);
+const app = express();
 
-// IMPORTANT: Use express.raw(). signature verifies the raw body
+// IMPORTANT: use express.raw() here. Verification signs the RAW body.
+// If a JSON body parser runs first, the reserialized body won't match
+// the signature and every event will fail verification.
 app.post('/webhooks', express.raw({ type: 'application/json' }), (req, res) => {
+  let event;
   try {
-    const event = agentaos.webhooks.verify(
+    event = agentaos.webhooks.verify(
       req.body,
       req.headers['x-agentaos-signature'] as string,
       process.env.AGENTAOS_WEBHOOK_SECRET!,
     );
-
-    switch (event.type) {
-      case 'checkout.session.completed':
-        console.log('Payment received:', event.data.amount);
-        fulfillOrder(event.data.sessionId);
-        break;
-      case 'send.completed':
-        console.log('Send confirmed:', event.data.txHash);
-        break;
-      case 'send.failed':
-        console.log('Send failed:', event.data.transactionId);
-        break;
-    }
-
-    res.sendStatus(200);
   } catch (err) {
     if (err instanceof WebhookVerificationError) {
       return res.status(400).send('Invalid signature');
     }
-    res.status(500).send('Webhook processing failed');
+    return res.status(500).send('Webhook processing failed');
   }
+
+  // Signature is valid: safe to act on event.data now.
+  switch (event.type) {
+    case 'checkout.session.completed':
+      fulfillOrder(event.data.sessionId, event.data.amount);
+      break;
+    case 'send.completed':
+      console.log('Send confirmed:', event.data.txHash);
+      break;
+    case 'send.failed':
+      console.log('Send failed:', event.data.transactionId);
+      break;
+  }
+
+  res.sendStatus(200);
 });
 ```
+</CodeGroup>
 
-<Tip>
-Always return `200` after processing. AgentaOS retries on non-2xx responses (up to 3 times with exponential backoff).
-</Tip>
+`webhooks.verify()` does four things, in order: parses the `t=...,v1=...` header, rejects it if the timestamp is older than 5 minutes (replay protection), recomputes the HMAC-SHA256 digest and compares it in constant time, then parses and returns a typed `WebhookEvent`. Any failure throws `WebhookVerificationError` rather than returning a falsy value, so you can't accidentally skip the check.
 
-## Delivery Flow
+### Manual verification (no SDK)
 
-```mermaid
-sequenceDiagram
-    participant B as Blockchain
-    participant A as AgentaOS
-    participant S as Your Server
+The algorithm is plain HMAC-SHA256 over `{timestamp}.{raw_body}`, so it's straightforward to reimplement in any language that can do an HMAC and a constant-time compare.
 
-    B->>A: Payment confirmed on-chain
-    A->>A: Sign payload with HMAC-SHA256
-    A->>S: POST /webhooks (with X-AgentaOS-Signature)
-    alt Signature valid
-        S->>S: Verify signature ✓
-        S->>S: Process event (fulfill order)
-        S-->>A: 200 OK
-    else Signature invalid
-        S-->>A: 400 Bad Request
-    else Server down
-        A->>A: Wait (exponential backoff)
-        A->>S: Retry (up to 3 times)
-    end
+<CodeGroup>
+```python Python
+import hmac, hashlib, time
+
+def verify_webhook(body: str, signature: str, secret: str, tolerance_sec: int = 300) -> bool:
+    parts = dict(p.split("=", 1) for p in signature.split(","))
+    timestamp = int(parts["t"])
+
+    # Reject old signatures (replay protection)
+    if abs(time.time() - timestamp) > tolerance_sec:
+        return False
+
+    expected = hmac.new(
+        secret.encode(),
+        f"{timestamp}.{body}".encode(),
+        hashlib.sha256,
+    ).hexdigest()
+
+    return hmac.compare_digest(expected, parts["v1"])
 ```
 
-## Signature Format
+```go Go
+package main
 
-Every webhook includes an `X-AgentaOS-Signature` header:
+import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
+	"strconv"
+	"strings"
+	"time"
+)
+
+func verifyWebhook(body []byte, signature, secret string, toleranceSec int64) bool {
+	parts := map[string]string{}
+	for _, p := range strings.Split(signature, ",") {
+		if kv := strings.SplitN(p, "=", 2); len(kv) == 2 {
+			parts[kv[0]] = kv[1]
+		}
+	}
+	timestamp, err := strconv.ParseInt(parts["t"], 10, 64)
+	if err != nil || parts["v1"] == "" {
+		return false
+	}
+	if age := time.Now().Unix() - timestamp; age > toleranceSec || age < 0 {
+		return false // expired or in the future
+	}
+
+	mac := hmac.New(sha256.New, []byte(secret))
+	mac.Write([]byte(fmt.Sprintf("%d.%s", timestamp, body)))
+	expected := hex.EncodeToString(mac.Sum(nil))
+
+	return hmac.Equal([]byte(expected), []byte(parts["v1"]))
+}
+```
+
+```php PHP
+<?php
+function verify_webhook(string $body, string $signature, string $secret, int $toleranceSec = 300): bool {
+    $parts = [];
+    foreach (explode(',', $signature) as $pair) {
+        [$key, $value] = array_pad(explode('=', $pair, 2), 2, null);
+        $parts[$key] = $value;
+    }
+    $timestamp = (int) ($parts['t'] ?? 0);
+    if (!$timestamp || empty($parts['v1'])) {
+        return false;
+    }
+    if (abs(time() - $timestamp) > $toleranceSec) {
+        return false; // expired
+    }
+
+    $expected = hash_hmac('sha256', "{$timestamp}.{$body}", $secret);
+    return hash_equals($expected, $parts['v1']);
+}
+```
+</CodeGroup>
+
+<Warning>
+Use a **constant-time comparison** (`hmac.compare_digest`, `hmac.Equal`, `hash_equals`, `crypto.timingSafeEqual`), never `==` or `===`. A naive string comparison leaks timing information an attacker can use to forge a valid signature byte by byte.
+</Warning>
+
+### Signature format
 
 ```
 X-AgentaOS-Signature: t=1710791400,v1=5257a869e7ecebeda32affa62cdca3fa51cad7e77a0e56ff536d0ce8e108d8bd
@@ -94,110 +179,87 @@ X-AgentaOS-Signature: t=1710791400,v1=5257a869e7ecebeda32affa62cdca3fa51cad7e77a
 
 | Part | Description |
 |------|-------------|
-| `t` | Unix timestamp (seconds) when the signature was created |
-| `v1` | HMAC-SHA256 hex digest of `{timestamp}.{body}` |
+| `t` | Unix timestamp (seconds) when AgentaOS signed the payload |
+| `v1` | HMAC-SHA256 hex digest of `{t}.{raw_body}`, keyed with your webhook signing secret |
 
-### Manual Verification (without SDK)
+The `t` prefix exists so the same payload signed twice never produces the same signature, and so a captured request can't be replayed indefinitely, verification rejects anything older than 5 minutes by default.
 
-```python
-import hmac, hashlib, time
+## Delivery and retries
 
-def verify_webhook(body: str, signature: str, secret: str) -> bool:
-    parts = dict(p.split('=', 1) for p in signature.split(','))
-    timestamp = int(parts['t'])
+```mermaid
+sequenceDiagram
+    participant P as Payment rail
+    participant A as AgentaOS
+    participant S as Your server
 
-    # Reject old signatures (5 minute tolerance)
-    if abs(time.time() - timestamp) > 300:
-        return False
-
-    expected = hmac.new(
-        secret.encode(),
-        f"{timestamp}.{body}".encode(),
-        hashlib.sha256
-    ).hexdigest()
-
-    return hmac.compare_digest(expected, parts['v1'])
+    P->>A: Payment confirmed
+    A->>A: Sign payload (HMAC-SHA256)
+    A->>S: POST your webhook URL (X-AgentaOS-Signature)
+    alt 2xx response
+        S-->>A: 200 OK
+        Note over A: Delivered
+    else Non-2xx or timeout
+        A->>A: Wait (exponential backoff)
+        A->>S: Retry, up to 3 attempts total
+    end
 ```
+
+Each delivery attempt gets a 10-second response timeout. If your endpoint doesn't return a `2xx` status in time, AgentaOS retries with exponential backoff, up to 3 attempts total. After the last attempt fails, the event is marked failed and isn't retried further.
+
+<Tip>
+Return `200` as soon as you've verified the signature and durably queued the event (a job, a database row). Do the actual work, fulfillment emails, external API calls, asynchronously. A slow handler is the most common reason webhooks fail and retry unnecessarily.
+</Tip>
 
 ## Events
 
-### `checkout.session.completed`
+<CardGroup cols={3}>
+  <Card title="checkout.session.completed" icon="link">
+    A checkout was paid, by card, bank transfer, or stablecoin.
+  </Card>
+  <Card title="send.completed" icon="arrow-right">
+    An outbound send confirmed on-chain.
+  </Card>
+  <Card title="send.failed" icon="triangle-exclamation">
+    An outbound send failed to broadcast.
+  </Card>
+</CardGroup>
 
-Fired when a payment is confirmed on-chain.
+See the [event reference](/webhooks/events) for the full payload shape of each one.
 
-```json
-{
-  "id": "evt_a1b2c3d4",
-  "type": "checkout.session.completed",
-  "data": {
-    "linkId": "secureLinkId",
-    "sessionId": "mZrESFyR7RC9RPsJfZCVkg",
-    "amount": "49.99",
-    "currency": "EURe",
-    "txHash": "0xabc...",
-    "payer": "0x1234...",
-    "payerType": "human",
-    "network": "eip155:8453",
-    "metadata": { "orderId": "order-123" }
-  }
-}
-```
+<Note>
+Every webhook payload's `amount` field is a **string** (e.g. `"49.99"`), not a number. This is different from `amount` on SDK create calls, which is a plain number. Parse it before doing arithmetic.
+</Note>
 
-### `send.completed`
-
-Fired when an outbound send is confirmed on-chain.
-
-```json
-{
-  "id": "evt_d5e6f7g8",
-  "type": "send.completed",
-  "data": {
-    "transactionId": "uuid",
-    "txHash": "0xdef...",
-    "from": "0xorgwallet...",
-    "to": "0xrecipient...",
-    "amount": "100.00",
-    "token": "USDC",
-    "chainId": 8453,
-    "network": "eip155:8453"
-  }
-}
-```
-
-### `send.failed`
-
-Fired when an outbound send broadcast fails.
-
-```json
-{
-  "id": "evt_h9i0j1k2",
-  "type": "send.failed",
-  "data": {
-    "transactionId": "uuid",
-    "txHash": null,
-    "from": "0xorgwallet...",
-    "to": "0xrecipient...",
-    "amount": "100.00",
-    "token": "USDC",
-    "chainId": 8453,
-    "network": "eip155:8453"
-  }
-}
-```
-
-## Best Practices
+## Best practices
 
 <CardGroup cols={2}>
   <Card title="Don't trust the redirect" icon="arrow-right">
-    The `successUrl` redirect is best-effort. The customer might close their browser. Always use webhooks as the source of truth.
+    The `successUrl` redirect is best-effort. The customer might close their browser before it fires. Always treat the webhook, not the redirect, as the source of truth that a payment happened.
   </Card>
-  <Card title="Idempotent handling" icon="repeat">
-    Webhook events may be delivered more than once. Use `event.data.sessionId` or `event.data.txHash` to deduplicate.
+  <Card title="Handle idempotently" icon="repeat">
+    Retries mean the same event can arrive more than once. Key your fulfillment logic off `event.data.sessionId` or `event.data.transactionId` and make it safe to process twice.
   </Card>
   <Card title="Respond quickly" icon="bolt">
-    Return `200` immediately. Do heavy processing (emails, shipping) asynchronously.
+    Verify, queue, return `200`. Do the slow work outside the request.
   </Card>
-  <Card title="Verify first" icon="shield-check">
-    Always verify the signature before processing. Never trust the raw body without verification.
+  <Card title="Verify every time" icon="shield-check">
+    Never branch on `event.data` before `webhooks.verify()` (or the manual equivalent) has returned successfully.
+  </Card>
+</CardGroup>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Event reference" icon="bell" href="/webhooks/events">
+    Every event type, its full payload, and a JSON example.
+  </Card>
+  <Card title="Payment SDK: Webhooks" icon="node-js" href="/sdk/pay-webhooks">
+    The `webhooks` resource in `@agentaos/pay`, in full.
+  </Card>
+  <Card title="Checkouts" icon="link" href="/payments/checkouts">
+    Set a per-checkout `webhookUrl` when you create one.
+  </Card>
+  <Card title="Payouts" icon="money-bill-transfer" href="/payouts/overview">
+    What happens to your balance after a payment lands.
   </Card>
 </CardGroup>

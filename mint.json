@@ -1,6 +1,7 @@
 {
   "$schema": "https://mintlify.com/schema.json",
   "name": "AgentaOS",
+  "openapi": "openapi.json",
   "logo": {
     "dark": "/images/agentaos-icon.png",
     "light": "/images/agentaos-icon.png",
@@ -36,7 +37,7 @@
     "suggestEdit": true
   },
   "announcement": {
-    "title": "AgentaOS CLI is live. Accept payments from AI agents →",
+    "title": "AgentaOS is the Merchant of Record for AI native founders. Sell software globally →",
     "url": "https://agentaos.ai"
   },
   "topbarLinks": [
@@ -49,20 +50,14 @@
     "name": "Open Account",
     "url": "https://app.agentaos.ai"
   },
-  "topAnchor": {
-    "name": "Docs",
-    "icon": "book"
-  },
   "tabs": [
     {
-      "name": "CLI",
-      "url": "cli",
-      "icon": "terminal"
+      "name": "Guides",
+      "url": "guides"
     },
     {
-      "name": "SDKs",
-      "url": "sdk",
-      "icon": "code"
+      "name": "API Reference",
+      "url": "api-reference"
     }
   ],
   "anchors": [
@@ -80,74 +75,151 @@
   ],
   "navigation": [
     {
-      "group": "",
+      "group": "Getting Started",
       "pages": [
-        "introduction"
+        "introduction",
+        "getting-started/quickstart",
+        "getting-started/test-mode",
+        "getting-started/dashboard"
       ]
     },
     {
-      "group": "Accept Payments",
+      "group": "Features",
       "pages": [
-        "pay/checkouts",
-        "payments/webhooks",
-        "payments/api-reference"
+        "payments/payment-links",
+        "payments/checkouts",
+        "payments/subscriptions",
+        "payments/invoices",
+        "payments/receipts",
+        "payments/customers"
       ]
     },
     {
-      "group": "Banking",
+      "group": "SDK",
       "pages": [
-        "banking/activate-eur",
-        "banking/activate-eur-individual",
-        "banking/activate-eur-business"
+        "sdk/pay-overview",
+        "sdk/pay-checkouts",
+        "sdk/pay-payment-links",
+        "sdk/pay-subscriptions",
+        "sdk/pay-invoices",
+        "sdk/pay-customers",
+        "sdk/pay-webhooks",
+        "sdk/pay-errors"
       ]
     },
     {
-      "group": "Agent Sub-accounts",
-      "pages": [
-        "sub/create",
-        "sub/send",
-        "sub/policies",
-        "sub/x402",
-        "architecture/overview",
-        "guardian/concepts/threshold-signing",
-        "guardian/concepts/security",
-        "guardian/networks"
-      ]
-    },
-    {
-      "group": "MCP Server",
-      "pages": [
-        "mcp/setup"
-      ]
-    },
-    {
-      "group": "Resources",
-      "pages": [
-        "guardian/faq",
-        "guardian/glossary"
-      ]
-    },
-    {
-      "group": "CLI Reference",
+      "group": "CLI",
       "pages": [
         "cli/install",
         "cli/login",
+        "cli/pay",
+        "cli/subscriptions",
+        "cli/customers",
+        "cli/invoices",
         "cli/status"
       ]
     },
     {
-      "group": "Payment SDK",
+      "group": "Webhooks",
       "pages": [
-        "sdk/pay-overview",
-        "sdk/pay-checkouts",
-        "sdk/pay-example"
+        "payments/webhooks",
+        "webhooks/events"
       ]
     },
     {
-      "group": "Sub-account SDK",
+      "group": "Merchant of Record",
       "pages": [
-        "sdk/sub-overview",
-        "sdk/sub-foundry"
+        "mor/how-it-works",
+        "mor/supported-countries",
+        "mor/tax",
+        "mor/pricing",
+        "mor/account-review",
+        "payouts/overview"
+      ]
+    },
+    {
+      "group": "AI & Agents",
+      "pages": [
+        "mcp/setup",
+        "sub/x402"
+      ]
+    },
+    {
+      "group": "For customers",
+      "pages": [
+        "for-customers/why-charged"
+      ]
+    },
+    {
+      "group": "Legacy",
+      "pages": [
+        "banking/activate-eur",
+        "banking/activate-eur-individual",
+        "banking/activate-eur-business",
+        "legacy/stablecoin-payouts"
+      ]
+    },
+    {
+      "group": "Guides",
+      "pages": [
+        "guides/introduction",
+        "guides/accept-your-first-payment",
+        "guides/sell-a-subscription",
+        "guides/go-live",
+        "guides/handle-webhooks",
+        "guides/ai-agent"
+      ]
+    },
+    {
+      "group": "API Reference",
+      "pages": [
+        "api-reference/introduction",
+        "api-reference/error-codes",
+        {
+          "group": "Payment Links",
+          "pages": [
+            "api-reference/payment-links/create",
+            "api-reference/payment-links/list",
+            "api-reference/payment-links/retrieve",
+            "api-reference/payment-links/update",
+            "api-reference/payment-links/cancel"
+          ]
+        },
+        {
+          "group": "Checkouts",
+          "pages": [
+            "api-reference/checkouts/create",
+            "api-reference/checkouts/list",
+            "api-reference/checkouts/retrieve",
+            "api-reference/checkouts/cancel"
+          ]
+        },
+        {
+          "group": "Subscriptions",
+          "pages": ["api-reference/subscriptions/list", "api-reference/subscriptions/cancel"]
+        },
+        {
+          "group": "Customers",
+          "pages": ["api-reference/customers/list"]
+        },
+        {
+          "group": "Invoices",
+          "pages": [
+            "api-reference/invoices/list",
+            "api-reference/invoices/retrieve",
+            "api-reference/invoices/void",
+            "api-reference/invoices/pdf",
+            "api-reference/invoices/receipt",
+            "api-reference/invoices/send-receipt",
+            "api-reference/invoices/statement",
+            "api-reference/invoices/export"
+          ]
+        },
+        {
+          "group": "Transactions",
+          "pages": ["api-reference/transactions/list"]
+        },
+        "api-reference/webhooks"
       ]
     }
   ],

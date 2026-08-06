@@ -1,25 +1,12 @@
 # AgentaOS Documentation
 
-Official documentation for AgentaOS — the financial OS for the agent economy.
+Official documentation for AgentaOS, the Merchant of Record for AI native founders. Payments, subscriptions, invoices, tax, and payouts, all handled.
 
 **Live docs:** [docs.agentaos.ai](https://docs.agentaos.ai)
 
-## Products
+## AI-friendly docs
 
-| Product | Description | Status |
-|---------|-------------|--------|
-| [Agenta Wallet](./guardian) | 2-of-3 threshold signing for AI agents — CLI, SDK, MCP | Live |
-| [x402 Facilitator](./x402) | Payment verification and settlement for x402 protocol | Live |
-
-## AI-Friendly Docs
-
-This documentation is optimized for AI agent consumption. Mintlify auto-generates `llms.txt` and `llms-full.txt` at the site root for LLM context ingestion. You can also use the individual `.mdx` files directly.
-
-**Key files for AI agents:**
-- `guardian/integration/sdk.mdx` — SDK integration (packages, classes, methods)
-- `guardian/integration/cli.mdx` — CLI commands reference
-- `guardian/integration/mcp.mdx` — MCP server tools for Claude/Cursor
-- `guardian/quickstart.mdx` — End-to-end setup guide
+Mintlify auto-generates `llms.txt` and `llms-full.txt` at the site root for LLM context ingestion. You can also read any page as raw markdown by appending `.md` to its URL, or use the `.mdx` files directly.
 
 ## Development
 
@@ -27,25 +14,25 @@ This documentation is optimized for AI agent consumption. Mintlify auto-generate
 npx mintlify dev
 ```
 
-Docs at `http://localhost:3000`
+Open the local URL Mintlify prints. To check links:
 
-## Project Structure
+```bash
+npx mintlify broken-links
+```
 
-```
-├── mint.json           # Mintlify configuration
-├── guardian/           # Agenta Wallet docs
-│   ├── introduction.mdx
-│   ├── quickstart.mdx
-│   ├── integration/    # CLI, SDK, MCP, Foundry
-│   ├── concepts/       # Threshold signing, guardrails, security
-│   └── comparisons/    # vs Fireblocks, vs Privy, MPC vs Multisig
-├── x402/               # x402 Payment Facilitator docs
-│   ├── introduction.mdx
-│   ├── quickstart.mdx
-│   ├── api-reference/
-│   └── integration/
-└── images/             # Logos and assets
-```
+## Structure
+
+- `introduction.mdx` — overview
+- `getting-started/` — quickstart, test mode, dashboard
+- `payments/` — payment links, checkouts, subscriptions, invoices, receipts, customers, webhooks
+- `sdk/` — the `@agentaos/pay` TypeScript SDK
+- `cli/` — the `agenta` CLI
+- `mor/` — Merchant of Record: how it works, supported countries, tax, pricing, account review
+- `payouts/` — how your balance clears and pays out
+- `api-reference/` — REST API (OpenAPI-driven) and error codes
+- `guides/` — end-to-end walkthroughs
+- `mint.json` — Mintlify configuration
+- `openapi.json` — the API spec the reference renders from
 
 ## License
 
