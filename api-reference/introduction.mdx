@@ -82,7 +82,7 @@ Most response fields mirror the underlying data and are `snake_case`. A handful 
   <Accordion title="Computed convenience fields → camelCase, added on top">
     A small number of fields are built by the server at response time rather than read from a column, and those are camelCase as written, with no snake_case equivalent:
     <ul>
-      <li><code>checkoutUrl</code> and <code>x402Url</code> on Checkouts; <code>checkoutUrl</code> on Payment Links</li>
+      <li><code>checkoutUrl</code> on Checkouts and Payment Links</li>
       <li><code>money</code> (an object: <code>currency</code>, <code>grossMinor</code>, <code>feeMinor</code>, <code>vatMinor</code>, <code>netMinor</code>) on Transactions</li>
       <li><code>earnings</code> (an object: <code>currency</code>, <code>grossMinor</code>, <code>agentaosFeeMinor</code>, <code>vatMinor</code>, <code>netMinor</code>) on a single retrieved Invoice, same shape as <code>money</code> except the fee field is named <code>agentaosFeeMinor</code> instead of <code>feeMinor</code></li>
     </ul>

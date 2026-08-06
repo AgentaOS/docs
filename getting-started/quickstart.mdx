@@ -6,15 +6,33 @@ description: "Start accepting payments in minutes with AgentaOS. Everything belo
 Both paths below run in **test mode** with test money, so there is nothing to verify and nothing to lose. Pick the one that fits how you build:
 
 <CardGroup cols={2}>
+  <Card title="No-code" icon="wand-magic-sparkles" href="#no-code">
+    Create a product and start selling without writing a line of code.
+  </Card>
   <Card title="Code integration" icon="code" href="#code-integration">
     Integrate AgentaOS into your app with the SDK, CLI, or REST API.
   </Card>
-  <Card title="No-code" icon="wand-magic-sparkles" href="#no-code">
-    Create a payment link and start selling without writing code.
-  </Card>
 </CardGroup>
 
+## No-code
+
+The fastest way to get paid: create a product in the dashboard and share its link.
+
+<Steps>
+  <Step title="Create a product">
+    Open **Catalog → Products** and click **New product**. Give it a name and a price, choose one-time or subscription, and save. Your shareable payment link is generated as you type.
+  </Step>
+  <Step title="Share your link">
+    Click **Copy link** and send it anywhere: an email, a chat message, social, or a QR code. Every visitor gets their own checkout, and one link can be paid many times.
+  </Step>
+  <Step title="Get paid">
+    Your buyer pays on the secure checkout (card, Apple Pay, or Google Pay). The payment, tax, invoice, and payout are handled for you. Watch it land under **Home** or **Finance → Payments**.
+  </Step>
+</Steps>
+
 ## Code integration
+
+Everything the dashboard does is available over the SDK, CLI, and REST API.
 
 <Steps>
   <Step title="Get access and your API key">
@@ -127,19 +145,6 @@ app.listen(3000, () => console.log('Listening on :3000'));
 </CodeGroup>
 
 To run it: `npm install express @agentaos/pay`, add a webhook endpoint pointing at `/webhooks` in **Settings → Developers → Webhooks** and copy its signing secret into `AGENTAOS_WEBHOOK_SECRET`, then `node server.ts`. `POST /checkout` returns a `checkoutUrl`, pay it with the test card, and your `/webhooks` handler fires.
-
-## No-code
-
-Perfect for creators and anyone who wants to start selling without writing code.
-
-<Steps>
-  <Step title="Create a product">
-    Open the **Products** page in the dashboard and create your first product with a name, description, and price.
-  </Step>
-  <Step title="Share your link">
-    Click **Share** to copy the product's payment link. Send it by email, social, or anywhere else. That is it, you are ready to get paid.
-  </Step>
-</Steps>
 
 ## Next steps
 

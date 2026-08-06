@@ -137,7 +137,6 @@ Company, VAT, and address are optional but recommended, they land directly on th
 <ResponseField name="paymentLinkId" type="string | null">Set when created from a `linkId`; `null` for a standalone checkout.</ResponseField>
 <ResponseField name="orgId" type="string">Your organization's UUID.</ResponseField>
 <ResponseField name="checkoutUrl" type="string">URL to send your human customer to.</ResponseField>
-<ResponseField name="x402Url" type="string">x402 protocol URL for AI-agent payers.</ResponseField>
 <ResponseField name="status" type="'open' | 'completed' | 'expired' | 'cancelled'">Current session status.</ResponseField>
 <ResponseField name="sellerMode" type="'mor' | 'crypto'">How this session settles. Resolved server-side, see the note above.</ResponseField>
 <ResponseField name="amountOverride" type="number | null">The amount for this session (currency units), or `null` if unset.</ResponseField>
@@ -158,7 +157,6 @@ Company, VAT, and address are optional but recommended, they land directly on th
   "orgId": "b7e2a1c4-...",
   "sessionId": "mZrESFyR7RC9RPsJfZCVkg",
   "checkoutUrl": "https://app.agentaos.ai/checkout/mZrESFyR7RC9RPsJfZCVkg",
-  "x402Url": "https://api.agentaos.ai/gateway/v1/x402/mZrESFyR7RC9RPsJfZCVkg",
   "status": "open",
   "sellerMode": "mor",
   "amountOverride": 100.00,

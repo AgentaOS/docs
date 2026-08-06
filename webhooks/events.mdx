@@ -57,7 +57,7 @@ Fired when a checkout is paid, by card, wallet, or stablecoin. This is the event
     The paying wallet address for stablecoin checkouts. `null` for card/bank rails.
   </ResponseField>
   <ResponseField name="payer_type" type="string">
-    `human` or `agent`, whether a person or an autonomous agent (e.g. an x402 client) initiated the payment.
+    `human` or `agent`, whether a person or an autonomous agent initiated the payment.
   </ResponseField>
   <ResponseField name="network" type="string">
     CAIP-2 network ID for on-chain rails, e.g. `"eip155:8453"` for Base, or `stripe` for card/bank.
