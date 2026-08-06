@@ -4,8 +4,8 @@
   "name": "AgentaOS",
   "colors": {
     "primary": "#4F46E5",
-    "light": "#6366F1",
-    "dark": "#4338CA"
+    "light": "#A5B4FC",
+    "dark": "#3F37C9"
   },
   "favicon": "/images/agentaos-icon.png",
   "navigation": {
@@ -198,8 +198,8 @@
           "href": "https://agentaos.ai/SKILL.md",
           "icon": "robot",
           "color": {
-            "light": "#4400E0",
-            "dark": "#4400E0"
+            "light": "#4F46E5",
+            "dark": "#4F46E5"
           }
         },
         {
