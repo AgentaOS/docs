@@ -1,13 +1,13 @@
 ---
 title: MCP Server
-description: Connect AI agents to AgentaOS via MCP.
+description: Connect an AI agent to AgentaOS so it can run your store from chat.
 ---
 
-The AgentaOS MCP server exposes your account to any Model Context Protocol client, so an AI agent can create checkouts, read customers and subscriptions, send receipts, and operate your wallet on your behalf. Use it when you want Claude Desktop, Cursor, or Windsurf to run AgentaOS directly, instead of calling the API or CLI by hand.
+The AgentaOS MCP server lets any Model Context Protocol client (Claude Desktop, Cursor, or Windsurf) create checkouts, read your customers and subscriptions, and send receipts on your behalf. Use it when you want your agent to run the store directly, instead of calling the API or CLI by hand.
 
-25 tools for Claude Desktop, Cursor, Windsurf, and any MCP-compatible client.
+## Setup
 
-## Claude Desktop
+Add the server to your client's config with a gateway key from [app.agentaos.ai](https://app.agentaos.ai) → **Settings → Developers → API Keys**:
 
 ```json
 {
@@ -16,88 +16,38 @@ The AgentaOS MCP server exposes your account to any Model Context Protocol clien
       "command": "npx",
       "args": ["-y", "agentaos"],
       "env": {
-        "AGENTA_API_KEY": "your-api-key",
-        "AGENTA_API_SECRET": "your-api-secret",
-        "AGENTAOS_GATEWAY_KEY": "sk_live_your-gateway-key"
+        "AGENTAOS_GATEWAY_KEY": "sk_test_your-gateway-key"
       }
     }
   }
 }
 ```
 
-- **API Key + Secret**: For wallet tools. From sub-account creation.
-- **Gateway Key**: For payment tools. From [app.agentaos.ai](https://app.agentaos.ai) → API Keys.
+Test keys (`sk_test_`) only ever see test data, so your agent can build and break things safely. The same config works for Cursor and Windsurf.
 
 ## Tools
 
-18 wallet/agent tools plus 7 `agenta_pay_*` payment tools.
-
-### Wallet & agent tools
-
-#### Discovery
 | Tool | What it does |
 |------|-------------|
-| `agenta_wallet_overview` | Address, balances, and recent transactions |
-| `agenta_list_networks` | List available networks and chain IDs |
-| `agenta_list_signers` | List signers accessible with the API key |
-| `agenta_resolve_address` | Resolve an ENS name to an address |
-
-#### Common operations
-| Tool | What it does |
-|------|-------------|
-| `agenta_send_eth` | Send ETH |
-| `agenta_send_token` | Send ERC-20 tokens |
-| `agenta_get_balances` | ETH + ERC-20 balances |
-
-#### Contract interaction
-| Tool | What it does |
-|------|-------------|
-| `agenta_call_contract` | Write to a contract |
-| `agenta_read_contract` | Read contract state |
-| `agenta_execute` | Execute a raw transaction with pre-encoded calldata |
-| `agenta_simulate` | Simulate a transaction |
-
-#### Signing
-| Tool | What it does |
-|------|-------------|
-| `agenta_sign_message` | Sign a message |
-| `agenta_sign_typed_data` | Sign EIP-712 typed data |
-
-#### Management and audit
-| Tool | What it does |
-|------|-------------|
-| `agenta_get_status` | Server health and signer status |
-| `agenta_get_audit_log` | Recent signing activity and policy evaluations |
-
-#### x402 payments
-| Tool | What it does |
-|------|-------------|
-| `agenta_x402_check` | Check if a URL requires payment |
-| `agenta_x402_discover` | Find x402 endpoints |
-| `agenta_x402_fetch` | Pay and fetch a resource |
-
-### Payment tools (`agenta_pay_*`)
-| Tool | What it does |
-|------|-------------|
-| `agenta_pay_create_checkout` | Create a checkout session |
-| `agenta_pay_get_checkout` | Get checkout status |
-| `agenta_pay_list_checkouts` | List checkouts |
-| `agenta_pay_list_subscriptions` | List subscriptions |
-| `agenta_pay_cancel_subscription` | Cancel a subscription |
-| `agenta_pay_list_customers` | List paying customers |
-| `agenta_pay_send_receipt` | Re-send a receipt email |
+| `agenta_pay_create_checkout` | Create a checkout and get a shareable `checkoutUrl`. |
+| `agenta_pay_get_checkout` | Check whether a payment completed. |
+| `agenta_pay_list_checkouts` | List checkouts by status (`open`, `completed`, `expired`, `cancelled`). |
+| `agenta_pay_list_subscriptions` | List subscriptions: status, amount, interval, and subscriber. |
+| `agenta_pay_cancel_subscription` | Cancel a subscription, at period end or immediately. |
+| `agenta_pay_list_customers` | Everyone who paid you: email, name, and country. |
+| `agenta_pay_send_receipt` | Re-send the receipt email for a paid invoice. |
 
 ## Next steps
 
 <CardGroup cols={2}>
+  <Card title="Run your store from an agent" icon="wand-magic-sparkles" href="/guides/ai-agent">
+    The full walkthrough: a coding agent with the CLI, or a chat agent with MCP.
+  </Card>
   <Card title="TypeScript SDK" icon="node-js" href="/sdk/pay-overview">
     The same operations as typed methods in `@agentaos/pay`.
   </Card>
   <Card title="CLI" icon="terminal" href="/cli/install">
     Run AgentaOS from your terminal with `agenta`.
-  </Card>
-  <Card title="x402 payments" icon="robot" href="/sub/x402">
-    Let an agent discover, check, and pay for 402-protected APIs.
   </Card>
   <Card title="Quickstart" icon="rocket" href="/getting-started/quickstart">
     Create a product and take your first payment.

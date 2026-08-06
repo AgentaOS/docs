@@ -38,7 +38,7 @@ An AgentaOS account. Neither path needs an API key up front, `agenta login` and 
     curl -fsSL https://agentaos.ai/SKILL.md
     ```
 
-    It teaches the agent the exact `agenta pay` and `agenta sub` commands, their flags, and how to handle the response, including always running `agenta status --json` first and always passing `--json` so output is machine-parseable instead of full of ANSI color codes.
+    It teaches the agent the exact `agenta pay` commands, their flags, and how to handle the response, including always running `agenta status --json` first and always passing `--json` so output is machine-parseable instead of full of ANSI color codes.
   </Step>
 
   <Step title="Try a prompt">
@@ -54,7 +54,7 @@ An AgentaOS account. Neither path needs an API key up front, `agenta login` and 
 
 <Steps>
   <Step title="Get your keys">
-    A gateway key for payment tools, from [app.agentaos.ai](https://app.agentaos.ai) → **Settings → Developers → API Keys**. If you also want the agent to touch an agent wallet (send tokens, sign messages), you'll additionally need an API key and secret from a sub-account.
+    A gateway key for the payment tools, from [app.agentaos.ai](https://app.agentaos.ai) → **Settings → Developers → API Keys**.
   </Step>
 
   <Step title="Add the server to your client's config">
@@ -67,9 +67,7 @@ An AgentaOS account. Neither path needs an API key up front, `agenta login` and 
           "command": "npx",
           "args": ["-y", "agentaos"],
           "env": {
-            "AGENTA_API_KEY": "your-api-key",
-            "AGENTA_API_SECRET": "your-api-secret",
-            "AGENTAOS_GATEWAY_KEY": "sk_live_your-gateway-key"
+            "AGENTAOS_GATEWAY_KEY": "sk_test_your-gateway-key"
           }
         }
       }
@@ -90,11 +88,11 @@ An AgentaOS account. Neither path needs an API key up front, `agenta login` and 
 
 ## What the agent can do
 
-The MCP server exposes **25 tools** total: wallet operations, contract calls, x402 payments, and the payment tools below. All 25 are documented in full at [MCP setup](/mcp/setup); the payment-specific ones are the ones most relevant to running a store:
+The MCP server exposes these payment tools, all documented at [MCP setup](/mcp/setup):
 
 | Tool | What it does |
 |---|---|
-| `agenta_pay_create_checkout` | Create a checkout session. Returns a `checkoutUrl` for a human buyer and an `x402Url` for an AI agent payer. |
+| `agenta_pay_create_checkout` | Create a checkout session and get a shareable `checkoutUrl`. |
 | `agenta_pay_get_checkout` | Get a checkout's status, amount, currency, and expiry. Use it to check whether a payment completed. |
 | `agenta_pay_list_checkouts` | List checkout sessions, filterable by status (`open`, `completed`, `expired`, `cancelled`). |
 | `agenta_pay_list_subscriptions` | List subscriptions: status, amount, billing interval, and subscriber. |
@@ -112,16 +110,13 @@ Ask the agent directly:
 
 > What's my AgentaOS status?
 
-On the CLI path, it should run `agenta status --json` and report `paymentTools.ready: true`, along with your organization and wallet. On the MCP path, ask it to list your most recent checkout and confirm the amount and status match what you see in the dashboard.
+On the CLI path, it should run `agenta status --json` and report `paymentTools.ready: true`, along with your organization. On the MCP path, ask it to list your most recent checkout and confirm the amount and status match what you see in the dashboard.
 
 ## Next steps
 
 <CardGroup cols={2}>
   <Card title="MCP server setup" icon="server" href="/mcp/setup">
     Every tool the MCP server exposes, and Cursor/Windsurf configuration.
-  </Card>
-  <Card title="x402 payments" icon="robot" href="/sub/x402">
-    Let agents discover, check, and pay for 402-protected resources automatically.
   </Card>
   <Card title="CLI install" icon="terminal" href="/cli/install">
     The full `agenta` CLI reference, for scripting outside an AI agent too.

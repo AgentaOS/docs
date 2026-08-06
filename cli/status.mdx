@@ -16,7 +16,6 @@ Alias: `agenta whoami`.
 - **Account**: are you logged in, and as who (read from your session).
 - **Organization and wallet**: your org name and whether a payout wallet is activated.
 - **Payment tools**: whether `agenta pay checkout` will actually work right now.
-- **Agent sub-accounts**: any `agenta sub create`d signer wallets on this machine, with live balance and status.
 
 ## Usage
 
@@ -41,10 +40,8 @@ agenta status [--json]
   Config:       /Users/you/.agenta
 
   Payment tools:  ✓ Ready
-  Agent accounts: Run agenta sub create to create a sub-account
 
   Next: agenta pay checkout -a 50 to create a checkout
-        agenta sub create to create an agent sub-account
 ```
 
 If your wallet isn't activated yet, `Payment tools` shows what's blocking you instead of a green check, and `Next` points at `agenta login` to finish activation.
@@ -67,11 +64,6 @@ If your wallet isn't activated yet, `Payment tools` shows what's blocking you in
       "ready": true,
       "hint": "Run agenta pay checkout -a 50 to create a checkout."
     }
-  },
-  "subAccounts": {
-    "count": 0,
-    "hint": "Run agenta sub create --name <name> to create a sub-account.",
-    "items": []
   }
 }
 ```
@@ -93,13 +85,7 @@ If your wallet isn't activated yet, `Payment tools` shows what's blocking you in
 | `account.paymentTools.hint` | What to do if it isn't ready. |
 | `account.jwtExpiresAt` | ISO 8601 timestamp your session token expires at. |
 | `account.jwtSecondsRemaining` | Seconds left before that expiry. |
-| `account.configDir` | Where the CLI stores its local session and signer config. |
-| `subAccounts.count` | Number of agent sub-accounts (`agenta sub create`) on this machine. |
-| `subAccounts.items[]` | Each sub-account's `name`, `address`, and `isDefault`. |
-
-<Note>
-`subAccounts` are agent signer wallets created with `agenta sub` (for agent-to-agent payments and x402), not your MoR customers. For the people who've paid you, see [`agenta customers list`](/cli/customers).
-</Note>
+| `account.configDir` | Where the CLI stores its local session config. |
 
 ## Not logged in
 
@@ -109,8 +95,7 @@ If your wallet isn't activated yet, `Payment tools` shows what's blocking you in
     "authenticated": false,
     "reason": "not-logged-in",
     "hint": "Run agenta login to get started."
-  },
-  "subAccounts": { "count": 0, "hint": "Run agenta sub create --name <name> to create a sub-account.", "items": [] }
+  }
 }
 ```
 

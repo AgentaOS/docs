@@ -27,8 +27,7 @@
             "group": "Build with AI agents",
             "pages": [
               "agents/overview",
-              "mcp/setup",
-              "sub/x402"
+              "mcp/setup"
             ]
           },
           {
@@ -69,7 +68,9 @@
           {
             "group": "Legacy",
             "pages": [
-              "legacy/stablecoin-payouts"
+              "legacy/stablecoin-payouts",
+              "legacy/agent-wallet",
+              "sub/x402"
             ]
           }
         ]
