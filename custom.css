@@ -84,8 +84,8 @@ a.group[href="https://app.agentaos.ai"]:hover {
 /* Dark mode: light border/shadow so the buttons read on navy */
 .dark a.group[href="https://app.agentaos.ai"] { box-shadow: 3px 3px 0 #A5B4FC !important; border-color: #A5B4FC !important; }
 .dark a.group[href="https://app.agentaos.ai"]:hover { box-shadow: 5px 5px 0 #A5B4FC !important; }
-.dark .navbar-link a { background: transparent !important; color: #E8ECF7 !important; border-color: #A5B4FC !important; box-shadow: 3px 3px 0 #A5B4FC !important; }
-.dark .navbar-link a:hover { box-shadow: 5px 5px 0 #A5B4FC !important; color: #E8ECF7 !important; }
+.dark .navbar-link a { background: transparent !important; color: #FFFFFF !important; border-color: #A5B4FC !important; box-shadow: 3px 3px 0 #A5B4FC !important; }
+.dark .navbar-link a:hover { box-shadow: 5px 5px 0 #A5B4FC !important; color: #FFFFFF !important; }
 
 /* ---- Content links — brand indigo, underlined ---- */
 #content-area a.link, .prose a.link {
@@ -97,3 +97,6 @@ a.group[href="https://app.agentaos.ai"]:hover {
 }
 #content-area a.link:hover, .prose a.link:hover { text-decoration-color: #4F46E5 !important; }
 .dark #content-area a.link, .dark .prose a.link { color: #A5B4FC !important; text-decoration-color: rgba(165, 180, 252, 0.4); }
+
+/* ---- Announcement banner — match the landing's ink bar (#0B1533, white text) ---- */
+#banner { background-color: #0B1533 !important; }

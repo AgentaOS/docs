@@ -1,0 +1,54 @@
+---
+title: "Glossary"
+description: "Plain-English definitions for the payments and tax terms you'll meet in AgentaOS."
+---
+
+New to payments? These are the terms that show up across the docs, in one place.
+
+<AccordionGroup>
+  <Accordion title="Merchant of Record (MoR)">
+    The legal seller of your product. Your buyer pays AgentaOS, not you, so AgentaOS collects the money, charges and remits the tax, issues the invoice, and pays you out. You carry none of the tax or payment liability.
+  </Accordion>
+  <Accordion title="Destination VAT">
+    VAT charged at the rate of the **buyer's** country, not yours. As your Merchant of Record, AgentaOS calculates it from the buyer's country at checkout and remits it for you.
+  </Accordion>
+  <Accordion title="OSS (One-Stop Shop)">
+    The EU scheme that lets one registration cover VAT across all EU countries. AgentaOS files EU VAT through OSS (via Estonia), so you never register in each country you sell to.
+  </Accordion>
+  <Accordion title="Reverse charge">
+    For a B2B sale to a VAT-registered business in another EU country, VAT shifts to the buyer, so the invoice shows no VAT. A buyer who enters a valid EU VAT ID at checkout is handled this way.
+  </Accordion>
+  <Accordion title="Payment link">
+    A reusable, shareable URL for one product. Every visitor who opens it gets their own checkout, and one link can be paid many times.
+  </Accordion>
+  <Accordion title="Checkout">
+    A single attempt to collect one payment. Created on its own or from a payment link. Every checkout has a `checkoutUrl` you send the buyer to.
+  </Accordion>
+  <Accordion title="Subscription">
+    A recurring charge on a card on file, billed automatically every cycle until cancelled.
+  </Accordion>
+  <Accordion title="Invoice vs. receipt">
+    An **invoice** is the tax document for a sale (seller, buyer, VAT breakdown), issued automatically on every payment. A **receipt** is the emailed confirmation the buyer gets that they paid.
+  </Accordion>
+  <Accordion title="Settlement">
+    The behind-the-scenes step where a completed payment becomes money in your balance, after the card or bank network clears it.
+  </Accordion>
+  <Accordion title="Balance states: Available, Incoming, In reserve">
+    **Available** is money that pays out on your next payout date. **Incoming** is money still clearing (about 14 days for new accounts). **In reserve** is a small hold on newer accounts to cover refunds and chargebacks; it releases on a set date.
+  </Accordion>
+  <Accordion title="Reserve">
+    A portion of your balance held temporarily on newer accounts to cover potential refunds or chargebacks. It releases automatically.
+  </Accordion>
+  <Accordion title="Payout">
+    Money moving from your Available balance to your bank account. Payouts run automatically twice a month.
+  </Accordion>
+  <Accordion title="Chargeback (dispute)">
+    When a buyer's bank reverses a card payment. The disputed amount is deducted from your balance rather than paid out.
+  </Accordion>
+  <Accordion title="Test mode vs. live mode">
+    **Test mode** uses fake money and test cards, safe to explore, no verification needed. **Live mode** takes real money and unlocks after business verification (KYB).
+  </Accordion>
+  <Accordion title="Webhook">
+    A signed HTTP call AgentaOS makes to your server the moment something happens (like a completed checkout), so your app can react without polling.
+  </Accordion>
+</AccordionGroup>
