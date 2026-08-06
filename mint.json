@@ -51,7 +51,7 @@
     }
   ],
   "topbarCtaButton": {
-    "name": "Sign in",
+    "name": "Log in",
     "url": "https://app.agentaos.ai"
   },
   "tabs": [
