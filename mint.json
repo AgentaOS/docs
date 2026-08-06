@@ -51,7 +51,7 @@
     }
   ],
   "topbarCtaButton": {
-    "name": "Open Account",
+    "name": "Sign in",
     "url": "https://app.agentaos.ai"
   },
   "tabs": [
