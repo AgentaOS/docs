@@ -9,17 +9,21 @@
   },
   "favicon": "/images/agentaos-icon.png",
   "colors": {
-    "primary": "#4400E0",
-    "light": "#7C5CFC",
-    "dark": "#4400E0",
+    "primary": "#4F46E5",
+    "light": "#6366F1",
+    "dark": "#4338CA",
     "background": {
-      "light": "#FAFAFA",
-      "dark": "#1A1A24"
+      "light": "#FFFFFF",
+      "dark": "#0B1533"
     },
     "anchors": {
-      "from": "#4400E0",
-      "to": "#00B4D8"
+      "from": "#4F46E5",
+      "to": "#12B981"
     }
+  },
+  "font": {
+    "headings": { "family": "Bricolage Grotesque" },
+    "body": { "family": "Inter" }
   },
   "sidebar": {
     "items": "border"

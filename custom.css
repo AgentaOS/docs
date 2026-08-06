@@ -1,44 +1,47 @@
-/* Sidebar — subtle purple tint */
+/* Match the landing page (agentaos.ai): Bricolage Grotesque + Inter + Space Grotesk */
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;450;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+/* Sidebar — subtle paper/sand tint, ink navy in dark */
 nav[aria-label="Sidebar"] {
-  background: linear-gradient(180deg, #f8f6ff 0%, #ffffff 100%);
+  background: linear-gradient(180deg, #F6F7F9 0%, #ffffff 100%);
 }
 .dark nav[aria-label="Sidebar"] {
-  background: linear-gradient(180deg, #1e1a2e 0%, #1A1A24 100%);
+  background: linear-gradient(180deg, #0E1A3D 0%, #0B1533 100%);
 }
 
-/* Cards — depth + hover */
+/* Cards — depth + hover, brand indigo */
 .card {
-  border: 1px solid rgba(68, 0, 224, 0.08);
+  border: 1px solid rgba(79, 70, 229, 0.08);
   transition: all 0.2s ease;
 }
 .card:hover {
-  border-color: rgba(68, 0, 224, 0.2);
-  box-shadow: 0 8px 24px rgba(68, 0, 224, 0.06);
+  border-color: rgba(79, 70, 229, 0.22);
+  box-shadow: 0 8px 24px rgba(79, 70, 229, 0.07);
   transform: translateY(-1px);
 }
 .dark .card:hover {
-  box-shadow: 0 8px 24px rgba(68, 0, 224, 0.1);
+  box-shadow: 0 8px 24px rgba(79, 70, 229, 0.14);
 }
 
-/* Headings */
-h1 { letter-spacing: -0.5px; }
+/* Headings — landing letter-spacing */
+h1 { letter-spacing: -0.02em; }
 h2 {
   margin-top: 2rem;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid rgba(68, 0, 224, 0.08);
+  border-bottom: 1px solid rgba(11, 21, 51, 0.10);
 }
-.dark h2 { border-bottom-color: rgba(68, 0, 224, 0.15); }
+.dark h2 { border-bottom-color: rgba(255, 255, 255, 0.12); }
 
 /* Tables — cleaner */
 table th {
-  background: rgba(68, 0, 224, 0.04);
+  background: rgba(79, 70, 229, 0.04);
   font-weight: 600;
 }
-.dark table th { background: rgba(68, 0, 224, 0.08); }
-table tr:hover { background: rgba(68, 0, 224, 0.02); }
+.dark table th { background: rgba(79, 70, 229, 0.10); }
+table tr:hover { background: rgba(79, 70, 229, 0.02); }
 
-/* Code blocks — darker */
+/* Code blocks */
 pre {
-  border: 1px solid rgba(68, 0, 224, 0.06) !important;
+  border: 1px solid rgba(11, 21, 51, 0.08) !important;
   border-radius: 8px !important;
 }
