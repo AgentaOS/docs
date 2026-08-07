@@ -66,10 +66,10 @@
             ]
           },
           {
-            "group": "Legacy",
+            "group": "Experimental",
             "pages": [
-              "legacy/stablecoin-payouts",
-              "legacy/agent-wallet"
+              "experimental/stablecoin-payouts",
+              "experimental/agent-wallet"
             ]
           }
         ]
