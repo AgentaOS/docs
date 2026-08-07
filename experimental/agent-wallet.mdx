@@ -1,0 +1,20 @@
+---
+title: "Agent wallet (experimental)"
+description: "The advanced agent-wallet tools for on-chain operations. Optional, and outside the core payments product."
+---
+
+<Note>
+  **Advanced, and non-core.** The agent-wallet tools are optional and sit outside the core payments product. For most integrations the [payment tools](/mcp/setup), the [Payment SDK](/sdk/pay-overview), or the [CLI](/cli/install) are the better fit. This page covers on-chain and self-custody setups.
+</Note>
+
+Earlier versions of the MCP server and CLI also exposed an on-chain **agent wallet**, created from a sub-account and driven with an **API key and secret** alongside the gateway key:
+
+```json
+"env": {
+  "AGENTA_API_KEY": "your-api-key",
+  "AGENTA_API_SECRET": "your-api-secret",
+  "AGENTAOS_GATEWAY_KEY": "sk_test_your-gateway-key"
+}
+```
+
+Those keys unlocked tools for on-chain operations, contract calls, and message signing. They are not part of the core payments setup. To get paid, use the payments API and the [payment tools](/mcp/setup).
