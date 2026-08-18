@@ -3,7 +3,7 @@ title: "Sell a Subscription"
 description: "Create a recurring payment link, let a buyer subscribe at the hosted checkout, then list and cancel what's running."
 ---
 
-By the end of this guide you'll have a subscription plan buyers can pay into, a real test subscriber, and you'll know how to list who's subscribed and cancel someone who asks. This runs in **test mode**, so the "buyer" is you, paying with the test card.
+By the end of this guide you'll have a subscription product buyers can pay into, a real test subscriber, and you'll know how to list who's subscribed and cancel someone who asks. This runs in **test mode**, so the "buyer" is you, paying with the test card.
 
 <Warning>
 **There is no `subscriptions.create()`.** A subscription is created by the buyer, not by you. You create a payment link with `type: 'subscription'`, the buyer pays it at the hosted checkout, and that payment is what starts the subscription. This guide walks through exactly that flow.
@@ -15,8 +15,8 @@ By the end of this guide you'll have a subscription plan buyers can pay into, a 
 - Your account needs to accept card and bank (via Merchant of Record), which is the default for most accounts. Only wallet-only, on-chain accounts can't create subscription links. Business verification (KYB) is a separate, later requirement for going **live**; it isn't needed to build and test subscriptions in test mode. See [Going live](/guides/go-live).
 
 <Steps>
-  <Step title="Create a subscription payment link">
-    Set `type: 'subscription'` and a `billingInterval`. Every other field works the same as a one-time link.
+  <Step title="Create a subscription product">
+    Set `type: 'subscription'` and a `billingInterval`. Every other field works the same as a one-time product.
 
     <Tabs>
       <Tab title="SDK">
@@ -25,16 +25,16 @@ By the end of this guide you'll have a subscription plan buyers can pay into, a 
 
         const agentaos = new AgentaOS(process.env.AGENTAOS_API_KEY!); // sk_test_...
 
-        const plan = await agentaos.paymentLinks.create({
+        const product = await agentaos.paymentLinks.create({
           amount: 19.99,
           currency: 'EUR',
-          description: 'Pro plan, monthly',
+          description: 'Pro, monthly',
           type: 'subscription',
           billingInterval: 'month', // 'month' | 'year', required for subscriptions
         });
 
-        console.log(plan.id);          // linkId — pass this to checkouts.create
-        console.log(plan.checkoutUrl); // buyer URL — /pay/… slug, not the API id
+        console.log(product.id);          // linkId — pass this to checkouts.create
+        console.log(product.checkoutUrl); // buyer URL — /pay/… slug, not the API id
         ```
       </Tab>
       <Tab title="cURL">
@@ -45,7 +45,7 @@ By the end of this guide you'll have a subscription plan buyers can pay into, a 
           -d '{
             "amount": 19.99,
             "currency": "EUR",
-            "description": "Pro plan, monthly",
+            "description": "Pro, monthly",
             "type": "subscription",
             "billingInterval": "month"
           }'
@@ -54,14 +54,14 @@ By the end of this guide you'll have a subscription plan buyers can pay into, a 
     </Tabs>
 
     <Note>
-    There's no CLI command for payment links yet, one-time or subscription. `agenta pay checkout` only creates single, non-recurring checkouts. Create a subscription link from the SDK, the REST API, or the dashboard's **Catalog → Products** page.
+    There's no CLI command for products yet, one-time or subscription. `agenta pay checkout` only creates single, non-recurring checkouts. Create a subscription product from the SDK, the REST API, or the dashboard's **Catalog → Products** page.
     </Note>
   </Step>
 
   <Step title="Share the buyer link, or check out a known user">
-    Unknown buyer: share `plan.checkoutUrl`.
+    Unknown buyer: share `product.checkoutUrl`.
 
-    Logged-in user in your app: create a checkout from `plan.id` (`linkId`) and pass your user id in metadata. Full flow: [Subscribe users in your app](/guides/saas-subscriptions).
+    Logged-in user in your app: create a checkout from `product.id` (`linkId`) and pass your user id in metadata. Full flow: [Subscribe Users in Your App](/guides/saas-subscriptions).
 
     Test card at the hosted checkout:
 
@@ -80,7 +80,7 @@ By the end of this guide you'll have a subscription plan buyers can pay into, a 
         ```typescript
         const page = await agentaos.subscriptions.list({ limit: 20, offset: 0 });
 
-        const sub = page.items.find((s) => s.planName === 'Pro plan, monthly');
+        const sub = page.items.find((s) => s.planName === 'Pro, monthly');
         console.log(sub?.status);           // 'active'
         console.log(sub?.unitAmountMinor);  // 1999
         ```

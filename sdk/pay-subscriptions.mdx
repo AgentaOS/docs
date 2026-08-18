@@ -6,17 +6,17 @@ description: "Read and manage recurring billing with agentaos.subscriptions. Lis
 `agentaos.subscriptions` is a read/manage surface, not a creation API. A subscription comes into existence when a buyer pays a [payment link](/sdk/pay-payment-links) created with `type: 'subscription'`, AgentaOS bills them every `billingInterval` from then on through Merchant of Record (card or bank). There is no `subscriptions.create()`: to start recurring billing, create a subscription payment link and let the buyer check out.
 
 ```typescript
-const link = await agentaos.paymentLinks.create({
+const product = await agentaos.paymentLinks.create({
   amount: 29.99,
   currency: 'EUR',
-  description: 'Pro plan: monthly',
+  description: 'Pro',
   type: 'subscription',
   billingInterval: 'month',
 });
 
-// Logged-in user: create a checkout from link.id (the product linkId)
+// Logged-in user: create a checkout from the product's linkId
 const checkout = await agentaos.checkouts.create({
-  linkId: link.id,
+  linkId: product.id,
   buyerEmail: user.email,
   buyerCountry: user.country,
   metadata: { customerId: user.id },
@@ -47,7 +47,7 @@ Returns `PaginatedList<Subscription>`.
 <ResponseField name="id" type="string">Subscription UUID.</ResponseField>
 <ResponseField name="customerEmail" type="string | null" />
 <ResponseField name="customerName" type="string | null" />
-<ResponseField name="planName" type="string | null">The plan's name/description, taken from the subscription payment link.</ResponseField>
+<ResponseField name="planName" type="string | null">The product name or description.</ResponseField>
 <ResponseField name="billingInterval" type="'month' | 'year' | null" />
 <ResponseField name="status" type="SubscriptionStatus">See statuses below.</ResponseField>
 <ResponseField name="unitAmountMinor" type="number">
@@ -56,7 +56,7 @@ Returns `PaginatedList<Subscription>`.
 <ResponseField name="currency" type="string" />
 <ResponseField name="currentPeriodEnd" type="string | null">ISO 8601. `null` before the first billing cycle has booked.</ResponseField>
 <ResponseField name="stripeSubscriptionId" type="string | null">The underlying subscription ID from the card processor.</ResponseField>
-<ResponseField name="paymentLinkId" type="string">The plan. Same value as `linkId` on the product page.</ResponseField>
+<ResponseField name="paymentLinkId" type="string">Same UUID as `linkId`. Use it as `linkId` on `checkouts.create`.</ResponseField>
 <ResponseField name="cancelAtPeriodEnd" type="boolean" />
 <ResponseField name="canceledAt" type="string | null" />
 <ResponseField name="effectiveCancelDate" type="string | null" />
