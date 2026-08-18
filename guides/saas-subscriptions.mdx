@@ -1,0 +1,159 @@
+---
+title: "Subscribe users in your app"
+description: "Logged-in SaaS users: create a checkout per profile, pass your customer id, then sync status, invoices, and cancel."
+---
+
+You have users who log in. Each one has a profile and an email. You sell plans. This is how you charge them.
+
+A subscription is not created by an API call. You create a checkout from a plan's `linkId`. The buyer pays on the hosted checkout. That payment creates the subscription.
+
+## What you keep
+
+| You store | Where it comes from |
+|---|---|
+| Plan `linkId` | Product page, or `paymentLinks.create` → `id` |
+| Your user id | Your database |
+| AgentaOS `subscription.id` | After they pay (webhook or poll) |
+
+Pass your user id as `metadata.customerId` on the checkout. It comes back on the webhook. It is **not** copied onto `subscriptions.list()`.
+
+## 1. Create each plan once
+
+One product per plan. Copy `linkId` from **Catalog → Products**, or create it in code:
+
+```typescript
+import { AgentaOS } from '@agentaos/pay';
+
+const agentaos = new AgentaOS(process.env.AGENTAOS_API_KEY!);
+
+const pro = await agentaos.paymentLinks.create({
+  amount: 49,
+  currency: 'EUR',
+  description: 'Pro',
+  type: 'subscription',
+  billingInterval: 'month',
+});
+
+// Save pro.id as the plan's linkId.
+```
+
+Do this in test mode first (`sk_test_...`).
+
+## 2. On login, check if they already subscribe
+
+Store `agentaosSubscriptionId` on your user after the first payment. Then:
+
+```typescript
+async function currentPlan(user: { agentaosSubscriptionId: string | null }) {
+  if (!user.agentaosSubscriptionId) return null;
+
+  const page = await agentaos.subscriptions.list({ limit: 100 });
+  const sub = page.items.find((s) => s.id === user.agentaosSubscriptionId);
+  if (!sub) return null;
+
+  const live = sub.status === 'active' || sub.status === 'trialing';
+  return live ? sub : null;
+}
+```
+
+If they have a live plan, skip the paywall. If not, show plans.
+
+`subscriptions.list` has no email filter. Page size max is 100. Store the subscription id. Do not scan by `planName`.
+
+Fallback if you lost the id: find `page.items` where `customerEmail` equals the email you sent as `buyerEmail`.
+
+## 3. They click a plan: create a checkout
+
+```typescript
+const checkout = await agentaos.checkouts.create({
+  linkId: plan.linkId,
+  buyerEmail: user.email,
+  buyerCountry: user.country, // ISO-2, e.g. 'DE'
+  metadata: { customerId: user.id },
+});
+
+// Save checkout.sessionId on the user as pending.
+// Redirect them to checkout.checkoutUrl
+```
+
+`buyerEmail` should be the same email as their profile. That is how AgentaOS attaches the customer.
+
+`buyerCountry` lets tax be calculated before they land on checkout.
+
+Do not send them the product `/pay/…` link. That link is for unknown buyers. A logged-in user gets a checkout you created.
+
+Test card: `4242 4242 4242 4242`, any future expiry, any CVC.
+
+## 4. Confirm they paid
+
+Save `{ sessionId, customerId }` when you create the checkout. Then use either path.
+
+### Webhook (preferred)
+
+`checkout.session.completed` includes `sessionId` and your `metadata`.
+
+```typescript
+case 'checkout.session.completed': {
+  const { sessionId, metadata } = event.data;
+  const customerId = metadata?.customerId as string | undefined;
+  if (!customerId) break;
+
+  const session = await agentaos.checkouts.retrieve(sessionId);
+  const subscriptionId =
+    typeof session.metadata?.subscriptionId === 'string'
+      ? session.metadata.subscriptionId
+      : null;
+
+  // Attach subscriptionId to your user (customerId).
+  break;
+}
+```
+
+Verify the signature. Treat the handler as idempotent on `sessionId`. See [Handle webhooks](/guides/handle-webhooks).
+
+### Poll
+
+```typescript
+const session = await agentaos.checkouts.retrieve(pendingSessionId);
+if (session.status === 'completed') {
+  const subscriptionId = session.metadata?.subscriptionId;
+  // Attach to your user.
+}
+```
+
+Poll every few seconds until `completed`, `expired`, or `cancelled`.
+
+## 5. Status, invoices, cancel
+
+Use the stored `subscription.id`.
+
+```typescript
+const page = await agentaos.subscriptions.list({ limit: 100 });
+const sub = page.items.find((s) => s.id === user.agentaosSubscriptionId);
+
+// Status
+sub?.status; // active | trialing | past_due | canceled | ...
+sub?.cancelAtPeriodEnd;
+sub?.currentPeriodEnd;
+sub?.paymentLinkId; // which plan
+
+// Invoices (each cycle)
+const invoices = await agentaos.subscriptions.invoices(sub.id);
+
+// Cancel at period end (keeps access until currentPeriodEnd)
+await agentaos.subscriptions.cancel(sub.id);
+```
+
+Cancel does not refund. It stops the next renewal. Immediate cancel is not supported.
+
+PDF for one invoice: `agentaos.invoices.downloadPdf(invoice.id)` and `agentaos.invoices.getReceipt(invoice.id)`.
+
+## Checklist
+
+1. One `linkId` per plan
+2. Checkout per click: `linkId` + `buyerEmail` + `metadata.customerId`
+3. Redirect to `checkoutUrl`
+4. Webhook or poll `sessionId`
+5. Save `subscription.id` on your user
+6. Gate the app on `active` / `trialing`
+7. Billing screen: status, invoices, cancel

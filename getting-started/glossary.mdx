@@ -18,11 +18,17 @@ New to payments? These are the terms that show up across the docs, in one place.
   <Accordion title="Reverse charge">
     For a B2B sale to a VAT-registered business in another EU country, VAT shifts to the buyer, so the invoice shows no VAT. A buyer who enters a valid EU VAT ID at checkout is handled this way.
   </Accordion>
+  <Accordion title="Product">
+    The dashboard name for a payment link. There is no separate `product` API. The product's API id is `linkId`.
+  </Accordion>
+  <Accordion title="linkId">
+    The payment link UUID (`paymentLinks.id`). Pass it to `checkouts.create({ linkId })`. On the product page this is **For your app** / **Copy link ID**. It is not the `/pay/…` URL and not the checkout `sessionId`.
+  </Accordion>
   <Accordion title="Payment link">
-    A reusable, shareable URL for one product. Every visitor who opens it gets their own checkout, and one link can be paid many times.
+    A reusable, shareable URL for one product. `checkoutUrl` (`/pay/…`) is for buyers. `id` / `linkId` is for the API.
   </Accordion>
   <Accordion title="Checkout">
-    A single attempt to collect one payment. Created on its own or from a payment link. Every checkout has a `checkoutUrl` you send the buyer to.
+    A single attempt to collect one payment. Created on its own or from a payment link via `checkouts.create({ linkId })`. Every checkout has a `checkoutUrl` you send the buyer to (`/checkout/{sessionId}`).
   </Accordion>
   <Accordion title="Subscription">
     A recurring charge on a card on file, billed automatically every cycle until cancelled.

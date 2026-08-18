@@ -33,8 +33,8 @@ By the end of this guide you'll have a subscription plan buyers can pay into, a 
           billingInterval: 'month', // 'month' | 'year', required for subscriptions
         });
 
-        console.log(plan.checkoutUrl);
-        // → https://app.agentaos.ai/pay/7rr6S9ml4BMp829wV5WeAA
+        console.log(plan.id);          // linkId — pass this to checkouts.create
+        console.log(plan.checkoutUrl); // buyer URL — /pay/… slug, not the API id
         ```
       </Tab>
       <Tab title="cURL">
@@ -58,8 +58,12 @@ By the end of this guide you'll have a subscription plan buyers can pay into, a 
     </Note>
   </Step>
 
-  <Step title="Share checkoutUrl, buyer subscribes">
-    Share `plan.checkoutUrl` exactly as you would a one-time link. The buyer opens it and pays with a card at the hosted checkout, using the test card in test mode:
+  <Step title="Share the buyer link, or check out a known user">
+    Unknown buyer: share `plan.checkoutUrl`.
+
+    Logged-in user in your app: create a checkout from `plan.id` (`linkId`) and pass your user id in metadata. Full flow: [Subscribe users in your app](/guides/saas-subscriptions).
+
+    Test card at the hosted checkout:
 
     | Field | Value |
     |---|---|
