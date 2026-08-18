@@ -260,5 +260,11 @@
     "body": {
       "family": "Inter"
     }
-  }
+  },
+  "redirects": [
+    {
+      "source": "/guides/saas-subscriptions",
+      "destination": "/guides/sell-a-subscription"
+    }
+  ]
 }

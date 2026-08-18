@@ -47,7 +47,7 @@ res.redirect(checkout.checkoutUrl);
 </ParamField>
 
 <ParamField body="linkId" type="string">
-  UUID of an existing payment link to create this session from. The session inherits the link's `amount`, `currency`, `description`, `taxRateId`, `successUrl`, `cancelUrl`, and `webhookUrl`, all overridable per-field. Omit for a standalone checkout.
+  `paymentLinks.id`. On the product page this is **Copy link ID**. The session inherits the link's amount, currency, and description. Omit for a standalone checkout.
 </ParamField>
 
 <ParamField body="amountOverride" type="number">

@@ -1,22 +1,36 @@
 ---
 title: "Sell a Subscription"
-description: "Create a recurring payment link, let a buyer subscribe at the hosted checkout, then list and cancel what's running."
+description: "Create a product once. Share the buyer link, or create a checkout for a logged-in user. Then list, invoice, and cancel."
 ---
 
-By the end of this guide you'll have a subscription plan buyers can pay into, a real test subscriber, and you'll know how to list who's subscribed and cancel someone who asks. This runs in **test mode**, so the "buyer" is you, paying with the test card.
+By the end of this guide you'll have a subscription product, a test subscriber, and you'll know how to see who's subscribed and cancel them. This runs in **test mode**. The "buyer" is you, paying with the test card.
 
 <Warning>
-**There is no `subscriptions.create()`.** A subscription is created by the buyer, not by you. You create a payment link with `type: 'subscription'`, the buyer pays it at the hosted checkout, and that payment is what starts the subscription. This guide walks through exactly that flow.
+There is no `subscriptions.create()`. You create a **product** once. The buyer pays. That payment is what starts the subscription.
 </Warning>
 
 ## Before you start
 
-- An AgentaOS account with a test API key, or the CLI logged in. See [Accept your first payment](/guides/accept-your-first-payment) if you haven't set that up yet.
-- Your account needs to accept card and bank (via Merchant of Record), which is the default for most accounts. Only wallet-only, on-chain accounts can't create subscription links. Business verification (KYB) is a separate, later requirement for going **live**; it isn't needed to build and test subscriptions in test mode. See [Going live](/guides/go-live).
+- An AgentaOS account and a test API key (`sk_test_...`) from **Settings → Developers → API Keys**. See [Accept your first payment](/guides/accept-your-first-payment) if you haven't.
+- Card and bank are on by default. Wallet-only accounts cannot sell subscriptions. KYB is only needed for **live**. See [Go live](/guides/go-live).
+
+Test card, typed on the hosted page only: `4242 4242 4242 4242`, any future expiry, any CVC. Never send a card number to the API.
+
+## The one id
+
+The dashboard calls this a **product**. The API creates it with `paymentLinks.create`. The id you pass around is `linkId`.
+
+| Name | What it is | Where you see it |
+|---|---|---|
+| `linkId` | The product's UUID | Product page → **Copy link ID**, or `product.id` |
+| Buyer link | `/pay/…` URL | Product page → **Copy link**. Anyone can open this. |
+| `sessionId` | One checkout attempt | `checkouts.create` → `checkout.sessionId` |
+
+`linkId` is what `checkouts.create({ linkId })` wants. It is not the `/pay/…` slug.
 
 <Steps>
-  <Step title="Create a subscription payment link">
-    Set `type: 'subscription'` and a `billingInterval`. Every other field works the same as a one-time link.
+  <Step title="Create the product once">
+    One product per price. **Catalog → Products**, or in code:
 
     <Tabs>
       <Tab title="SDK">
@@ -25,16 +39,16 @@ By the end of this guide you'll have a subscription plan buyers can pay into, a 
 
         const agentaos = new AgentaOS(process.env.AGENTAOS_API_KEY!); // sk_test_...
 
-        const plan = await agentaos.paymentLinks.create({
+        const product = await agentaos.paymentLinks.create({
           amount: 19.99,
           currency: 'EUR',
-          description: 'Pro plan, monthly',
+          description: 'Pro, monthly',
           type: 'subscription',
-          billingInterval: 'month', // 'month' | 'year', required for subscriptions
+          billingInterval: 'month', // 'month' | 'year'
         });
 
-        console.log(plan.checkoutUrl);
-        // → https://app.agentaos.ai/pay/7rr6S9ml4BMp829wV5WeAA
+        // product.id is the linkId
+        // product.checkoutUrl is the /pay/… buyer link
         ```
       </Tab>
       <Tab title="cURL">
@@ -45,7 +59,7 @@ By the end of this guide you'll have a subscription plan buyers can pay into, a 
           -d '{
             "amount": 19.99,
             "currency": "EUR",
-            "description": "Pro plan, monthly",
+            "description": "Pro, monthly",
             "type": "subscription",
             "billingInterval": "month"
           }'
@@ -53,74 +67,117 @@ By the end of this guide you'll have a subscription plan buyers can pay into, a 
       </Tab>
     </Tabs>
 
+    `amount: 19.99` means €19.99, not cents. Create this once, not once per buyer.
+
     <Note>
-    There's no CLI command for payment links yet, one-time or subscription. `agenta pay checkout` only creates single, non-recurring checkouts. Create a subscription link from the SDK, the REST API, or the dashboard's **Catalog → Products** page.
+    No CLI command for products yet. `agenta pay checkout` only makes a one-time checkout.
     </Note>
   </Step>
 
-  <Step title="Share checkoutUrl, buyer subscribes">
-    Share `plan.checkoutUrl` exactly as you would a one-time link. The buyer opens it and pays with a card at the hosted checkout, using the test card in test mode:
+  <Step title="Get them to pay">
+    Two ways. Same product. Same `linkId`.
+
+    <Tabs>
+      <Tab title="Anyone (share the link)">
+        Send `product.checkoutUrl`. Every visitor gets their own checkout. You do not know who they are until they type an email and pay.
+
+        This is the dashboard **Copy link** button.
+      </Tab>
+      <Tab title="Logged-in user">
+        They already have an account in **your** app. Create a checkout from `linkId` and pass your user id:
+
+        ```typescript
+        const checkout = await agentaos.checkouts.create({
+          linkId: product.id,
+          buyerEmail: user.email,
+          buyerCountry: user.country, // ISO-2, e.g. 'DE'
+          metadata: { customerId: user.id },
+        });
+
+        // Save checkout.sessionId as pending.
+        // Redirect them to checkout.checkoutUrl
+        ```
+
+        `buyerEmail` should match their profile. That is how AgentaOS attaches the customer.
+
+        Do **not** send them the `/pay/…` link. That page has no `metadata.customerId`.
+
+        Store `linkId` on the product, your user id in your database, and after they pay the AgentaOS `subscription.id`.
+      </Tab>
+    </Tabs>
 
     | Field | Value |
     |---|---|
     | Card number | `4242 4242 4242 4242` |
     | Expiry | Any future date |
     | CVC | Any 3 digits |
-
-    Behind the scenes, AgentaOS creates a customer and subscription with our card processor, charges the first cycle, and the subscription becomes visible to `subscriptions.list()`.
   </Step>
 
-  <Step title="Confirm the subscription is active">
-    <Tabs>
-      <Tab title="SDK">
-        ```typescript
-        const page = await agentaos.subscriptions.list({ limit: 20, offset: 0 });
+  <Step title="Confirm they paid">
+    Shared the `/pay/…` link? List subscriptions and find them by email:
 
-        const sub = page.items.find((s) => s.planName === 'Pro plan, monthly');
-        console.log(sub?.status);           // 'active'
-        console.log(sub?.unitAmountMinor);  // 1999
-        ```
-      </Tab>
-      <Tab title="CLI">
-        ```bash
-        agenta subscriptions list --json
-        ```
-      </Tab>
-      <Tab title="cURL">
-        ```bash
-        curl "https://api.agentaos.ai/api/v1/gateway/subscriptions?limit=20" \
-          -H "x-api-key: sk_test_..."
-        ```
-      </Tab>
-    </Tabs>
+    ```typescript
+    const page = await agentaos.subscriptions.list({ limit: 20, offset: 0 });
+    const sub = page.items.find((s) => s.customerEmail === 'you@example.com');
+    console.log(sub?.status);          // 'active'
+    console.log(sub?.unitAmountMinor); // 1999
+    ```
+
+    ```bash
+    agenta subscriptions list --json
+    ```
+
+    Created a checkout for a logged-in user? Prefer the webhook. `checkout.session.completed` includes `event.data.metadata`. Your `customerId` is there. So is `subscriptionId` after they start the card form.
+
+    ```typescript
+    case 'checkout.session.completed': {
+      const { sessionId, metadata } = event.data;
+      const customerId = metadata?.customerId as string | undefined;
+      const subscriptionId =
+        typeof metadata?.subscriptionId === 'string' ? metadata.subscriptionId : null;
+
+      if (!customerId || !subscriptionId) break;
+
+      // Save subscriptionId on your user (customerId).
+      // Key idempotency on sessionId.
+      break;
+    }
+    ```
+
+    `subscriptions.list()` does **not** copy your metadata. Later renewals fire the same event without `customerId`. Look up the user by the `subscription.id` you stored the first time.
+
+    Or poll `checkouts.retrieve(sessionId)` until `completed`, `expired`, or `cancelled`. Verify the signature: [Handle webhooks](/guides/handle-webhooks).
 
     <Info>
-    **Money model exception:** every other amount in this API, including this same payment link's `amount: 19.99`, is decimal currency units. A subscription's `unitAmountMinor` is the one field that breaks that pattern: it's an **integer of the smallest currency unit**. `1999` means €19.99, mirroring how our card processor represents recurring prices internally. The field name is the signal, anything ending in `Minor` is an integer, everything else is already decimal.
+    `unitAmountMinor` is cents. `1999` means €19.99. Every other `amount` in this API is already decimal (`19.99`).
     </Info>
   </Step>
 
-  <Step title="Cancel the subscription">
-    Defaults to cancel-at-period-end: the subscriber keeps access until `currentPeriodEnd`, no refund. Pass `atPeriodEnd: false` to cancel immediately instead.
+  <Step title="Status, invoices, cancel">
+    Use the `subscription.id`.
+
+    ```typescript
+    const page = await agentaos.subscriptions.list({ limit: 100 });
+    const sub = page.items.find((s) => s.id === subscriptionId);
+
+    sub?.status; // active | trialing | past_due | canceled | ...
+    sub?.cancelAtPeriodEnd;
+    sub?.currentPeriodEnd;
+
+    const invoices = await agentaos.subscriptions.invoices(sub.id);
+
+    await agentaos.subscriptions.cancel(sub.id);
+    ```
+
+    Cancel does not refund. It stops the next renewal. They keep access until `currentPeriodEnd`. Immediate cancel is not supported. Calling cancel again is a no-op.
+
+    PDF: `agentaos.invoices.downloadPdf(invoice.id)` and `agentaos.invoices.getReceipt(invoice.id)`.
 
     <Tabs>
-      <Tab title="SDK">
-        ```typescript
-        // At period end (default)
-        await agentaos.subscriptions.cancel(sub!.id);
-
-        // Immediately, no grace period
-        await agentaos.subscriptions.cancel(sub!.id, { atPeriodEnd: false });
-        ```
-      </Tab>
       <Tab title="CLI">
-        <CodeGroup>
-        ```bash At period end
+        ```bash
         agenta subscriptions cancel 7c1e9b2a-4f6d-4a3b-9c8e-2d5f0a1b3c4d
         ```
-        ```bash Immediately
-        agenta subscriptions cancel 7c1e9b2a-4f6d-4a3b-9c8e-2d5f0a1b3c4d --now
-        ```
-        </CodeGroup>
       </Tab>
       <Tab title="cURL">
         ```bash
@@ -131,32 +188,29 @@ By the end of this guide you'll have a subscription plan buyers can pay into, a 
         ```
       </Tab>
     </Tabs>
-
-    <Note>
-    Cancellation never issues a refund, it only stops future renewals. Calling cancel again on an already-canceled subscription is a no-op, safe to retry.
-    </Note>
   </Step>
 </Steps>
 
 ## Verify it worked
 
-- `subscriptions.list()` shows your test subscription with `status: 'active'` and the right `unitAmountMinor` and `billingInterval`.
-- After cancelling at period end, `status` is still `active` but `cancelAtPeriodEnd` is `true` and `effectiveCancelDate` is set. After cancelling immediately, `status` becomes `canceled` right away.
-- The buyer now shows up under [Customers](/payments/customers), and the first cycle's charge issued its own invoice.
+- `subscriptions.list()` shows `status: 'active'` and the right `unitAmountMinor`.
+- Shared-link buyer: they used `/pay/…` and appear under [Customers](/payments/customers).
+- Logged-in buyer: they landed on `/checkout/…`. The webhook has `metadata.customerId` and `metadata.subscriptionId`. `subscriptions.list()` does not contain `customerId`.
+- Cancel sets `cancelAtPeriodEnd: true`. Access stays until `currentPeriodEnd`.
 
 ## Next steps
 
 <CardGroup cols={2}>
-  <Card title="Payment links" icon="link" href="/payments/payment-links">
-    The full parameter and response reference, one-time and subscription both.
+  <Card title="Handle webhooks" icon="bell" href="/guides/handle-webhooks">
+    Verify the signature and handle the same event twice.
   </Card>
-  <Card title="Webhooks" icon="bell" href="/payments/webhooks">
-    Get notified the moment a subscription payment lands.
+  <Card title="Checkouts" icon="cart-shopping" href="/sdk/pay-checkouts">
+    `checkouts.create({ linkId })` and every field on the session.
   </Card>
-  <Card title="Customers" icon="users" href="/payments/customers">
-    See everyone subscribed to you, with email, country, and VAT number.
+  <Card title="Subscriptions" icon="rotate" href="/sdk/pay-subscriptions">
+    List, invoices, and cancel.
   </Card>
   <Card title="Go live" icon="rocket" href="/guides/go-live">
-    Take this plan from test mode to real, recurring revenue.
+    Take this product from test mode to real money.
   </Card>
 </CardGroup>

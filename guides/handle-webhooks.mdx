@@ -75,8 +75,10 @@ By the end of this guide you'll have a real Express endpoint that verifies Agent
         fulfilledSessions.add(sessionId);
 
         console.log(`Order ${sessionId} paid: ${amount} ${currency}`);
-        // YOUR BUSINESS LOGIC HERE:
-        // - grant access, send a confirmation email, trigger shipping
+        // event.data.metadata is the checkout metadata.
+        // metadata.customerId is whatever you passed on checkouts.create.
+        // For a subscription, metadata.subscriptionId is also on this event.
+        // See /guides/sell-a-subscription
         break;
       }
     }

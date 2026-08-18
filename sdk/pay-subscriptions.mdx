@@ -6,16 +6,24 @@ description: "Read and manage recurring billing with agentaos.subscriptions. Lis
 `agentaos.subscriptions` is a read/manage surface, not a creation API. A subscription comes into existence when a buyer pays a [payment link](/sdk/pay-payment-links) created with `type: 'subscription'`, AgentaOS bills them every `billingInterval` from then on through Merchant of Record (card or bank). There is no `subscriptions.create()`: to start recurring billing, create a subscription payment link and let the buyer check out.
 
 ```typescript
-// This is how a subscription is born, on the hosted checkout, not the SDK:
-const link = await agentaos.paymentLinks.create({
+const product = await agentaos.paymentLinks.create({
   amount: 29.99,
   currency: 'EUR',
-  description: 'Pro plan: monthly',
+  description: 'Pro',
   type: 'subscription',
   billingInterval: 'month',
 });
-// → share link.checkoutUrl. Every buyer who pays it gets their own Subscription.
+
+// Logged-in user: create a checkout from the product's linkId
+const checkout = await agentaos.checkouts.create({
+  linkId: product.id,
+  buyerEmail: user.email,
+  buyerCountry: user.country,
+  metadata: { customerId: user.id },
+});
 ```
+
+See [Sell a subscription](/guides/sell-a-subscription).
 
 ## `subscriptions.list(params?)`
 
@@ -39,7 +47,7 @@ Returns `PaginatedList<Subscription>`.
 <ResponseField name="id" type="string">Subscription UUID.</ResponseField>
 <ResponseField name="customerEmail" type="string | null" />
 <ResponseField name="customerName" type="string | null" />
-<ResponseField name="planName" type="string | null">The plan's name/description, taken from the subscription payment link.</ResponseField>
+<ResponseField name="planName" type="string | null">The product name or description.</ResponseField>
 <ResponseField name="billingInterval" type="'month' | 'year' | null" />
 <ResponseField name="status" type="SubscriptionStatus">See statuses below.</ResponseField>
 <ResponseField name="unitAmountMinor" type="number">
@@ -48,6 +56,10 @@ Returns `PaginatedList<Subscription>`.
 <ResponseField name="currency" type="string" />
 <ResponseField name="currentPeriodEnd" type="string | null">ISO 8601. `null` before the first billing cycle has booked.</ResponseField>
 <ResponseField name="stripeSubscriptionId" type="string | null">The underlying subscription ID from the card processor.</ResponseField>
+<ResponseField name="paymentLinkId" type="string">Same UUID as `linkId`. Use it as `linkId` on `checkouts.create`.</ResponseField>
+<ResponseField name="cancelAtPeriodEnd" type="boolean" />
+<ResponseField name="canceledAt" type="string | null" />
+<ResponseField name="effectiveCancelDate" type="string | null" />
 
 ```json
 {
@@ -79,21 +91,30 @@ Returns `PaginatedList<Subscription>`.
 | `unpaid` | Renewal retries exhausted without a successful charge. |
 | `paused` | Billing paused (e.g. a trial-without-payment-method configuration ending). |
 
-## `subscriptions.cancel(id, params?)`
+## `subscriptions.invoices(id)`
 
-Defaults to cancel-at-period-end: the subscriber keeps access through the period they already paid for, no refund. Pass `{ atPeriodEnd: false }` to cancel immediately instead. Calling it again on an already-canceled subscription is a no-op, not an error.
+Each billing cycle's invoice, newest first.
 
 ```typescript
-// Cancel at period end (default): subscriber keeps access until currentPeriodEnd
-await agentaos.subscriptions.cancel('sub_...');
-
-// Cancel immediately: access revoked now, no refund
-await agentaos.subscriptions.cancel('sub_...', { atPeriodEnd: false });
+const invoices = await agentaos.subscriptions.invoices(sub.id);
 ```
 
-<ParamField body="atPeriodEnd" type="boolean" default="true">
-  `true` schedules cancellation for `currentPeriodEnd`. `false` cancels now.
-</ParamField>
+<ResponseField name="id" type="string" />
+<ResponseField name="invoiceNumber" type="string" />
+<ResponseField name="status" type="string" />
+<ResponseField name="issuedAt" type="string" />
+<ResponseField name="amount" type="number">Currency units.</ResponseField>
+<ResponseField name="currency" type="string" />
+<ResponseField name="disputed" type="boolean" />
+<ResponseField name="chargedBack" type="boolean" />
+
+## `subscriptions.cancel(id)`
+
+Cancels at period end. The subscriber keeps access until `currentPeriodEnd`. No refund. Calling it again is a no-op.
+
+```typescript
+await agentaos.subscriptions.cancel(sub.id);
+```
 
 ### Response
 
@@ -114,6 +135,9 @@ await agentaos.subscriptions.cancel('sub_...', { atPeriodEnd: false });
 ## Next steps
 
 <CardGroup cols={2}>
+  <Card title="Sell a subscription" icon="rotate" href="/guides/sell-a-subscription">
+    Create a product, share the link or check out a logged-in user.
+  </Card>
   <Card title="Payment links" icon="link" href="/sdk/pay-payment-links">
     Create the `type: 'subscription'` link that gives birth to a subscription.
   </Card>

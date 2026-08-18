@@ -12,19 +12,20 @@ A subscription is a running, recurring commitment: card on file, billed automati
 ## How a subscription gets created
 
 <Steps>
-  <Step title="Create a subscription payment link">
+  <Step title="Create a subscription product">
     ```typescript
-    const plan = await agentaos.paymentLinks.create({
+    const product = await agentaos.paymentLinks.create({
       amount: 19.99,
       currency: 'EUR',
-      description: 'Pro plan, monthly',
+      description: 'Pro, monthly',
       type: 'subscription',
       billingInterval: 'month',
     });
+    // product.id is the linkId
     ```
   </Step>
   <Step title="Share checkoutUrl">
-    The buyer opens `plan.checkoutUrl` and pays with a card at the hosted checkout, exactly like a one-time payment.
+    The buyer opens `product.checkoutUrl` and pays with a card at the hosted checkout, exactly like a one-time payment. Logged-in users: create a checkout with `checkouts.create({ linkId: product.id })` instead. See [Sell a subscription](/guides/sell-a-subscription).
   </Step>
   <Step title="First cycle books, subscription goes active">
     AgentaOS creates a customer and subscription with our card processor behind the scenes, charges cycle 1, and the subscription becomes visible to `subscriptions.list()`.
@@ -148,6 +149,9 @@ Cancellation never issues a refund. It only stops future renewals. If you owe th
 ## Next steps
 
 <CardGroup cols={2}>
+  <Card title="Sell a subscription" icon="rotate" href="/guides/sell-a-subscription">
+    Create a product, share the link or check out a logged-in user.
+  </Card>
   <Card title="Payment links" icon="link" href="/payments/payment-links">
     Create the `type: 'subscription'` link that starts this flow.
   </Card>
