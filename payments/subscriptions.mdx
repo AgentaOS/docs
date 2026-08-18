@@ -25,7 +25,7 @@ A subscription is a running, recurring commitment: card on file, billed automati
     ```
   </Step>
   <Step title="Share checkoutUrl">
-    The buyer opens `product.checkoutUrl` and pays with a card at the hosted checkout, exactly like a one-time payment. Logged-in users: create a checkout with `checkouts.create({ linkId: product.id })` instead. See [Subscribe Users in Your App](/guides/saas-subscriptions).
+    The buyer opens `product.checkoutUrl` and pays with a card at the hosted checkout, exactly like a one-time payment. Logged-in users: create a checkout with `checkouts.create({ linkId: product.id })` instead. See [Sell a subscription](/guides/sell-a-subscription).
   </Step>
   <Step title="First cycle books, subscription goes active">
     AgentaOS creates a customer and subscription with our card processor behind the scenes, charges cycle 1, and the subscription becomes visible to `subscriptions.list()`.
@@ -149,8 +149,8 @@ Cancellation never issues a refund. It only stops future renewals. If you owe th
 ## Next steps
 
 <CardGroup cols={2}>
-  <Card title="Subscribe users in your app" icon="user-check" href="/guides/saas-subscriptions">
-    Logged-in users: checkout per profile, then status, invoices, cancel.
+  <Card title="Sell a subscription" icon="rotate" href="/guides/sell-a-subscription">
+    Create a product, share the link or check out a logged-in user.
   </Card>
   <Card title="Payment links" icon="link" href="/payments/payment-links">
     Create the `type: 'subscription'` link that starts this flow.

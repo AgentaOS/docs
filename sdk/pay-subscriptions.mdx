@@ -23,7 +23,7 @@ const checkout = await agentaos.checkouts.create({
 });
 ```
 
-See [Subscribe users in your app](/guides/saas-subscriptions).
+See [Sell a subscription](/guides/sell-a-subscription).
 
 ## `subscriptions.list(params?)`
 
@@ -135,8 +135,8 @@ await agentaos.subscriptions.cancel(sub.id);
 ## Next steps
 
 <CardGroup cols={2}>
-  <Card title="Subscribe users in your app" icon="user-check" href="/guides/saas-subscriptions">
-    Checkout per logged-in user, metadata, webhooks, billing.
+  <Card title="Sell a subscription" icon="rotate" href="/guides/sell-a-subscription">
+    Create a product, share the link or check out a logged-in user.
   </Card>
   <Card title="Payment links" icon="link" href="/sdk/pay-payment-links">
     Create the `type: 'subscription'` link that gives birth to a subscription.
