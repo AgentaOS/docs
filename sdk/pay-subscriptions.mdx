@@ -56,7 +56,7 @@ Returns `PaginatedList<Subscription>`.
 <ResponseField name="currency" type="string" />
 <ResponseField name="currentPeriodEnd" type="string | null">ISO 8601. `null` before the first billing cycle has booked.</ResponseField>
 <ResponseField name="stripeSubscriptionId" type="string | null">The underlying subscription ID from the card processor.</ResponseField>
-<ResponseField name="paymentLinkId" type="string">Same UUID as `linkId`. Use it as `linkId` on `checkouts.create`.</ResponseField>
+<ResponseField name="linkId" type="string">Same UUID as `checkouts.create({ linkId })` / product page Copy link ID.</ResponseField>
 <ResponseField name="cancelAtPeriodEnd" type="boolean" />
 <ResponseField name="canceledAt" type="string | null" />
 <ResponseField name="effectiveCancelDate" type="string | null" />
@@ -72,7 +72,8 @@ Returns `PaginatedList<Subscription>`.
   "unitAmountMinor": 1999,
   "currency": "EUR",
   "currentPeriodEnd": "2026-09-06T00:00:00.000Z",
-  "stripeSubscriptionId": "sub_1H..."
+  "stripeSubscriptionId": "sub_1H...",
+  "linkId": "4cbb8f52-7cf2-4480-8c66-34f794cd23d0"
 }
 ```
 
