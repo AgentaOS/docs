@@ -82,7 +82,7 @@ A discriminated union on `type`. `switch`/narrow on it to get typed `data`.
 <ResponseField name="id" type="string">
   Unique event ID, `evt_<uuid>`. Present on every event, both on the wire and on the object `verify()` returns.
 </ResponseField>
-<ResponseField name="type" type="'checkout.session.completed' | 'send.completed' | 'send.failed'" />
+<ResponseField name="type" type="'checkout.session.completed' | 'send.completed' | 'send.failed' | 'subscription.created' | 'subscription.renewed' | 'subscription.payment_failed' | 'subscription.updated' | 'subscription.canceled'" />
 
 <Warning>
 Inside every event's `data`, **`amount` is a string**, e.g. `"49.99"`, not the `number` you get back from `checkouts.create()` or `paymentLinks.create()`. Parse it before doing math. See the [money model](/sdk/pay-overview#the-money-model).
@@ -100,6 +100,7 @@ Fires when a checkout session's payment confirms.
 <ResponseField name="payer" type="string">Payer wallet address.</ResponseField>
 <ResponseField name="payerType" type="'human' | 'agent'" />
 <ResponseField name="network" type="string">CAIP-2 network ID.</ResponseField>
+<ResponseField name="livemode" type="boolean">`true` in live mode, `false` in test mode.</ResponseField>
 <ResponseField name="metadata" type="object">Whatever `metadata` you passed at `checkouts.create()`.</ResponseField>
 
 ### `send.completed`
@@ -114,6 +115,7 @@ Fires when an outbound send (a payout or transfer you initiated) is broadcast su
 <ResponseField name="token" type="string" />
 <ResponseField name="chainId" type="number" />
 <ResponseField name="network" type="string" />
+<ResponseField name="livemode" type="boolean">`true` in live mode, `false` in test mode.</ResponseField>
 <ResponseField name="description" type="string | null" />
 
 ### `send.failed`
@@ -128,7 +130,23 @@ Same shape as `send.completed`, but `txHash` is always `null` and no broadcast s
 <ResponseField name="token" type="string" />
 <ResponseField name="chainId" type="number" />
 <ResponseField name="network" type="string" />
+<ResponseField name="livemode" type="boolean">`true` in live mode, `false` in test mode.</ResponseField>
 <ResponseField name="description" type="string | null" />
+
+### `subscription.*`
+
+All five `subscription.*` events carry the same `SubscriptionData`, delivered to your organization webhook endpoint.
+
+<ResponseField name="id" type="string">The subscription ID.</ResponseField>
+<ResponseField name="status" type="string">Stripe status: `active`, `trialing`, `past_due`, `unpaid`, `canceled`, `incomplete`.</ResponseField>
+<ResponseField name="planName" type="string | null">The plan name, from the backing payment link.</ResponseField>
+<ResponseField name="currency" type="string" />
+<ResponseField name="amountMinor" type="number">Per-cycle price in integer minor units. `1000` means `€10.00`.</ResponseField>
+<ResponseField name="currentPeriodEnd" type="string | null">ISO 8601 timestamp, or `null` before the first cycle is set.</ResponseField>
+<ResponseField name="cancelAtPeriodEnd" type="boolean">`true` once a cancellation is scheduled for period end.</ResponseField>
+<ResponseField name="customerEmail" type="string | null" />
+<ResponseField name="customerName" type="string | null" />
+<ResponseField name="livemode" type="boolean">`true` in live mode, `false` in test mode.</ResponseField>
 
 <AccordionGroup>
   <Accordion title="Don't fulfill on the success page redirect">

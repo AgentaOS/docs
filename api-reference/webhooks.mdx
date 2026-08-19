@@ -21,6 +21,9 @@ If none of the three is set, nothing is sent. That's not an error, it's silent b
   <Accordion title="send.failed">
     Fired when an outbound send's broadcast fails. Same org-level-only resolution as `send.completed`.
   </Accordion>
+  <Accordion title="subscription.*">
+    `created`, `renewed`, `payment_failed`, `updated`, `canceled`. Subscription lifecycle events, org-level webhook only.
+  </Accordion>
 </AccordionGroup>
 
 ### `checkout.session.completed`
@@ -40,7 +43,7 @@ If none of the three is set, nothing is sent. That's not an error, it's silent b
     "payer": null,
     "payer_type": "human",
     "network": "stripe",
-    "testnet": false,
+    "livemode": true,
     "overpaid_by_cents": null,
     "metadata": { "orderId": "order-123" }
   }
@@ -57,7 +60,7 @@ If none of the three is set, nothing is sent. That's not an error, it's silent b
 <ResponseField name="data.payer" type="string | null">On-chain payer address. `null` for card/bank rails.</ResponseField>
 <ResponseField name="data.payer_type" type="string">`human` or `agent`.</ResponseField>
 <ResponseField name="data.network" type="string">CAIP-2 network ID for on-chain rails, or `stripe` for card/bank.</ResponseField>
-<ResponseField name="data.testnet" type="boolean">`true` on a test-mode checkout.</ResponseField>
+<ResponseField name="data.livemode" type="boolean">`true` in live mode, `false` in test mode.</ResponseField>
 <ResponseField name="data.overpaid_by_cents" type="number | null">Set when a bank-transfer buyer sent more than the amount due (beyond a 1-cent tolerance). `null` otherwise.</ResponseField>
 <ResponseField name="data.metadata" type="object">Whatever you set on the checkout (or its link), unchanged.</ResponseField>
 
@@ -76,7 +79,7 @@ If none of the three is set, nothing is sent. That's not an error, it's silent b
     "token": "USDC",
     "chain_id": 8453,
     "network": "eip155:8453",
-    "testnet": false,
+    "livemode": true,
     "description": null
   }
 }
@@ -99,14 +102,48 @@ Identical shape to `send.completed`, with `tx_hash: null`.
     "token": "USDC",
     "chain_id": 8453,
     "network": "eip155:8453",
-    "testnet": false,
+    "livemode": true,
     "description": null
   }
 }
 ```
 
+### `subscription.*`
+
+`subscription.created`, `subscription.renewed`, `subscription.payment_failed`, `subscription.updated`, and `subscription.canceled` share one `data` shape. Org-level webhook only.
+
+```json
+{
+  "id": "evt_3f2a1b0c-9d8e-7f6a-5b4c-3d2e1f0a9b8c",
+  "type": "subscription.renewed",
+  "data": {
+    "id": "sub_6pC2lNB6joCRQIZ1aMrTpi",
+    "status": "active",
+    "plan_name": "Pro Monthly",
+    "currency": "EUR",
+    "amount_minor": 1000,
+    "current_period_end": "2026-09-19T12:00:00.000Z",
+    "cancel_at_period_end": false,
+    "customer_email": "customer@example.com",
+    "customer_name": "Alex Rivera",
+    "livemode": true
+  }
+}
+```
+
+<ResponseField name="data.id" type="string">The subscription ID.</ResponseField>
+<ResponseField name="data.status" type="string">Stripe status: `active`, `trialing`, `past_due`, `unpaid`, `canceled`, `incomplete`.</ResponseField>
+<ResponseField name="data.plan_name" type="string | null">Plan name, from the backing payment link.</ResponseField>
+<ResponseField name="data.currency" type="string" />
+<ResponseField name="data.amount_minor" type="number">Per-cycle price in integer minor units. `1000` = `€10.00`.</ResponseField>
+<ResponseField name="data.current_period_end" type="string | null">ISO 8601, or `null` before the first cycle.</ResponseField>
+<ResponseField name="data.cancel_at_period_end" type="boolean">`true` if cancellation is scheduled for period end.</ResponseField>
+<ResponseField name="data.customer_email" type="string | null" />
+<ResponseField name="data.customer_name" type="string | null" />
+<ResponseField name="data.livemode" type="boolean">`true` in live mode, `false` in test mode.</ResponseField>
+
 <Note>
-The raw payload above is the literal snake_case JSON body AgentaOS `POST`s to your `webhookUrl`, this is what you'll parse in any language other than the SDK. `agentaos.webhooks.verify()` (Node.js) parses it and returns a camelCased, typed object instead: `linkId`, `sessionId`, `txHash`, `payerType`, etc. `rail`, `vendor_reference`, `testnet`, and `overpaid_by_cents` are additive fields not yet reflected in the SDK's TypeScript types, they arrive on the wire regardless of language.
+The raw payload above is the literal snake_case JSON body AgentaOS `POST`s to your `webhookUrl`, this is what you'll parse in any language other than the SDK. `agentaos.webhooks.verify()` (Node.js) parses it and returns a camelCased, typed object instead: `linkId`, `sessionId`, `txHash`, `payerType`, `livemode`, etc. `rail`, `vendor_reference`, and `overpaid_by_cents` arrive on the wire but are not yet reflected in the SDK's TypeScript types, they're present regardless of language.
 </Note>
 
 ## Delivery
