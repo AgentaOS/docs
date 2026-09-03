@@ -44,6 +44,10 @@ console.log(link.checkoutUrl);
   **Required when `type: 'subscription'`, omit otherwise.**
 </ParamField>
 
+<ParamField body="trialPeriodDays" type="number">
+  Free-trial length in days, 1 to 730. Subscription links only. The buyer's card is saved with nothing due today, the subscription starts as `trialing`, and the first charge happens when the trial ends. See [Free trials](/sdk/pay-subscriptions#free-trials).
+</ParamField>
+
 <ParamField body="taxRateId" type="string">
   UUID of a pre-created tax rate.
 </ParamField>
@@ -124,6 +128,7 @@ const link = await agentaos.paymentLinks.create({
 <ResponseField name="sellerMode" type="'mor' | 'crypto'">How this link settles.</ResponseField>
 <ResponseField name="type" type="'one_time' | 'subscription'" />
 <ResponseField name="billingInterval" type="'month' | 'year' | null">`null` for one-time links.</ResponseField>
+<ResponseField name="trialPeriodDays" type="number | null">Free-trial length in days; `null` when there is no trial.</ResponseField>
 <ResponseField name="checkoutUrl" type="string">Shareable payment URL.</ResponseField>
 <ResponseField name="metadata" type="object" />
 <ResponseField name="checkoutFields" type="CheckoutField[]" />

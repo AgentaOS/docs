@@ -222,7 +222,7 @@ Subscription lifecycle events, delivered to your **organization** webhook endpoi
 - **`subscription.created`** first payment succeeded; now active (or trialing).
 - **`subscription.renewed`** a cycle was paid and renewed for another period.
 - **`subscription.payment_failed`** a renewal payment failed; now past due.
-- **`subscription.updated`** the subscription changed (commonly `cancel_at_period_end`).
+- **`subscription.updated`** the subscription changed: a cancel scheduled or resumed (`cancel_at_period_end`), a downgrade scheduled (`pending_plan` set), a scheduled downgrade reverted (`pending_plan` null again), an upgrade applied (new `plan_name` / `link_id` / `amount_minor`), or the scheduled plan taking over at the period end.
 - **`subscription.canceled`** terminal; no further charges.
 
 <Expandable title="data fields" defaultOpen>
@@ -233,6 +233,10 @@ Subscription lifecycle events, delivered to your **organization** webhook endpoi
   <ResponseField name="amount_minor" type="number">Per-cycle price in integer minor units. `1000` = `€10.00`.</ResponseField>
   <ResponseField name="current_period_end" type="string | null">ISO 8601, or `null` before the first cycle.</ResponseField>
   <ResponseField name="cancel_at_period_end" type="boolean">`true` if cancellation is scheduled for period end.</ResponseField>
+  <ResponseField name="link_id" type="string">The current plan's payment-link id (the `linkId` you pass to `checkouts.create`).</ResponseField>
+  <ResponseField name="pending_plan" type="object | null">
+    Null unless a downgrade is scheduled. Then `{ link_id, plan_name, amount_minor, effective_at }`: the plan the subscription switches to at `effective_at` (the period end). `plan_name`, `link_id` and `amount_minor` above stay what the buyer paid for until then.
+  </ResponseField>
   <ResponseField name="customer_email" type="string | null" />
   <ResponseField name="customer_name" type="string | null" />
   <ResponseField name="livemode" type="boolean">`true` in live mode, `false` in test mode.</ResponseField>

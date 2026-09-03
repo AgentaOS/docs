@@ -111,6 +111,7 @@
             "pages": [
               "cli/install",
               "cli/login",
+              "cli/products",
               "cli/pay",
               "cli/subscriptions",
               "cli/customers",
@@ -146,6 +147,8 @@
                 "group": "Subscriptions",
                 "pages": [
                   "api-reference/subscriptions/list",
+                  "api-reference/subscriptions/plan-change-preview",
+                  "api-reference/subscriptions/plan-change",
                   "api-reference/subscriptions/cancel"
                 ]
               },

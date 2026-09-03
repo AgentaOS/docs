@@ -1,0 +1,12 @@
+---
+title: "Change the plan"
+openapi: "POST /gateway/subscriptions/{id}/plan-change"
+---
+
+<Warning>
+An **upgrade** charges the prorated difference on the subscriber's saved card **now**. Always show the [preview](/api-reference/subscriptions/plan-change-preview) first and echo its `prorationDate`; that is what makes the charge equal the quote. A **downgrade** charges nothing today and switches at the current period end.
+</Warning>
+
+<Note>
+Idempotent on (subscription, target plan, `prorationDate`): retrying the same request does not charge twice. Same plan, a subscription that is not `active` or `trialing`, a different currency, or a different billing interval return `400`.
+</Note>

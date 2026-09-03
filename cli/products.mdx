@@ -1,0 +1,109 @@
+---
+title: "agenta products"
+description: "Create and list products and subscription plans from the terminal. A product is a reusable payment link; its id is the linkId."
+---
+
+A **product** is a reusable, shareable checkout with a fixed price: one-time, or a subscription plan billed monthly or yearly. It is the same object the dashboard calls a product and the API calls a payment link. Create it once; every buyer uses the same one. Creating the first product is the merchant's first go-live milestone.
+
+Requires `agentaos` 2.1 or newer (`npm install -g agentaos@latest`).
+
+## Create a product or plan
+
+```bash
+agenta products create --name <name> -a <amount> [-c <currency>] [-d <description>] \
+  [--subscription --interval month|year [--trial-days <n>]] \
+  [--success-url <https-url>] [--cancel-url <https-url>] [--json]
+```
+
+<ParamField query="-n, --name" type="string" required>
+  Product name buyers see.
+</ParamField>
+<ParamField query="-a, --amount" type="number" required>
+  Price in currency units: `29` means €29.00.
+</ParamField>
+<ParamField query="-c, --currency" type="string">
+  `EUR` or `USD`. Defaults to the org setting.
+</ParamField>
+<ParamField query="-d, --description" type="string">
+  Shown on the checkout page.
+</ParamField>
+<ParamField query="--subscription" type="boolean" default="false">
+  Recurring plan instead of a one-time product. Needs `--interval`.
+</ParamField>
+<ParamField query="--interval" type="'month' | 'year'">
+  Billing cadence for a plan.
+</ParamField>
+<ParamField query="--trial-days" type="number">
+  Free-trial length, 1 to 730 days. Plans only. The buyer's card is saved with nothing due today; the first charge happens when the trial ends.
+</ParamField>
+<ParamField query="--success-url" type="string">
+  `https://` URL the buyer lands on after paying. `?sessionId=<id>` is appended.
+</ParamField>
+<ParamField query="--cancel-url" type="string">
+  `https://` URL the buyer lands on if they back out.
+</ParamField>
+<ParamField query="--json" type="boolean">
+  Output a single JSON object instead of the human-readable summary.
+</ParamField>
+
+```bash
+agenta products create --name "Pro" -a 29 -c EUR --subscription --interval month \
+  --success-url https://yourapp.com/thanks --json
+```
+
+```json --json
+{
+  "id": "48d35c70-4a6c-4347-bff5-3a4aa073e642",
+  "name": "Pro",
+  "type": "subscription",
+  "billingInterval": "month",
+  "amount": 29,
+  "currency": "EUR",
+  "status": "active",
+  "checkoutUrl": "https://app.agentaos.ai/pay/mc8d_k7fxmkyMPC80ngtcA",
+  "successUrl": "https://yourapp.com/thanks",
+  "cancelUrl": null,
+  "hint": "Share the checkoutUrl with your customers. It works for every sale."
+}
+```
+
+- `id` is the **`linkId`**: pass it to `checkouts.create({ linkId })` for logged-in users, or to `agenta subscriptions change-plan --to`.
+- `checkoutUrl` is the **buyer link**: share it, or put it behind a Buy button. It carries no app user id.
+- Return URLs must be `https://`; plain-http and localhost are refused before the request is sent.
+- Products created from the CLI are test-mode products. Live products are created in the dashboard once the merchant is live.
+
+A plan with a trial:
+
+```bash
+agenta products create --name "Pro (annual)" -a 290 -c EUR --subscription --interval year --trial-days 14 --json
+```
+
+The hosted checkout then shows "Due today €0.00, then €290.00/yr after your 14-day free trial", saves the card, and the subscription starts as `trialing`.
+
+## List products
+
+```bash
+agenta products list [--limit <n>] [--json]
+```
+
+```json --json
+{
+  "total": 2,
+  "hasMore": false,
+  "items": [
+    { "id": "ebc045bf-…", "name": "Pro (annual)", "type": "subscription", "billingInterval": "year", "amount": 290, "currency": "EUR", "status": "active", "checkoutUrl": "https://app.agentaos.ai/pay/v6wN…", "successUrl": null, "cancelUrl": null },
+    { "id": "7e0f2852-…", "name": "Launch Kit", "type": "one_time", "billingInterval": null, "amount": 49, "currency": "EUR", "status": "active", "checkoutUrl": "https://app.agentaos.ai/pay/AgaG…", "successUrl": null, "cancelUrl": null }
+  ]
+}
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Sell a subscription" icon="rotate" href="/guides/sell-a-subscription">
+    Share the link, or check out a logged-in user with the linkId.
+  </Card>
+  <Card title="Subscriptions" icon="rotate" href="/cli/subscriptions">
+    List subscribers, change plans, cancel.
+  </Card>
+</CardGroup>

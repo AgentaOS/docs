@@ -121,6 +121,65 @@ agenta subscriptions cancel 253dbe6a-6b4d-4c40-a16f-aae31cfea271 --now
 Default to the no-flag form. `--now` skips the grace period the subscriber already paid for, so reach for it only when that's actually the ask (fraud, duplicate signup, an explicit "cancel me right now").
 </Tip>
 
+## Change the plan (upgrade or downgrade)
+
+```bash
+agenta subscriptions change-plan <id> --to <linkId> [--dry-run] [--json]
+```
+
+<ParamField path="id" type="string" required>
+  Subscription ID.
+</ParamField>
+<ParamField query="--to" type="string" required>
+  The target product's id (`agenta products list`). It must be a subscription product in the same currency and billing interval as the current plan, and a different one.
+</ParamField>
+<ParamField query="--dry-run" type="boolean" default="false">
+  Print the quote and apply nothing.
+</ParamField>
+
+One command, two API calls: the quote, then the change with the quote's `prorationDate` echoed back, so what is charged is what was shown. Always look at the quote first:
+
+```bash
+agenta subscriptions change-plan 9811c905-1f61-459d-af03-18fb5aad47d8 --to 3f0c2d61-... --dry-run --json
+```
+
+```json --json
+{
+  "applied": false,
+  "direction": "upgrade",
+  "currency": "eur",
+  "dueTodayMinor": 1234,
+  "dueTodayVatMinor": 239,
+  "effectiveAt": "2026-09-03T10:31:25.000Z",
+  "nextInvoiceMinor": 4900,
+  "nextInvoiceVatMinor": 1176,
+  "nextInvoiceAt": "2026-10-03T10:45:13.000Z",
+  "prorationDate": 1788434542
+}
+```
+
+Then apply:
+
+```bash
+agenta subscriptions change-plan 9811c905-1f61-459d-af03-18fb5aad47d8 --to 3f0c2d61-... --json
+```
+
+```json --json
+{
+  "direction": "upgrade",
+  "applied": true,
+  "status": "active",
+  "unitAmountMinor": 4900,
+  "currency": "eur",
+  "quote": { "...": "the quote above" }
+}
+```
+
+- **Upgrade** (the new plan costs more): the prorated difference is charged on the saved card **now**; `dueTodayMinor` says how much.
+- **Downgrade** (same or lower price): nothing today; the subscriber keeps the current plan until `effectiveAt`, the current period end, and `agenta subscriptions list` shows the scheduled switch as `pendingPlanChange` until then.
+- **Cancel a scheduled downgrade**: run the command again with `--to` set to the current plan's id. The result says `direction: "revert"`, nothing is charged, and `pendingPlanChange` is null again.
+- Money fields are integer minor units (`4900` = €49.00). The subscription must be `active` or `trialing`.
+
 ## Next steps
 
 <CardGroup cols={2}>

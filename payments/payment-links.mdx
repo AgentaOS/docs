@@ -68,7 +68,7 @@ Prefer code? Create links programmatically below.
 </Tabs>
 
 <Note>
-There's no CLI command to create a payment link yet. Create one from the SDK, the REST API, or the [dashboard](https://app.agentaos.ai). The CLI's `agenta pay checkout` creates a one-off [checkout](/payments/checkouts), not a reusable link.
+From the terminal, `agenta products create` makes the same reusable link (see [agenta products](/cli/products); needs `agentaos` 2.1 or newer). `agenta pay checkout` creates a one-off [checkout](/payments/checkouts), not a reusable link.
 </Note>
 
 `amount` is in currency units, not cents. `49.99` means €49.99. See the [money model](/payments/checkouts#money-model) if you're wiring this up against real numbers.
