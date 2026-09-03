@@ -236,7 +236,7 @@ The dashboard calls this a **product**. The API creates it with `paymentLinks.cr
       </Tab>
     </Tabs>
 
-    An **upgrade** charges the prorated difference on the saved card now and the new price applies immediately. A **downgrade** charges nothing today; the cheaper plan starts at `effectiveAt`, the current period end. The target must be a different plan in the same currency and billing interval, and the subscription must be `active` or `trialing`.
+    An **upgrade** charges the prorated difference on the saved card now and the new price applies immediately. A **downgrade** charges nothing today; the subscriber keeps the current plan until `effectiveAt`, the current period end, and the subscription reports the switch as `pendingPlanChange` until then. To cancel a scheduled downgrade, change the plan to the current plan again (`direction: 'revert'`, nothing charged). The target must be a different plan in the same currency and billing interval, and the subscription must be `active` or `trialing`. Each of these fires `subscription.updated`.
   </Step>
 </Steps>
 

@@ -1410,11 +1410,27 @@
           },
           "currency": { "type": "string" },
           "currentPeriodEnd": { "type": ["string", "null"], "format": "date-time", "description": "null before the first cycle books." },
-          "stripeSubscriptionId": { "type": ["string", "null"] }
+          "stripeSubscriptionId": { "type": ["string", "null"] },
+          "pendingPlanChange": {
+            "description": "Null unless a downgrade is scheduled; then the plan, quoted amount and date the subscription switches to. `planName`, `unitAmountMinor` and `linkId` stay what the buyer paid for until `effectiveAt`.",
+            "oneOf": [
+              { "type": "null" },
+              {
+                "type": "object",
+                "properties": {
+                  "linkId": { "type": "string", "format": "uuid" },
+                  "planName": { "type": ["string", "null"] },
+                  "unitAmountMinor": { "type": "integer", "description": "Per-cycle amount from `effectiveAt` on, integer minor units." },
+                  "effectiveAt": { "type": "string", "format": "date-time" }
+                },
+                "required": ["linkId", "planName", "unitAmountMinor", "effectiveAt"]
+              }
+            ]
+          }
         },
         "required": [
           "id", "customerEmail", "customerName", "planName", "billingInterval", "status",
-          "unitAmountMinor", "currency", "currentPeriodEnd", "stripeSubscriptionId"
+          "unitAmountMinor", "currency", "currentPeriodEnd", "stripeSubscriptionId", "pendingPlanChange"
         ]
       },
       "SubscriptionListResponse": {
@@ -1453,7 +1469,7 @@
         "type": "object",
         "description": "Read-only quote for moving a subscription to another plan. Money is integer minor units.",
         "properties": {
-          "direction": { "type": "string", "enum": ["upgrade", "downgrade"], "description": "`upgrade` when the new plan costs more per cycle, otherwise `downgrade`." },
+          "direction": { "type": "string", "enum": ["upgrade", "downgrade", "revert"], "description": "`upgrade` when the new plan costs more per cycle; `downgrade` otherwise; `revert` when the target is the current plan while a downgrade is pending (cancels it, nothing due)." },
           "currency": { "type": "string" },
           "dueTodayMinor": { "type": "integer", "description": "Charged now. Always 0 for a downgrade." },
           "dueTodayVatMinor": { "type": "integer" },
@@ -1493,11 +1509,22 @@
             "properties": {
               "direction": { "type": "string", "enum": ["downgrade"] },
               "applied": { "type": "boolean", "enum": [true] },
-              "effectiveAt": { "type": "string", "format": "date-time", "description": "When the new plan starts: the current period end." },
+              "effectiveAt": { "type": "string", "format": "date-time", "description": "When the new plan starts: the current period end. Until then the subscription keeps its current plan and reports the change as `pendingPlanChange`." },
               "unitAmountMinor": { "type": "integer", "description": "Per-cycle amount from `effectiveAt` on." },
               "currency": { "type": "string" }
             },
             "required": ["direction", "applied", "effectiveAt", "unitAmountMinor", "currency"]
+          },
+          {
+            "type": "object",
+            "title": "Pending downgrade reverted",
+            "properties": {
+              "direction": { "type": "string", "enum": ["revert"] },
+              "applied": { "type": "boolean", "enum": [true] },
+              "unitAmountMinor": { "type": "integer", "description": "The current plan's per-cycle amount, unchanged." },
+              "currency": { "type": "string" }
+            },
+            "required": ["direction", "applied", "unitAmountMinor", "currency"]
           }
         ]
       },

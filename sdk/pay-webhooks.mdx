@@ -144,6 +144,10 @@ All five `subscription.*` events carry the same `SubscriptionData`, delivered to
 <ResponseField name="amountMinor" type="number">Per-cycle price in integer minor units. `1000` means `€10.00`.</ResponseField>
 <ResponseField name="currentPeriodEnd" type="string | null">ISO 8601 timestamp, or `null` before the first cycle is set.</ResponseField>
 <ResponseField name="cancelAtPeriodEnd" type="boolean">`true` once a cancellation is scheduled for period end.</ResponseField>
+<ResponseField name="linkId" type="string">The current plan's payment-link id.</ResponseField>
+<ResponseField name="pendingPlan" type="object | null">
+  Null unless a downgrade is scheduled. Then `{ linkId, planName, amountMinor, effectiveAt }`: the plan the subscription switches to at `effectiveAt`. `subscription.updated` fires when it is scheduled, reverted, and when it takes over.
+</ResponseField>
 <ResponseField name="customerEmail" type="string | null" />
 <ResponseField name="customerName" type="string | null" />
 <ResponseField name="livemode" type="boolean">`true` in live mode, `false` in test mode.</ResponseField>

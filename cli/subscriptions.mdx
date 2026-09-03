@@ -176,7 +176,8 @@ agenta subscriptions change-plan 9811c905-1f61-459d-af03-18fb5aad47d8 --to 3f0c2
 ```
 
 - **Upgrade** (the new plan costs more): the prorated difference is charged on the saved card **now**; `dueTodayMinor` says how much.
-- **Downgrade** (same or lower price): nothing today; the switch happens at `effectiveAt`, the current period end, and the response carries `effectiveAt` instead of `status`.
+- **Downgrade** (same or lower price): nothing today; the subscriber keeps the current plan until `effectiveAt`, the current period end, and `agenta subscriptions list` shows the scheduled switch as `pendingPlanChange` until then.
+- **Cancel a scheduled downgrade**: run the command again with `--to` set to the current plan's id. The result says `direction: "revert"`, nothing is charged, and `pendingPlanChange` is null again.
 - Money fields are integer minor units (`4900` = €49.00). The subscription must be `active` or `trialing`.
 
 ## Next steps

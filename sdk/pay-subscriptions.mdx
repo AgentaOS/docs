@@ -57,6 +57,9 @@ Returns `PaginatedList<Subscription>`.
 <ResponseField name="currentPeriodEnd" type="string | null">ISO 8601. `null` before the first billing cycle has booked.</ResponseField>
 <ResponseField name="stripeSubscriptionId" type="string | null">The underlying subscription ID from the card processor.</ResponseField>
 <ResponseField name="linkId" type="string">Same UUID as `checkouts.create({ linkId })` / product page Copy link ID.</ResponseField>
+<ResponseField name="pendingPlanChange" type="object | null">
+  Null unless a downgrade is scheduled. Then `{ linkId, planName, unitAmountMinor, effectiveAt }`: the plan the subscription switches to at `effectiveAt` (the period end). `planName`, `unitAmountMinor` and `linkId` above stay what the buyer paid for until then, so gate access on them, not on the pending change.
+</ResponseField>
 <ResponseField name="cancelAtPeriodEnd" type="boolean" />
 <ResponseField name="canceledAt" type="string | null" />
 <ResponseField name="effectiveCancelDate" type="string | null" />
@@ -172,6 +175,10 @@ if (result.direction === 'upgrade') {
 ```
 
 Show the quote to the merchant (or the subscriber) before calling this: the upgrade charge is real money. The CLI does both steps in one command: `agenta subscriptions change-plan <id> --to <linkId>` (add `--dry-run` for the quote only).
+
+**Cancelling a scheduled downgrade.** Change the plan to the current plan again. The preview and the result come back with `direction: 'revert'`, nothing is charged, and `pendingPlanChange` is null afterwards. Targeting the plan that is already pending returns `400` ("already scheduled").
+
+**Webhooks.** Every plan change fires `subscription.updated` on the organization endpoint: when a downgrade is scheduled (`data.pending_plan` is set), when it is reverted (`pending_plan` back to null), when an upgrade is applied, and when the scheduled plan takes over at the period end. See [Events](/webhooks/events).
 
 ## `subscriptions.cancel(id)`
 
