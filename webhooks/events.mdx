@@ -3,7 +3,7 @@ title: "Events"
 description: "Every webhook event AgentaOS sends: full payload fields, types, and a JSON example for each."
 ---
 
-AgentaOS sends three event types today. Every event shares the same envelope, an `id`, a `type`, and a `data` object whose shape depends on the type. See [Webhooks](/payments/webhooks) for how to register a URL and verify the signature before trusting any of this.
+AgentaOS sends webhook events for checkouts, outbound sends, and subscriptions. Every event shares the same envelope, an `id`, a `type`, and a `data` object whose shape depends on the type. See [Webhooks](/payments/webhooks) for how to register a URL and verify the signature before trusting any of this.
 
 <Note>
 Every `amount` field below is a **string** (e.g. `"49.99"`), not a number. This differs from `amount` on SDK create calls (checkouts, payment links), which is a plain number in currency units. Parse it before doing arithmetic.
@@ -18,7 +18,7 @@ The field names below are the literal snake_case keys AgentaOS `POST`s to your `
 </ResponseField>
 
 <ResponseField name="type" type="string">
-  One of `checkout.session.completed`, `send.completed`, `send.failed`. Switch on this to decide how to parse `data`.
+  One of `checkout.session.completed`, `send.completed`, `send.failed`, or a `subscription.*` event. Switch on this to decide how to parse `data`.
 </ResponseField>
 
 <ResponseField name="data" type="object">
@@ -62,8 +62,8 @@ Fired when a checkout is paid, by card, wallet, or stablecoin. This is the event
   <ResponseField name="network" type="string">
     CAIP-2 network ID for on-chain rails, e.g. `"eip155:8453"` for Base, or `stripe` for card/bank.
   </ResponseField>
-  <ResponseField name="testnet" type="boolean">
-    `true` on a test-mode checkout, `false` in live.
+  <ResponseField name="livemode" type="boolean">
+    `true` in live mode, `false` in test mode.
   </ResponseField>
   <ResponseField name="overpaid_by_cents" type="number | null">
     Set when a bank-transfer buyer sent more than the amount due (beyond a 1-cent tolerance). `null` otherwise.
@@ -92,7 +92,7 @@ Fired when a checkout is paid, by card, wallet, or stablecoin. This is the event
     "payer": null,
     "payer_type": "human",
     "network": "stripe",
-    "testnet": false,
+    "livemode": true,
     "overpaid_by_cents": null,
     "metadata": { "orderId": "order-123" }
   }
@@ -128,8 +128,8 @@ Fired when an outbound stablecoin send you initiated confirms on-chain.
   <ResponseField name="network" type="string">
     CAIP-2 network ID, e.g. `"eip155:8453"`.
   </ResponseField>
-  <ResponseField name="testnet" type="boolean">
-    `true` on a test-mode send, `false` in live.
+  <ResponseField name="livemode" type="boolean">
+    `true` in live mode, `false` in test mode.
   </ResponseField>
   <ResponseField name="description" type="string | null">
     Optional description you attached to the send. `null` if none was set.
@@ -149,7 +149,7 @@ Fired when an outbound stablecoin send you initiated confirms on-chain.
     "token": "USDC",
     "chain_id": 8453,
     "network": "eip155:8453",
-    "testnet": false,
+    "livemode": true,
     "description": "Payout to contractor"
   }
 }
@@ -184,8 +184,8 @@ Fired when an outbound send fails to broadcast, network error, insufficient bala
   <ResponseField name="network" type="string">
     CAIP-2 network ID, e.g. `"eip155:8453"`.
   </ResponseField>
-  <ResponseField name="testnet" type="boolean">
-    `true` on a test-mode send, `false` in live.
+  <ResponseField name="livemode" type="boolean">
+    `true` in live mode, `false` in test mode.
   </ResponseField>
   <ResponseField name="description" type="string | null">
     Optional description you attached to the send. `null` if none was set.
@@ -205,7 +205,7 @@ Fired when an outbound send fails to broadcast, network error, insufficient bala
     "token": "USDC",
     "chain_id": 8453,
     "network": "eip155:8453",
-    "testnet": false,
+    "livemode": true,
     "description": null
   }
 }
@@ -214,6 +214,48 @@ Fired when an outbound send fails to broadcast, network error, insufficient bala
 <Warning>
 `send.failed` means the transaction never landed on-chain. It's distinct from a payment dispute or a card decline, those don't go through this event, they affect your balance directly. See [Payouts](/payouts/overview).
 </Warning>
+
+## Subscription events
+
+Subscription lifecycle events, delivered to your **organization** webhook endpoint. All five share the same `data` shape.
+
+- **`subscription.created`** first payment succeeded; now active (or trialing).
+- **`subscription.renewed`** a cycle was paid and renewed for another period.
+- **`subscription.payment_failed`** a renewal payment failed; now past due.
+- **`subscription.updated`** the subscription changed (commonly `cancel_at_period_end`).
+- **`subscription.canceled`** terminal; no further charges.
+
+<Expandable title="data fields" defaultOpen>
+  <ResponseField name="id" type="string">The subscription ID.</ResponseField>
+  <ResponseField name="status" type="string">Stripe status: `active`, `trialing`, `past_due`, `unpaid`, `canceled`, `incomplete`.</ResponseField>
+  <ResponseField name="plan_name" type="string | null">Plan name, from the backing payment link.</ResponseField>
+  <ResponseField name="currency" type="string">e.g. `"EUR"`.</ResponseField>
+  <ResponseField name="amount_minor" type="number">Per-cycle price in integer minor units. `1000` = `€10.00`.</ResponseField>
+  <ResponseField name="current_period_end" type="string | null">ISO 8601, or `null` before the first cycle.</ResponseField>
+  <ResponseField name="cancel_at_period_end" type="boolean">`true` if cancellation is scheduled for period end.</ResponseField>
+  <ResponseField name="customer_email" type="string | null" />
+  <ResponseField name="customer_name" type="string | null" />
+  <ResponseField name="livemode" type="boolean">`true` in live mode, `false` in test mode.</ResponseField>
+</Expandable>
+
+```json Example
+{
+  "id": "evt_3f2a1b0c-9d8e-7f6a-5b4c-3d2e1f0a9b8c",
+  "type": "subscription.renewed",
+  "data": {
+    "id": "sub_6pC2lNB6joCRQIZ1aMrTpi",
+    "status": "active",
+    "plan_name": "Pro Monthly",
+    "currency": "EUR",
+    "amount_minor": 1000,
+    "current_period_end": "2026-09-19T12:00:00.000Z",
+    "cancel_at_period_end": false,
+    "customer_email": "customer@example.com",
+    "customer_name": "Alex Rivera",
+    "livemode": true
+  }
+}
+```
 
 ## Next steps
 

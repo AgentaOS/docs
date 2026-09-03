@@ -40,7 +40,7 @@ If none of the three is set, nothing is sent. That's not an error, it's silent b
     "payer": null,
     "payer_type": "human",
     "network": "stripe",
-    "testnet": false,
+    "livemode": true,
     "overpaid_by_cents": null,
     "metadata": { "orderId": "order-123" }
   }
@@ -57,7 +57,7 @@ If none of the three is set, nothing is sent. That's not an error, it's silent b
 <ResponseField name="data.payer" type="string | null">On-chain payer address. `null` for card/bank rails.</ResponseField>
 <ResponseField name="data.payer_type" type="string">`human` or `agent`.</ResponseField>
 <ResponseField name="data.network" type="string">CAIP-2 network ID for on-chain rails, or `stripe` for card/bank.</ResponseField>
-<ResponseField name="data.testnet" type="boolean">`true` on a test-mode checkout.</ResponseField>
+<ResponseField name="data.livemode" type="boolean">`true` in live mode, `false` in test mode.</ResponseField>
 <ResponseField name="data.overpaid_by_cents" type="number | null">Set when a bank-transfer buyer sent more than the amount due (beyond a 1-cent tolerance). `null` otherwise.</ResponseField>
 <ResponseField name="data.metadata" type="object">Whatever you set on the checkout (or its link), unchanged.</ResponseField>
 
@@ -76,7 +76,7 @@ If none of the three is set, nothing is sent. That's not an error, it's silent b
     "token": "USDC",
     "chain_id": 8453,
     "network": "eip155:8453",
-    "testnet": false,
+    "livemode": true,
     "description": null
   }
 }
@@ -99,14 +99,14 @@ Identical shape to `send.completed`, with `tx_hash: null`.
     "token": "USDC",
     "chain_id": 8453,
     "network": "eip155:8453",
-    "testnet": false,
+    "livemode": true,
     "description": null
   }
 }
 ```
 
 <Note>
-The raw payload above is the literal snake_case JSON body AgentaOS `POST`s to your `webhookUrl`, this is what you'll parse in any language other than the SDK. `agentaos.webhooks.verify()` (Node.js) parses it and returns a camelCased, typed object instead: `linkId`, `sessionId`, `txHash`, `payerType`, etc. `rail`, `vendor_reference`, `testnet`, and `overpaid_by_cents` are additive fields not yet reflected in the SDK's TypeScript types, they arrive on the wire regardless of language.
+The raw payload above is the literal snake_case JSON body AgentaOS `POST`s to your `webhookUrl`, this is what you'll parse in any language other than the SDK. `agentaos.webhooks.verify()` (Node.js) parses it and returns a camelCased, typed object instead: `linkId`, `sessionId`, `txHash`, `payerType`, `livemode`, etc. `rail`, `vendor_reference`, and `overpaid_by_cents` arrive on the wire but are not yet reflected in the SDK's TypeScript types, they're present regardless of language.
 </Note>
 
 ## Delivery
