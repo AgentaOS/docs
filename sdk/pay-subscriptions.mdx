@@ -1,6 +1,6 @@
 ---
 title: "Subscriptions"
-description: "Read and manage recurring billing with agentaos.subscriptions. List and cancel, list and cancel only, by design."
+description: "Read and manage recurring billing with agentaos.subscriptions: list, invoices, free trials, plan changes, cancel. No create, by design."
 ---
 
 `agentaos.subscriptions` is a read/manage surface, not a creation API. A subscription comes into existence when a buyer pays a [payment link](/sdk/pay-payment-links) created with `type: 'subscription'`, AgentaOS bills them every `billingInterval` from then on through Merchant of Record (card or bank). There is no `subscriptions.create()`: to start recurring billing, create a subscription payment link and let the buyer check out.
@@ -109,9 +109,73 @@ const invoices = await agentaos.subscriptions.invoices(sub.id);
 <ResponseField name="disputed" type="boolean" />
 <ResponseField name="chargedBack" type="boolean" />
 
+## Free trials
+
+A trial is a property of the product, not of the subscription: create the plan with `trialPeriodDays` (1 to 730). At checkout the buyer's card is saved with nothing due today, the subscription is created as `trialing`, and the first charge happens when the trial ends, after which it is `active`.
+
+```typescript
+const product = await agentaos.paymentLinks.create({
+  amount: 29,
+  currency: 'EUR',
+  description: 'Pro, monthly',
+  type: 'subscription',
+  billingInterval: 'month',
+  trialPeriodDays: 14,
+});
+```
+
+What you observe:
+
+- `checkout.session.completed` fires when the card is saved, with `amount: "0"`, `trial: true` and `trial_end` (ISO 8601) on `event.data`. Treat it as "trial started", not as money received.
+- `subscriptions.list()` shows `status: 'trialing'` and the plan's `unitAmountMinor`; `currentPeriodEnd` is the trial end while trialing.
+- Cancelling during the trial stops it before any charge.
+
+## `subscriptions.previewPlanChange(id, targetLinkId)`
+
+Quote moving a subscription to another plan. Read-only: nothing is charged or scheduled. The target must be a different subscription product in the **same currency and billing interval**, and the subscription must be `active` or `trialing`; anything else is a `400`.
+
+```typescript
+const quote = await agentaos.subscriptions.previewPlanChange(sub.id, PRO_PLUS_LINK_ID);
+// quote.direction      'upgrade' | 'downgrade'
+// quote.dueTodayMinor  charged now (0 for a downgrade)
+// quote.effectiveAt    upgrade: now; downgrade: the current period end
+// quote.prorationDate  pass it to changePlan
+```
+
+<ResponseField name="direction" type="'upgrade' | 'downgrade'">`upgrade` when the new plan costs more per cycle.</ResponseField>
+<ResponseField name="currency" type="string" />
+<ResponseField name="dueTodayMinor" type="number">Integer minor units charged now. Always `0` for a downgrade.</ResponseField>
+<ResponseField name="dueTodayVatMinor" type="number" />
+<ResponseField name="effectiveAt" type="string">ISO 8601. Upgrade: now. Downgrade: the current period end.</ResponseField>
+<ResponseField name="nextInvoiceMinor" type="number">The next regular cycle invoice on the new plan, integer minor units.</ResponseField>
+<ResponseField name="nextInvoiceVatMinor" type="number" />
+<ResponseField name="nextInvoiceAt" type="string">ISO 8601.</ResponseField>
+<ResponseField name="prorationDate" type="number">Unix seconds. Echo it in `changePlan` so the charge matches this quote.</ResponseField>
+
+## `subscriptions.changePlan(id, { targetLinkId, prorationDate })`
+
+Apply a quoted plan change. An **upgrade** charges the prorated difference on the saved card **now**; a **downgrade** charges nothing today and switches at the current period end. Idempotent on (subscription, target plan, `prorationDate`).
+
+```typescript
+const result = await agentaos.subscriptions.changePlan(sub.id, {
+  targetLinkId: PRO_PLUS_LINK_ID,
+  prorationDate: quote.prorationDate,
+});
+
+if (result.direction === 'upgrade') {
+  result.status;          // 'active'
+  result.unitAmountMinor; // new per-cycle amount, e.g. 4900
+} else {
+  result.effectiveAt;     // when the cheaper plan starts
+  result.unitAmountMinor;
+}
+```
+
+Show the quote to the merchant (or the subscriber) before calling this: the upgrade charge is real money. The CLI does both steps in one command: `agenta subscriptions change-plan <id> --to <linkId>` (add `--dry-run` for the quote only).
+
 ## `subscriptions.cancel(id)`
 
-Cancels at period end. The subscriber keeps access until `currentPeriodEnd`. No refund. Calling it again is a no-op.
+Cancels at period end. The subscriber keeps access until `currentPeriodEnd`. No refund. Calling it again is a no-op. Pass `{ atPeriodEnd: false }` to cancel immediately instead.
 
 ```typescript
 await agentaos.subscriptions.cancel(sub.id);

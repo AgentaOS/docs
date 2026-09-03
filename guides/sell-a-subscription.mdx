@@ -70,7 +70,9 @@ The dashboard calls this a **product**. The API creates it with `paymentLinks.cr
     `amount: 19.99` means €19.99, not cents. Create this once, not once per buyer.
 
     <Note>
-    No CLI command for products yet. `agenta pay checkout` only makes a one-time checkout.
+    From the terminal: `agenta products create --name "Pro" -a 19.99 -c EUR --subscription --interval month --json`
+    returns the same product; its `id` is the `linkId`. Needs `agentaos` 2.1 or newer (`npm install -g agentaos@latest`).
+    `agenta pay checkout` still only makes a one-time checkout.
     </Note>
   </Step>
 
@@ -169,7 +171,7 @@ The dashboard calls this a **product**. The API creates it with `paymentLinks.cr
     await agentaos.subscriptions.cancel(sub.id);
     ```
 
-    Cancel does not refund. It stops the next renewal. They keep access until `currentPeriodEnd`. Immediate cancel is not supported. Calling cancel again is a no-op.
+    Cancel does not refund. It stops the next renewal. They keep access until `currentPeriodEnd`. Pass `{ atPeriodEnd: false }` (CLI: `--now`) to cancel immediately instead. Calling cancel again is a no-op.
 
     PDF: `agentaos.invoices.downloadPdf(invoice.id)` and `agentaos.invoices.getReceipt(invoice.id)`.
 
@@ -188,6 +190,53 @@ The dashboard calls this a **product**. The API creates it with `paymentLinks.cr
         ```
       </Tab>
     </Tabs>
+  </Step>
+  <Step title="Optional: a free trial">
+    A trial is a property of the plan. Add `trialPeriodDays` (1 to 730) when you create it; nothing else changes.
+
+    ```typescript theme={null}
+    const product = await agentaos.paymentLinks.create({
+      amount: 19.99,
+      currency: 'EUR',
+      description: 'Pro, monthly',
+      type: 'subscription',
+      billingInterval: 'month',
+      trialPeriodDays: 14,
+    });
+    ```
+
+    ```bash theme={null}
+    agenta products create --name "Pro" -a 19.99 -c EUR --subscription --interval month --trial-days 14 --json
+    ```
+
+    The hosted checkout says "Due today €0.00, then €19.99/mo after your 14-day free trial", saves the card, and creates the subscription as `trialing`. The first charge happens when the trial ends. `checkout.session.completed` fires at trial start with `amount: "0"`, `trial: true` and `trial_end`; treat it as "trial started", not as money received.
+  </Step>
+
+  <Step title="Optional: upgrade or downgrade">
+    Each price is its own product. To move a subscriber, quote the change, show it, then apply it with the quote's `prorationDate`.
+
+    <Tabs>
+      <Tab title="SDK">
+        ```typescript theme={null}
+        const quote = await agentaos.subscriptions.previewPlanChange(sub.id, PRO_PLUS_LINK_ID);
+        // quote.direction 'upgrade' | 'downgrade', quote.dueTodayMinor, quote.effectiveAt
+
+        const result = await agentaos.subscriptions.changePlan(sub.id, {
+          targetLinkId: PRO_PLUS_LINK_ID,
+          prorationDate: quote.prorationDate,
+        });
+        ```
+      </Tab>
+
+      <Tab title="CLI">
+        ```bash theme={null}
+        agenta subscriptions change-plan <subscriptionId> --to <linkId> --dry-run --json   # quote only
+        agenta subscriptions change-plan <subscriptionId> --to <linkId> --json             # quote, then apply
+        ```
+      </Tab>
+    </Tabs>
+
+    An **upgrade** charges the prorated difference on the saved card now and the new price applies immediately. A **downgrade** charges nothing today; the cheaper plan starts at `effectiveAt`, the current period end. The target must be a different plan in the same currency and billing interval, and the subscription must be `active` or `trialing`.
   </Step>
 </Steps>
 

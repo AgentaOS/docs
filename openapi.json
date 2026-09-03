@@ -367,6 +367,85 @@
         }
       }
     },
+    "/gateway/subscriptions/{id}/plan-change/preview": {
+      "get": {
+        "tags": ["Subscriptions"],
+        "operationId": "previewSubscriptionPlanChange",
+        "summary": "Preview a plan change",
+        "description": "Quote moving a subscription to another plan. Read-only: nothing is charged or scheduled. The target must be a different subscription product in the same currency and billing interval, and the subscription must be `active` or `trialing`. An upgrade (higher price) is charged now, prorated; a downgrade switches at the current period end with nothing due today. Pass the returned `prorationDate` to the apply call so the charge matches this quote.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "description": "Subscription id.", "schema": { "type": "string", "format": "uuid" } },
+          { "name": "targetLinkId", "in": "query", "required": true, "description": "The target product's payment-link id.", "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "The quote. Money fields are integer minor units.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PlanChangePreview" },
+                "example": {
+                  "direction": "upgrade",
+                  "currency": "eur",
+                  "dueTodayMinor": 1234,
+                  "dueTodayVatMinor": 239,
+                  "effectiveAt": "2026-09-03T10:31:25.000Z",
+                  "nextInvoiceMinor": 4900,
+                  "nextInvoiceVatMinor": 1176,
+                  "nextInvoiceAt": "2026-10-03T10:45:13.000Z",
+                  "prorationDate": 1788434542
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/gateway/subscriptions/{id}/plan-change": {
+      "post": {
+        "tags": ["Subscriptions"],
+        "operationId": "changeSubscriptionPlan",
+        "summary": "Change the plan",
+        "description": "Apply a plan change quoted by the preview. Echo the preview's `prorationDate` so the amount charged matches the quote. An upgrade charges the prorated difference on the saved card now and the response carries the new per-cycle amount; a downgrade is scheduled for the current period end (`effectiveAt`) and charges nothing today. Idempotent on (subscription, target plan, prorationDate). Same plan, a non-active subscription, a different currency, or a different billing interval return `400`.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "description": "Subscription id.", "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PlanChangeRequest" },
+              "example": { "targetLinkId": "c9e44cf2-b3c3-465c-8ab8-de0706be4974", "prorationDate": 1788434542 }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The applied change. Shape depends on `direction`.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PlanChangeResponse" },
+                "examples": {
+                  "upgrade": {
+                    "value": { "direction": "upgrade", "applied": true, "status": "active", "unitAmountMinor": 4900, "currency": "eur" }
+                  },
+                  "downgrade": {
+                    "value": { "direction": "downgrade", "applied": true, "effectiveAt": "2026-10-03T10:45:13.000Z", "unitAmountMinor": 2900, "currency": "eur" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
     "/gateway/customers": {
       "get": {
         "tags": ["Customers"],
@@ -1037,6 +1116,12 @@
             "enum": ["month", "year"],
             "description": "Required when `type` is `subscription`, must be omitted for `one_time`."
           },
+          "trialPeriodDays": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 730,
+            "description": "Free-trial length in days. Subscription links only. The buyer's card is saved with nothing due today; the first charge happens when the trial ends."
+          },
           "maxUses": {
             "type": "integer",
             "minimum": 1,
@@ -1077,7 +1162,8 @@
             "enum": ["one_time", "subscription"],
             "description": "Checked against the resulting merged state."
           },
-          "billingInterval": { "type": "string", "enum": ["month", "year"] }
+          "billingInterval": { "type": "string", "enum": ["month", "year"] },
+          "trialPeriodDays": { "type": "integer", "minimum": 1, "maximum": 730, "description": "Free-trial length in days; subscription links only." }
         }
       },
       "PaymentLink": {
@@ -1362,6 +1448,58 @@
           "effectiveCancelDate": { "type": ["string", "null"], "format": "date-time" }
         },
         "required": ["status", "currentPeriodEnd", "cancelAtPeriodEnd", "effectiveCancelDate"]
+      },
+      "PlanChangePreview": {
+        "type": "object",
+        "description": "Read-only quote for moving a subscription to another plan. Money is integer minor units.",
+        "properties": {
+          "direction": { "type": "string", "enum": ["upgrade", "downgrade"], "description": "`upgrade` when the new plan costs more per cycle, otherwise `downgrade`." },
+          "currency": { "type": "string" },
+          "dueTodayMinor": { "type": "integer", "description": "Charged now. Always 0 for a downgrade." },
+          "dueTodayVatMinor": { "type": "integer" },
+          "effectiveAt": { "type": "string", "format": "date-time", "description": "Upgrade: now. Downgrade: the current period end." },
+          "nextInvoiceMinor": { "type": "integer", "description": "The next regular cycle invoice on the new plan." },
+          "nextInvoiceVatMinor": { "type": "integer" },
+          "nextInvoiceAt": { "type": "string", "format": "date-time" },
+          "prorationDate": { "type": "integer", "description": "Unix seconds. Echo it in the apply request so the charge matches this quote." }
+        },
+        "required": ["direction", "currency", "dueTodayMinor", "dueTodayVatMinor", "effectiveAt", "nextInvoiceMinor", "nextInvoiceVatMinor", "nextInvoiceAt", "prorationDate"]
+      },
+      "PlanChangeRequest": {
+        "type": "object",
+        "properties": {
+          "targetLinkId": { "type": "string", "format": "uuid", "description": "The target product's payment-link id." },
+          "prorationDate": { "type": "integer", "minimum": 1, "description": "From the preview response." }
+        },
+        "required": ["targetLinkId", "prorationDate"]
+      },
+      "PlanChangeResponse": {
+        "oneOf": [
+          {
+            "type": "object",
+            "title": "Upgrade applied",
+            "properties": {
+              "direction": { "type": "string", "enum": ["upgrade"] },
+              "applied": { "type": "boolean", "enum": [true] },
+              "status": { "type": "string", "description": "Subscription status after the change." },
+              "unitAmountMinor": { "type": "integer", "description": "New per-cycle amount." },
+              "currency": { "type": "string" }
+            },
+            "required": ["direction", "applied", "status", "unitAmountMinor", "currency"]
+          },
+          {
+            "type": "object",
+            "title": "Downgrade scheduled",
+            "properties": {
+              "direction": { "type": "string", "enum": ["downgrade"] },
+              "applied": { "type": "boolean", "enum": [true] },
+              "effectiveAt": { "type": "string", "format": "date-time", "description": "When the new plan starts: the current period end." },
+              "unitAmountMinor": { "type": "integer", "description": "Per-cycle amount from `effectiveAt` on." },
+              "currency": { "type": "string" }
+            },
+            "required": ["direction", "applied", "effectiveAt", "unitAmountMinor", "currency"]
+          }
+        ]
       },
       "Customer": {
         "type": "object",

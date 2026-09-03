@@ -126,7 +126,7 @@ The dashboard is enough to get paid. Reach for the API when you want to **create
         ```
 
         <Note>
-        There's no CLI command to create a reusable payment link yet. `agenta pay checkout` creates a one-off checkout instead. To create a real reusable link, use the SDK, the REST API, or the dashboard's **Catalog → Products** page.
+        `agenta pay checkout` creates a one-off checkout. For a reusable link (a product), run `agenta products create --name "Pro plan" -a 49.99 -c EUR --json` instead (needs `agentaos` 2.1 or newer), or use the dashboard's **Catalog → Products** page.
         </Note>
       </Tab>
     </Tabs>
