@@ -1,104 +1,130 @@
 ---
 title: "Go live"
-description: "Move from test mode to real money: verify your business, add a payout account, and swap your test key for a live one."
+description: "Take real money: verify your business, add a payout account, switch to live mode, and copy your products to live."
 ---
 
-By the end of this guide your account is verified, has somewhere to send money, and is running on a live API key instead of a test one. Test mode and live are fully separate environments in AgentaOS, nothing you built carries over automatically, only your code does, so this is a short, deliberate switch, not a background setting.
+By the end of this guide your business is verified, has a payout account, and sells for real money. Test mode and live mode are separate: each has its own products, sales, customers, and invoices. Your products do not move to live by themselves. You copy each one with the **Copy to live** button on its product page, and the live copy gets a new buyer link. If you built an integration, only your code carries over, with a live API key in place of the test key.
 
 ## Before you start
 
-- You've already tested your integration end to end in test mode: checkout creation, webhook delivery, and (if you're selling recurring plans) subscription creation. See [Accept your first payment](/guides/accept-your-first-payment) and [Sell a subscription](/guides/sell-a-subscription) if you haven't.
-- Your real business details on hand: legal name, address, and whatever your business verification asks for.
+- A product that you paid for yourself in test mode. The first row on the **Go live** page, **Create your first product**, shows as done after that test payment. See [Test mode and testing](/getting-started/test-mode).
+- Your business details: your legal name, your registration number if you are a company, your address, and a live web page where buyers can see the price.
 
-<Steps>
-  <Step title="Finish testing in test mode">
-    Confirm the basics work with test data before you touch real money: a checkout completes, your webhook handler verifies the signature and fulfills correctly, and (if relevant) a subscription activates and cancels the way you expect. Test mode is free and has no verification gate, so there's no reason to skip this.
-  </Step>
+## Verify your business
 
-  <Step title="Open Go live in the dashboard">
-    The sidebar's **Go live** item is your durable readiness tracker, with a progress chip showing what's left. It stays visible until every step below is done, and it's the fastest way to see what's blocking you.
+Open **Go live** in the sidebar. The page lists the steps to real money and counts them, for example "1 of 4 done". The same count shows next to **Go live** in the sidebar, for example "1/4". The four rows are:
 
-    <Frame caption="The Go live tracker.">
-      <img src="/images/product/go-live.png" alt="Go live checklist: Try it done, Verify your business in review, Add a payout account" />
-    </Frame>
-  </Step>
+1. **Create your first product**
+2. **Verify your business**
+3. **Add a payout account**
+4. **Go live**
 
-  <Step title="Complete business verification (KYB)">
-    AgentaOS is the Merchant of Record on every live transaction, we need to know who we're selling on behalf of before real money moves. Submit your business details for review from the **Go live** page.
+Above the rows, **Your Revenue & Pricing Audit** is an optional offer. It is not a step and holds nothing up.
 
-    You can also file it from the CLI, or let your agent file it. Run `agenta verify declaration` to read the five statements you attest to, then submit:
+<Frame caption="The Go live page in test mode. The Test and Live switch is at the bottom of the sidebar.">
+  <img src="/images/product/go-live-tracker.png" alt="Go live page showing 1 of 4 done, with the rows Create your first product, Verify your business, Add a payout account, and Go live, and the Test and Live switch at the bottom of the sidebar" />
+</Frame>
 
-    ```bash
-    agenta verify submit --legal-name "Acme OÜ" --registration-number 12345678 \
-      --country EE --street "Sepapaja 6" --city Tallinn --postal 15551 \
-      --url https://example.com --description "One sentence on what it does" \
-      --category saas --delivery instant_digital --volume under_1k --accept-declaration
-    ```
+AgentaOS is the merchant of record on every live sale, so we check whose product we sell before real money moves. To start, click **Start** on the **Verify your business** row. The form asks one question per screen, in three parts: **You**, **Your product**, and **The rules**. It takes about 5 minutes and saves as you go, so you can click **Save & finish later** and come back.
 
-    Run `agenta verify status` to see where the review is. An agent connected over MCP files it with the `agenta_verify_submit` tool, which takes the same fields.
+<Frame caption="The first question of the business details form.">
+  <img src="/images/product/go-live-form.png" alt="Business details form asking Are you a business or an individual?, with the options An individual and A business, and the parts You, Your product, and The rules at the top" />
+</Frame>
 
-    <Note>See [Account review](/mor/account-review) for what we check and how to prepare. Reviews are usually completed within a day.</Note>
-  </Step>
+On the last screen, click **Submit for review**. The form says: "Reviewed by a person, usually within 24 to 48 hours. No documents to upload and no third-party ID check."
 
-  <Step title="Add a payout account">
-    You need somewhere for your balance to go. Set up bank, wallet, or both.
+After you submit, the row shows **In review** and the sidebar shows "In review" next to **Go live**. You do not need to do anything while we review. The result shows on the **Go live** page:
 
-    <Tabs>
-      <Tab title="Bank account">
-        Add a bank account to receive payouts in EUR or USD across the supported countries. See [Supported countries](/mor/supported-countries).
-      </Tab>
-      <Tab title="Wallet">
-        Receive your balance in USDC or EURC at a wallet address you control. Stablecoin payouts are in public preview. See [Stablecoin payouts](/payouts/stablecoin-payouts).
-      </Tab>
-    </Tabs>
+- **Approved.** The row says "Verified. Card and bank payments are on."
+- **Change requested.** The sidebar shows **Action needed**. The row says "We need a few details changed before we can approve you. We emailed you the same list." Click **See changes**, fix each item, and send the form again.
+- **Not approved.** The row shows the reason. Click **Resubmit** to fix it and send the form again. If a waiting period applies, the row gives the date when you can resubmit.
 
-    See [Payouts](/payouts/overview) for how your balance moves through **Incoming**, **Available**, and **In reserve** before it pays out.
-  </Step>
+See [Account review](/mor/account-review) for what we check and how to prepare.
 
-  <Step title="Switch to Live and generate a live key">
-    Once verification is approved, flip the Test/Live switch at the top of the dashboard sidebar to **Live**, then generate a new key from **Settings → Developers → API Keys**. Live keys are prefixed `sk_live_`.
+## Add a payout account
 
-    ```typescript
-    const agentaos = new AgentaOS(process.env.AGENTAOS_API_KEY!); // now sk_live_...
-    ```
+A payout account is the bank account we send your money to. Open **Balances**, then the **Payout accounts** tab, and add one account per currency. You can add it before your verification is done. See [Add a payout account](/payouts/payout-accounts) for the steps.
 
-    The SDK detects the environment from the key's prefix automatically, there's no separate flag to flip. Swap the environment variable in your deploy, and every call now reads and writes live data.
-  </Step>
+Before your first payout, we confirm who we pay: a photo of your ID and a selfie, one time only. The **Payout accounts** tab tells you about it, and the **Verify and get paid** button appears when you have money to pay out. See [The identity check](/mor/verification#the-identity-check). See [Payouts](/payouts/overview) for how your balance moves to your account.
 
-  <Step title="Point production URLs at production">
-    Update `successUrl`, `cancelUrl`, and `webhookUrl` on your live checkouts and payment links to your real domain, not `localhost` or a tunnel URL left over from testing. Then check **Settings → Developers → Webhooks** while the dashboard is switched to Live, and confirm your production endpoint and signing secret are set. See [Handle webhooks](/guides/handle-webhooks) if you haven't wired this up yet.
-  </Step>
-</Steps>
+Payouts to a stablecoin wallet are in public preview and available on request. See [Stablecoin payouts](/payouts/stablecoin-payouts).
 
-## Verify it worked
+## Switch to live mode
 
-- The **Go live** progress chip in the sidebar shows every step complete.
-- **Settings → Developers → API Keys** shows an active `sk_live_` key, and your server is using it.
-- Your payout destination (bank IBAN or wallet address) appears under **Balances → Payout accounts**.
-- Optionally, run one small real checkout end to end: create it with your live key, pay it with a real card, and confirm it lands in **Transactions** with an invoice under **Invoices**. Unlike test mode, live mode doesn't accept the `4242...` test card, only real payment methods clear.
+When your business is verified and your payout account is added, the **Go live** row says "Everything is ready. Turn on real payments." Click **Go live** on that row. The dashboard switches to live mode and shows "You're live".
 
-## Go-live checklist
+You can also use the switch at the bottom of the sidebar, below **Settings**. It has two options, **Test** and **Live**. Click **Live**, and the dashboard shows "Switched to Live mode" with "You are now viewing live data. Real funds apply." While your business is not verified, clicking **Live** opens the **Go live** page instead.
 
-- [ ] Test-mode integration tested end to end (checkout, webhook, subscriptions if used)
-- [ ] Business verification (KYB) submitted and approved
-- [ ] Payout account added: bank IBAN, wallet address, or both
-- [ ] Live API key (`sk_live_...`) generated and deployed
-- [ ] `successUrl` / `cancelUrl` / `webhookUrl` point at production, not localhost
-- [ ] Live webhook endpoint and signing secret confirmed in **Settings → Developers → Webhooks**
+In test mode, a dark strip across the top of every page says "Test mode" and "No real payments are processed". In live mode the strip is gone.
+
+## Copy your products to live
+
+Your test products stay in test mode. For each product that you want to sell:
+
+1. Switch to **Test**.
+2. Open **Products** and click the product.
+3. Click **Copy to live**. The dashboard shows your product name followed by "is now in live mode." and a **View it** button.
+
+<Frame caption="A test product. Copy to live is in the row of buttons below the price.">
+  <img src="/images/product/copy-to-live.png" alt="Test product page for Plan C with the buttons Copy link, Edit, Copy to live, Preview, and QR code" />
+</Frame>
+
+The live copy has the same name, price, description, image, tax setting, success and cancel pages, and trial. It starts with no sales and no customers. Your test sales, customers, invoices, and subscriptions stay in test mode.
+
+After you copy a product, its test page shows **In live mode** in place of **Copy to live**, and that button opens the live copy. Later changes to the test product do not reach the live copy. To change a live product, switch to **Live** and edit it there.
+
+The live copy has its own buyer link. The test link stays a test link, so replace it everywhere you shared it:
+
+1. Switch to **Live**.
+2. Open **Products** and click the product.
+3. Click **Copy link**, and put this link on your site, in your emails, and in your social posts.
+4. Click **Preview** to open the live checkout page and check it. A payment on this page charges a real card.
+
+## Changes for your buyers
+
+In live mode, your buyers pay real money:
+
+- **Charges.** The card processor charges the buyer's card. Test cards such as `4242 4242 4242 4242` do not work.
+- **Card statement.** The charge shows as `AGENTAOS*` followed by your business name, shortened to fit, for example `AGENTAOS* KNEEGUARD`. The buyer's receipt email says "On your card statement this shows as" and gives the same line.
+- **Invoices and receipts.** Test invoices carry a TEST badge and a `TEST-` number, and test emails start with `[TEST]`. Live invoices, receipts, and emails do not.
+- **VAT.** The checkout calculates VAT for each buyer and adds it to the price. See [How tax works](/mor/tax).
+
+## If you built an integration
+
+This part is for developers. Your code stays the same, and the key decides the mode.
+
+1. Switch the dashboard to **Live**.
+2. Open **Settings**, then the **Developers** tab. Under **API Keys**, click **Generate Live Key**. Live keys start with `sk_live_`.
+3. Put the live key in your deploy in place of the `sk_test_` key. Every call with that key reads and writes live data.
+
+```typescript
+const agentaos = new AgentaOS(process.env.AGENTAOS_API_KEY!); // now sk_live_...
+```
+
+Your webhook endpoint, under **Webhooks** on the same tab, receives both test and live events. Live events carry `livemode: true`, so check that field before you fulfill an order. See [Handle webhooks](/guides/handle-webhooks).
+
+`successUrl`, `cancelUrl`, and `webhookUrl` must be `https` URLs on your live site. A product's own `webhookUrl` is not copied to live. Events for the live copy go to your endpoint under **Webhooks**.
+
+Checklist before your first live sale:
+
+- [ ] Business verified and payout account added.
+- [ ] Each product copied to live, and the live buyer links shared.
+- [ ] `sk_live_` key deployed in place of the test key.
+- [ ] `successUrl` and `cancelUrl` point at your live site.
+- [ ] Webhook handler checks the signature and `livemode`.
+
+To verify your business from the CLI, run `agenta login`, then `agenta verify declaration` to read the five statements you attest to, then `agenta verify submit` with your details. `agenta verify status` shows where the review is. An agent connected over MCP files the same form with the `agenta_verify_submit` tool. See [Verify](/cli/verify) for every option.
 
 ## Next steps
 
-<CardGroup cols={2}>
-  <Card title="Test mode and live mode" icon="flask" href="/getting-started/test-mode">
-    How test and live keys differ, in depth.
-  </Card>
-  <Card title="How Merchant of Record works" icon="building-columns" href="/mor/how-it-works">
-    Why verification exists and what it unlocks.
-  </Card>
+<CardGroup cols={3}>
   <Card title="Payouts" icon="money-bill-transfer" href="/payouts/overview">
-    How your balance clears and moves to your payout destination.
+    How your balance moves to your payout account.
+  </Card>
+  <Card title="Pricing" icon="tag" href="/mor/pricing">
+    What each live sale costs.
   </Card>
   <Card title="Handle webhooks" icon="bell" href="/guides/handle-webhooks">
-    Make sure your production endpoint is verified and ready before you flip the switch.
+    Check signatures and `livemode` on live events.
   </Card>
 </CardGroup>
