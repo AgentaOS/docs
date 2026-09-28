@@ -1,37 +1,103 @@
 ---
 title: "Invoices"
-description: "VAT-correct invoices for every payment. List, retrieve, void, download the PDF, and export for accounting."
+description: "Every sale gets a VAT-correct invoice automatically. Create and send invoices by hand, download the PDF, a statement, or a CSV for your accountant."
 ---
 
-Every confirmed payment issues an invoice automatically: seller and buyer details, tax breakdown, and (for stablecoin payments) the exchange rate used to convert to fiat. The seller of record on every invoice is **Aristokrates OÜ** (Estonia), AgentaOS's Merchant of Record entity, unless the payment settled to your own on-chain wallet, in which case you are the seller.
+Every sale gets an invoice. You do not create it or send it; AgentaOS issues it when the payment clears. For a card or bank sale, AgentaOS is the merchant of record, so the invoice names AgentaOS (Aristokrates OÜ, Estonia) as the seller, "Merchant of Record for" your business. The invoice carries the buyer's details and the tax breakdown for the buyer's country.
 
-<Info>
-Amounts on the `Invoice` object (`amount`, `fiatAmount`, `taxAmount`) are decimal currency units, same as everywhere else in this API. `19.99` means €19.99, not cents.
-</Info>
+You can also create an invoice by hand and email it to a customer. The customer pays it on the same hosted checkout as a product.
+
+## The Invoices page
+
+<Frame caption="The Invoices page. The tabs split invoices by status.">
+  <img src="/images/product/invoices.png" alt="The Invoices page with the All, Open, Paid, and Void tabs and one paid invoice, INV-2026-0001, for 12.40 euros" />
+</Frame>
+
+In the sidebar, click **Invoices**. The page has four tabs, each with a count:
+
+- **All**: every invoice, newest first.
+- **Open**: invoices sent and waiting for payment. An open invoice past its due date shows **Overdue**.
+- **Paid**: paid invoices for a period you pick, with **Revenue**, **VAT**, and **Invoices** totals at the top. A paid invoice with a chargeback shows **Disputed** or **Charged back**.
+- **Void**: voided invoices, kept for your records.
+
+The **How invoicing works** link at the top opens this page.
+
+## When an invoice is issued
+
+A sale from a product's buyer link gets its invoice when the payment clears. The invoice goes straight to **Paid**.
+
+An invoice you create by hand, or a checkout your server creates, gets its invoice when you create it. That invoice sits in **Open** until the customer pays, then moves to **Paid**.
+
+When the payment clears, AgentaOS also emails the buyer a receipt. See [Receipts](/payments/receipts).
 
 ## Create and send an invoice
 
-Bill a customer directly from the dashboard, no code required. Open **Finance → Invoices** and click **New invoice**. Add your line items, fill in the customer's details and country (we calculate the right VAT), set your payment terms, and send. Your customer pays on the same secure checkout, by card, Apple Pay, or Google Pay.
+<Steps>
+  <Step title="Start a new invoice">
+    On the Invoices page, click **Create invoice**.
+  </Step>
+  <Step title="Fill in Bill to">
+    Enter the customer's name, email, and country. Add their VAT number if they are a business. The country sets the VAT.
+  </Step>
+  <Step title="Add line items">
+    Enter an item description, a quantity, and a price. Click **Add line item** for each extra line. Add **Notes** for the customer if you want.
+  </Step>
+  <Step title="Set the invoice settings">
+    Under **Invoice settings**, choose the **Currency** and the **Payment terms**: **Net 7**, **Net 14**, **Net 30**, or **Due on receipt**.
+  </Step>
+  <Step title="Review and send">
+    Click **Review & send**. Check the email under **Delivery**, then click **Send to** followed by the customer's name. To share the link yourself instead, click **Create without sending**.
+  </Step>
+</Steps>
 
-<Frame caption="The invoice builder. AgentaOS is the merchant of record, so VAT is calculated from the customer's country.">
-  <img src="/images/product/invoice-builder.png" alt="AgentaOS invoice builder showing seller and buyer details, a line item, and the VAT breakdown" />
-</Frame>
+The builder saves your draft as you type. After you create the invoice, the next screen has **Copy payment link** and **Download invoice**. The customer pays on the hosted checkout, by card or, for EUR invoices, by bank transfer. You can also start an invoice from a customer's row on the [Customers](/payments/customers) page.
 
-Every invoice you send, and every invoice issued automatically when a payment clears, is available over the API below.
+## Download a PDF, a statement, or a CSV
 
-## List invoices
+- **Invoice PDF**: the seller and buyer details, the line, and the tax breakdown (subtotal, tax, total).
+- **Statement**: on the **Paid** tab, click **Download statement**. The PDF covers the period you picked, with the opening and closing figures, every transaction, and a VAT summary by rate.
+- **CSV**: on the **Paid** tab, click **Export CSV**. The file has 23 columns for accounting software, including the invoice number, the tax name, rate, and amount, a `total_eur` column, and the buyer's name, company, country, and VAT number.
 
-Paginated: every list call returns `{ items, total, hasMore }`. Filter by date range and status.
+## Void an invoice
+
+Voiding marks the invoice as void in your records. It does not refund the buyer or touch the payment. Use it to correct a bookkeeping mistake. Only an owner or an admin can void an invoice.
+
+On the **Paid** tab, click the void icon in the invoice's row, then click **Confirm void**. To cancel an open invoice that the customer will not pay, void it through the API (below).
+
+<Warning>
+You cannot undo a void. The invoice stays in the **Void** tab.
+</Warning>
+
+## From code
+
+Every invoice on the Invoices page is also available through the API. The full reference is in [Invoices (SDK)](/sdk/pay-invoices) and [agenta invoices](/cli/invoices). Amounts on an invoice are in currency units: `19.99` means €19.99.
 
 <Tabs>
   <Tab title="SDK">
     ```typescript
-    const page = await agentaos.invoices.list({
-      from: '2026-03-01',
-      to: '2026-03-31',
-      status: 'issued',   // 'all' | 'issued' | 'paid' | 'voided'
-      limit: 50,
-    });
+    import { writeFileSync } from 'node:fs';
+    import { AgentaOS } from '@agentaos/pay';
+
+    const agentaos = new AgentaOS(process.env.AGENTAOS_API_KEY!);
+
+    // List, newest first. Filter by date range and status.
+    const page = await agentaos.invoices.list({ from: '2026-03-01', to: '2026-03-31', limit: 50 });
+
+    const invoice = await agentaos.invoices.retrieve('invoice-uuid');
+
+    writeFileSync('invoice.pdf', await agentaos.invoices.downloadPdf('invoice-uuid'));
+
+    writeFileSync(
+      'march-statement.pdf',
+      await agentaos.invoices.downloadStatement({ from: '2026-03-01', to: '2026-03-31' }),
+    );
+
+    writeFileSync(
+      'invoices.csv',
+      await agentaos.invoices.exportCsv({ from: '2026-03-01', to: '2026-03-31' }),
+    );
+
+    await agentaos.invoices.void('invoice-uuid');
     ```
   </Tab>
   <Tab title="CLI">
@@ -41,156 +107,41 @@ Paginated: every list call returns `{ items, total, hasMore }`. Filter by date r
   </Tab>
   <Tab title="cURL">
     ```bash
-    curl "https://api.agentaos.ai/api/v1/gateway/invoices?from=2026-03-01&to=2026-03-31&status=issued" \
+    curl "https://api.agentaos.ai/api/v1/gateway/invoices?from=2026-03-01&to=2026-03-31&status=paid" \
       -H "x-api-key: sk_live_..."
-    ```
-  </Tab>
-</Tabs>
 
-## Retrieve an invoice
+    curl https://api.agentaos.ai/api/v1/gateway/invoices/invoice-uuid/pdf \
+      -H "x-api-key: sk_live_..." -o invoice.pdf
 
-<Tabs>
-  <Tab title="SDK">
-    ```typescript
-    const invoice = await agentaos.invoices.retrieve('invoice-uuid');
-    ```
-  </Tab>
-  <Tab title="cURL">
-    ```bash
-    curl https://api.agentaos.ai/api/v1/gateway/invoices/invoice-uuid \
-      -H "x-api-key: sk_live_..."
-    ```
-  </Tab>
-</Tabs>
+    curl "https://api.agentaos.ai/api/v1/gateway/invoices/statement?from=2026-03-01&to=2026-03-31" \
+      -H "x-api-key: sk_live_..." -o statement.pdf
 
-## Void an invoice
+    curl "https://api.agentaos.ai/api/v1/gateway/invoices/export?from=2026-03-01&to=2026-03-31" \
+      -H "x-api-key: sk_live_..." -o invoices.csv
 
-Voiding marks the accounting record as void. It never touches the payment itself: the buyer already paid, and nothing is refunded. Use it to correct a bookkeeping mistake, not to reverse a charge.
-
-<Tabs>
-  <Tab title="SDK">
-    ```typescript
-    await agentaos.invoices.void('invoice-uuid');
-    ```
-  </Tab>
-  <Tab title="cURL">
-    ```bash
     curl -X POST https://api.agentaos.ai/api/v1/gateway/invoices/invoice-uuid/void \
       -H "x-api-key: sk_live_..."
     ```
   </Tab>
 </Tabs>
 
-<Warning>
-Voiding is irreversible. The invoice stays void forever; there's no "un-void."
-</Warning>
+The `status` filter takes `all`, `issued`, `paid`, or `voided`. An invoice's `status` is `issued` (the **Open** tab), `paid`, or `voided`. A list call returns `{ items, total, hasMore }`.
 
-## Download the invoice PDF
-
-<Tabs>
-  <Tab title="SDK">
-    ```typescript
-    import { writeFileSync } from 'fs';
-
-    const pdf = await agentaos.invoices.downloadPdf('invoice-uuid');
-    writeFileSync('invoice.pdf', pdf);
-    ```
-  </Tab>
-  <Tab title="cURL">
-    ```bash
-    curl https://api.agentaos.ai/api/v1/gateway/invoices/invoice-uuid/pdf \
-      -H "x-api-key: sk_live_..." \
-      -o invoice.pdf
-    ```
-  </Tab>
-</Tabs>
-
-The PDF includes merchant and buyer details, the amount (plus the fiat equivalent and exchange rate for stablecoin payments), a tax breakdown (subtotal, tax, total), and a link to the on-chain transaction where relevant.
-
-## Download a statement
-
-A monthly-statement-style PDF covering a date range: opening/closing balance, every transaction in the ledger, and a VAT summary grouped by rate.
-
-<Tabs>
-  <Tab title="SDK">
-    ```typescript
-    const statement = await agentaos.invoices.downloadStatement({
-      from: '2026-03-01',
-      to: '2026-03-31',
-    });
-    writeFileSync('march-statement.pdf', statement);
-    ```
-  </Tab>
-  <Tab title="cURL">
-    ```bash
-    curl "https://api.agentaos.ai/api/v1/gateway/invoices/statement?from=2026-03-01&to=2026-03-31" \
-      -H "x-api-key: sk_live_..." \
-      -o statement.pdf
-    ```
-  </Tab>
-</Tabs>
-
-## Export CSV
-
-A 23-column CSV built for accounting software: date, direction, invoice number, description, crypto amount, token, and token address, chain, exchange rate (and source and timestamp), fiat amount and currency, tax name/rate/amount, `total_eur` (always in EUR), buyer name/company/country/VAT, transaction hash, and status.
-
-<Tabs>
-  <Tab title="SDK">
-    ```typescript
-    const csv = await agentaos.invoices.exportCsv({
-      from: '2026-03-01',
-      to: '2026-03-31',
-      status: 'issued',
-    });
-    writeFileSync('invoices.csv', csv);
-    ```
-  </Tab>
-  <Tab title="cURL">
-    ```bash
-    curl "https://api.agentaos.ai/api/v1/gateway/invoices/export?from=2026-03-01&to=2026-03-31" \
-      -H "x-api-key: sk_live_..." \
-      -o invoices.csv
-    ```
-  </Tab>
-</Tabs>
-
-## Response
-
-<ResponseField name="id" type="string">Invoice UUID.</ResponseField>
-<ResponseField name="invoiceNumber" type="string">Human-readable, e.g. `INV-2026-0001`.</ResponseField>
-<ResponseField name="amount" type="number">Amount in the payment token/currency.</ResponseField>
-<ResponseField name="currency" type="string">Currency or token code.</ResponseField>
-<ResponseField name="fiatAmount" type="number | null">EUR/USD equivalent, for stablecoin payments.</ResponseField>
-<ResponseField name="fiatCurrency" type="string | null">`EUR` or `USD`.</ResponseField>
-<ResponseField name="exchangeRate" type="number | null">Rate applied at settlement time.</ResponseField>
-<ResponseField name="exchangeRateSource" type="string | null">Where the rate came from.</ResponseField>
-<ResponseField name="taxRate" type="number | null">Applied tax rate, e.g. `19` for 19%.</ResponseField>
-<ResponseField name="taxAmount" type="number | null">Tax amount in currency units.</ResponseField>
-<ResponseField name="taxName" type="string | null">e.g. `DE VAT`.</ResponseField>
-<ResponseField name="taxInclusive" type="boolean | null">Whether `amount` already includes tax.</ResponseField>
-<ResponseField name="merchantName" type="string | null">Seller name on the invoice.</ResponseField>
-<ResponseField name="buyerEmail" type="string | null">Buyer email.</ResponseField>
-<ResponseField name="buyerName" type="string | null">Buyer name.</ResponseField>
-<ResponseField name="buyerCompany" type="string | null">Buyer company.</ResponseField>
-<ResponseField name="buyerCountry" type="string | null">ISO 3166-1 alpha-2.</ResponseField>
-<ResponseField name="buyerVat" type="string | null">Buyer VAT number, if provided.</ResponseField>
-<ResponseField name="status" type="string">`issued`, `paid`, or `voided`.</ResponseField>
-<ResponseField name="issuedAt" type="string">ISO 8601.</ResponseField>
-<ResponseField name="voidedAt" type="string | null">ISO 8601, if voided.</ResponseField>
+{/* TODO: the SDK types (ListInvoiceParams.status, Invoice.status) omit 'paid', which the server accepts and returns. */}
 
 ## Next steps
 
 <CardGroup cols={2}>
   <Card title="Receipts" icon="receipt" href="/payments/receipts">
-    Every paid invoice also gets a receipt, emailed automatically.
+    The receipt a buyer gets for every paid invoice.
   </Card>
   <Card title="Customers" icon="users" href="/payments/customers">
     The buyer behind each invoice.
   </Card>
   <Card title="Tax" icon="scale-balanced" href="/mor/tax">
-    How destination VAT is calculated and remitted.
+    How VAT is calculated for the buyer's country.
   </Card>
-  <Card title="Webhooks" icon="bell" href="/payments/webhooks">
-    Know the moment a new invoice is issued.
+  <Card title="Statements" icon="file-lines" href="/payouts/statements">
+    The documents that come with each payout.
   </Card>
 </CardGroup>

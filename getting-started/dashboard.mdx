@@ -1,82 +1,113 @@
 ---
 title: "Dashboard tour"
-description: "A tour of app.agentaos.ai: where to find your products, payments, customers, and settings. No code required."
+description: "A tour of app.agentaos.ai: what each page in the sidebar does, and where to find your products, money, invoices, and settings."
 ---
 
-[app.agentaos.ai](https://app.agentaos.ai) is where you run the business side of AgentaOS: create things to sell, watch money come in, and manage your team and API keys. Everything below is reachable by click, no code needed.
+[app.agentaos.ai](https://app.agentaos.ai) is where you run your sales: you create products, follow the money, send invoices, and manage your team and API keys. This page walks through the sidebar from top to bottom.
 
-<Frame caption="The AgentaOS dashboard: your business at a glance.">
-  <img src="/images/product/dashboard.png" alt="AgentaOS dashboard showing revenue, sales, customers, active subscriptions, and MRR" />
-</Frame>
-
-<Note>
-Every page is scoped by the **Test / Live** switch at the top of the sidebar. Toggle it to see test-mode data (safe to explore, see [Test mode and live mode](/getting-started/test-mode)) or live data (real money, gated on verification).
-</Note>
+The **Test** / **Live** switch at the bottom of the sidebar decides which data every page shows. Test mode is free to explore and processes no real payments. Live mode handles real money and opens after your business is verified. See [Test mode and live mode](/getting-started/test-mode).
 
 ## Home
 
-Your landing page after sign-in. Sales volume over the last 7 or 30 days, subscription MRR, customer count, and a recent-activity feed. If you haven't gone live yet, a checklist card walks you through what's left.
+Home is the page you see after you sign in. The **Setup guide** lists four steps to your first real sale: **Create your first product**, **Verify your business**, **Add a payout account**, and **Go live**. Each step shows a check mark when it is done. **New product** at the top right opens the product form.
 
-## Catalog → Products
+<Frame caption="Home with the setup guide. One step of four is done.">
+  <img src="/images/product/home.png" alt="The Home page with the Setup guide: Create your first product is done, and Verify your business, Add a payout account, and Go live are next" />
+</Frame>
 
-Where you create what you sell: one-time payment links or subscription plans. Each product is a shareable checkout URL, no code required to publish one. See [Payment links](/payments/payment-links) for the concept in depth, or the [Payment SDK](/sdk/pay-overview) to create them from code instead.
-
-## Finance → Payments
-
-Your balance, in EUR and USD: **Available**, **Incoming**, **In reserve**, and your next payout date. Every confirmed payment and payout also lands in the activity feed on this page, this is the one place to answer "where's my money."
-
-## Finance → Invoices
-
-Every completed payment issues a tax-correct invoice automatically. Download the PDF, void one if you need to, or export a batch for your accountant.
-
-## Finance → Subscriptions
-
-Recurring billing your buyers started by paying a subscription payment link. List active subscriptions, check status, and cancel from here, the same actions the SDK's `subscriptions` resource exposes.
-
-## Insights → Customers
-
-Everyone who has paid you: email, country, and VAT number where provided. This list builds itself; there's nothing to import.
+Below the setup guide, Home shows tiles for **Revenue**, **Sales**, **Customers**, **Active subs**, and **MRR**, and a list of your recent activity.
 
 ## Go live
 
-The sidebar's durable readiness tracker, with a progress chip that shows what's left before you can accept live payments. Business verification (KYB) is the main step. See [How Merchant of Record works](/mor/how-it-works) for why it exists.
+**Go live** tracks what is left before you can take real payments. The chip next to it counts the steps done, such as **1/4**. The main step is to verify your business. See [Go live](/guides/go-live) and [Account review](/mor/account-review).
 
-## Settings → Developers
+## Products
 
-Your API keys live here, scoped to whichever environment you're viewing (Test or Live), alongside webhooks and your account ID. This is also where you generate a new key or revoke an old one.
+**Products** lists everything you sell. Each product has a price, one-time or subscription, and a buyer link you can copy from its row. The **Checkouts** tab lists each checkout a buyer started. See [Products and payment links](/payments/payment-links).
 
-## Settings, the rest
+<Frame caption="The Products page with three products.">
+  <img src="/images/product/products.png" alt="The Products and Services page with revenue, payments, and active products at the top and three products below" />
+</Frame>
 
-A few more tabs round out account management:
+## Discounts
+
+**Discounts** holds the codes a buyer can type at checkout for a lower price. See [Discount codes](/payments/discount-codes).
+
+## Transactions
+
+**Transactions** lists every payment and payout on your account. Search by name, amount, or ID. Filter by period, by **Payments** or **Payouts**, and by currency. **Export CSV** downloads the list.
+
+<Frame caption="The Transactions page.">
+  <img src="/images/product/transactions.png" alt="The Transactions page with search, period, type, and currency filters, the Export CSV button, and one received card payment of 12.40 euros" />
+</Frame>
+
+## Balances
+
+**Balances** shows your money in EUR and USD. It has three tabs:
+
+- **Overview**: your balance, split into **Available now**, **On the way**, and **Reserve**, with the **Total** at the bottom.
+- **Payouts**: the payouts sent to you.
+- **Payout accounts**: the bank accounts and wallets that receive your payouts.
+
+<Frame caption="The Balances overview.">
+  <img src="/images/product/balances.png" alt="The Balances page on the Overview tab with the balance split into Available now, On the way, and Reserve, and a Total at the bottom" />
+</Frame>
+
+See [Payouts](/payouts/overview) and [Payout accounts](/payouts/payout-accounts).
+
+## Invoices
+
+**Invoices** lists every invoice in four tabs: **All**, **Open**, **Paid**, and **Void**. Every sale gets an invoice automatically, and **Create invoice** bills a customer by hand. See [Invoices](/payments/invoices).
+
+## Subscriptions
+
+**Subscriptions** lists the subscriptions your buyers started by paying a subscription product. From here you can change a plan or cancel. See [Subscriptions](/payments/subscriptions).
+
+## Customers
+
+**Customers** lists everyone who paid you or whom you billed, with their revenue and number of payments. See [Customers](/payments/customers).
+
+## Developers, Support, and Guides
+
+**Developers** opens a menu with links to **AI agents**, **API keys**, and **Webhooks**, and to the docs, the API reference, the SDK, the CLI, and the MCP server. **Support** opens an email to the AgentaOS team. **Guides** opens these docs.
+
+## Settings
+
+**Settings** has five tabs:
 
 <CardGroup cols={2}>
   <Card title="Profile" icon="user">
-    Your signed-in identity and security (passkey) settings.
+    Your sign-in email and your passkey.
   </Card>
   <Card title="Business" icon="building">
-    Company details, VAT number, and custom tax rates.
+    Your business details, the logo on invoices and pay pages, and whether prices include VAT.
   </Card>
   <Card title="Team" icon="users">
     Invite teammates to your account.
   </Card>
-  <Card title="Plan" icon="receipt">
-    Your pricing plan and the fees that apply to each payment method.
+  <Card title="Developers" icon="code">
+    API keys, webhooks, and the sites allowed to show your embedded checkout.
+  </Card>
+  <Card title="Billing" icon="receipt">
+    Your plan and the fee for each payment method.
   </Card>
 </CardGroup>
+
+API keys belong to the mode you are in: a test key works only in test mode, and a live key only in live mode.
 
 ## Next steps
 
 <CardGroup cols={2}>
   <Card title="Quickstart" icon="bolt" href="/getting-started/quickstart">
-    First payment in test mode, start to finish.
+    Your first payment in test mode, start to finish.
   </Card>
-  <Card title="Test mode vs live" icon="flask" href="/getting-started/test-mode">
-    Test keys, live keys, and what going live requires.
+  <Card title="Accept your first payment" icon="credit-card" href="/guides/accept-your-first-payment">
+    Create a product and pay it yourself.
   </Card>
   <Card title="How Merchant of Record works" icon="building-columns" href="/mor/how-it-works">
-    Why verification exists and what we handle for you.
+    Why verification exists and what AgentaOS handles for you.
   </Card>
   <Card title="Payment SDK" icon="code" href="/sdk/pay-overview">
-    Every resource behind the dashboard, in code.
+    Everything in the dashboard, from code.
   </Card>
 </CardGroup>
