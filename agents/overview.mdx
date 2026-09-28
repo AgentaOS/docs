@@ -1,9 +1,9 @@
 ---
 title: "Build with AI agents"
-description: "Don't integrate by hand. Point your AI agent at AgentaOS and it installs the CLI, creates a product, and hands you a live checkout link."
+description: "Give your AI agent the AgentaOS skill file. The agent installs the CLI, creates a product, and returns its buyer link."
 ---
 
-You build with agents. So don't read an SDK reference and translate it into code yourself. **Hand AgentaOS to your agent and let it do the integration.**
+Give your AI agent the AgentaOS skill file, and the agent does the integration for you.
 
 <Card title="Paste this into Claude Code, Cursor, or any coding agent" icon="robot" href="https://agentaos.ai/SKILL.md">
   ```text
@@ -12,7 +12,7 @@ You build with agents. So don't read an SDK reference and translate it into code
   ```
 </Card>
 
-It reads [`SKILL.md`](https://agentaos.ai/SKILL.md) (the exact commands, flags, and response shapes), installs the `agenta` CLI, signs you in, creates a product in test mode, and hands you a shareable checkout URL. You approve the browser sign-in once; everything after that is non-interactive.
+It reads [`SKILL.md`](https://agentaos.ai/SKILL.md) (the exact commands, flags, and response shapes), installs the `agenta` CLI, signs you in, creates a product in test mode, and returns the product's buyer link. You approve the browser sign-in once; everything after that is non-interactive.
 
 ## Connect the MCP server
 
@@ -20,14 +20,14 @@ In Claude, ChatGPT, Cursor or Claude Code, connect the AgentaOS MCP server inste
 
 ## Feed the docs to your model
 
-The whole documentation is available as plain markdown for LLMs. Point your model at it or paste it into context:
+The whole documentation is available as plain Markdown for LLMs. Point your model at it or paste it into context:
 
 <CardGroup cols={2}>
   <Card title="llms.txt" icon="list" href="/llms.txt">
     A compact index of every page, for grounding a model.
   </Card>
   <Card title="llms-full.txt" icon="book" href="/llms-full.txt">
-    The entire docs as one markdown file. Everything, in one paste.
+    The entire docs as one Markdown file.
   </Card>
 </CardGroup>
 
