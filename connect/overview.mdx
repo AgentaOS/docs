@@ -58,11 +58,11 @@ Only your own key or session may act for a business you manage. Any other id ret
 |---|---|
 | Connected account | Business (a client's business, or another app of the same company) |
 | `Stripe-Account: acct_…` / `{ stripeAccount }` | `AgentaOS-Account: <business id>` / `{ business }` |
-| Account Links | ID check link — only the client completes it (BR-15) |
-| Platform submits the account's details | Platform may file the client's verification; recorded as filed by the platform (decision 14) |
-| `application_fee_amount` | Share: % of the price before VAT + fixed, set in the dashboard (decision 13) |
-| Connect webhook, `account` on events | The platform's own webhook receives its clients' events, `business` on every event (FR-33) |
-| `account.updated` | `account.updated` (FR-32) |
+| Account Links | ID check link — only the client completes it |
+| Platform submits the account's details | Platform may file the client's verification; recorded as filed by the platform |
+| `application_fee_amount` | Share: % of the price before VAT + fixed, set in the dashboard |
+| Connect webhook, `account` on events | The platform's own webhook receives its clients' events, `business` on every event |
+| `account.updated` | `account.updated` |
 
 The main difference: we are the Merchant of Record, so the share is taken from the price before VAT, and the identity check stays with the person whose company it is.
 

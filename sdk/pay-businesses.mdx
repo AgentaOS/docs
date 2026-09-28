@@ -5,7 +5,7 @@ description: "Manage your clients' businesses with agentaos.businesses, and act 
 
 `agentaos.businesses` is for [platforms](/connect/overview): the businesses you manage, whether a client's business or another app of your own company. Stripe calls these connected accounts.
 
-Every method acts on your own account (the platform). To do anything **as** one of the businesses, see [Acting for a business](#acting-for-a-business).
+Every method acts on your own account (the platform), so call `businesses.*` on your platform client, not on one made with `{ business }` (that one acts as the client, which manages no businesses of its own). To do anything **as** one of the businesses, see [Acting for a business](#acting-for-a-business).
 
 ## `businesses.list()`
 

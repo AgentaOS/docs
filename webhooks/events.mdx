@@ -18,7 +18,7 @@ The field names below are the literal snake_case keys AgentaOS `POST`s to your `
 </ResponseField>
 
 <ResponseField name="type" type="string">
-  One of `checkout.session.completed`, `send.completed`, `send.failed`, a `subscription.*` event, `dispute.created`, `dispute.closed`, or `account.updated`. Switch on this to decide how to parse `data`.
+  One of `checkout.session.completed`, `send.completed`, `send.failed`, a `subscription.*` event, `dispute.created`, `dispute.closed`, `account.updated`, or `webhook.test` (the sample the dashboard sends). Switch on this to decide how to parse `data`.
 </ResponseField>
 
 <ResponseField name="business" type="string">
