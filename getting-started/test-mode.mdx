@@ -27,19 +27,9 @@ Click the number to copy it, then paste it into the card field on the checkout. 
 Type or paste a card number only into the card field on the checkout page. Never send a card number to the API, in a script, or in a support message, in test mode or in live mode.
 </Warning>
 
-## Test other card outcomes
+## Test a failed payment
 
-Use these cards on a test checkout to see how the checkout handles a failed payment. Each one takes any future expiry date and any CVC.
-
-{/* TODO: confirm each row on a running test checkout. Only 4242 4242 4242 4242 is confirmed; the others are the card processor's standard test cards and were not paid through the checkout for this page. */}
-
-| Card number | What happens |
-|---|---|
-| `4242 4242 4242 4242` | The payment succeeds. |
-| `4000 0000 0000 0002` | The bank declines the card. The checkout shows the error and the buyer can try again. |
-| `4000 0000 0000 9995` | The bank declines the card for insufficient funds. |
-| `4000 0025 0000 3155` | The bank asks the buyer to confirm the payment (3D Secure). A test confirmation window opens on the checkout. Complete it and the payment succeeds. Fail it and the checkout shows "Your bank couldn't confirm it's you. Try again, or use a different card." |
-| `4000 0000 0000 0259` | The payment succeeds, then the buyer disputes it. Use it to test your dispute handling. |
+Only the card above is confirmed on the AgentaOS checkout. If you need to see a declined payment or a 3D Secure prompt on the test checkout, ask us at [contact@agentaos.ai](mailto:contact@agentaos.ai) and we send you the test cards for those cases.
 
 ## Test invoices, receipts and emails
 
