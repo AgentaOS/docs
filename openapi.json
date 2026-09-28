@@ -51,7 +51,7 @@
     },
     {
       "name": "Businesses",
-      "description": "For platforms: the businesses you manage, a client's business or another app of your own company (Stripe's connected accounts). To act as one of them on any other endpoint, send its id in the `AgentaOS-Account` header. Every field on this resource is camelCase on the wire."
+      "description": "For platforms: the businesses you manage, a client's business or another app of your own company. To act as one of them on any other endpoint, send its id in the `AgentaOS-Account` header. Every field on this resource is camelCase on the wire."
     }
   ],
   "paths": {
@@ -726,7 +726,7 @@
         "tags": ["Businesses"],
         "operationId": "createBusiness",
         "summary": "Create a business",
-        "description": "Add a business you manage. It starts in test mode and goes live after its own verification. With `clientEmail`, your client is invited as its admin: we email the invitation, or with `sendInvitationEmail: false` we send nothing and you send `inviteUrl` yourself (white-label).",
+        "description": "Add a business you manage. It starts in test mode and goes live after its own verification. With `clientEmail`, your client is invited as its admin, and the invitation expires after 7 days. We email the invitation, or with `sendInvitationEmail: false` we send nothing and you send `inviteUrl` yourself (white-label).",
         "requestBody": {
           "required": true,
           "content": {
@@ -750,9 +750,53 @@
               }
             }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" },
+          "400": {
+            "description": "A field is missing or invalid, for example a country that is not a two-letter code or a name that is an email. `message` lists every problem; `errors` names the field of each.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" },
+                "example": {
+                  "statusCode": 400,
+                  "message": ["Country must be a two-letter ISO code."],
+                  "error": "Bad Request",
+                  "errors": [{ "field": "country", "message": "Country must be a two-letter ISO code." }],
+                  "timestamp": "2026-09-28T12:00:00.000Z"
+                }
+              }
+            }
+          },
           "401": { "$ref": "#/components/responses/Unauthorized" },
-          "403": { "$ref": "#/components/responses/BusinessForbidden" }
+          "403": {
+            "description": "You are not an owner or admin of the platform, or you sent `clientEmail` as an admin: only an owner of your platform may invite the client.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" },
+                "examples": {
+                  "owner_only": {
+                    "value": {
+                      "statusCode": 403,
+                      "message": "Only an owner of your platform can invite the client as admin.",
+                      "timestamp": "2026-09-28T12:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The caller is itself a business managed by a platform. A managed business cannot manage businesses of its own.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" },
+                "example": {
+                  "statusCode": 409,
+                  "code": "one_level",
+                  "message": "A business you manage cannot manage businesses of its own.",
+                  "timestamp": "2026-09-28T12:00:00.000Z"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -783,7 +827,7 @@
         "tags": ["Businesses"],
         "operationId": "resendBusinessInvitation",
         "summary": "Resend the invitation",
-        "description": "Send your client's invitation again, to the person last invited. It is a new link: the old one stops working. Refused with `409 client_joined` once your client has joined the business.",
+        "description": "Send your client's invitation again, to the person last invited. It is a new link that expires after 7 days: the old one stops working. Refused with `409 client_joined` once your client has joined the business.",
         "parameters": [{ "$ref": "#/components/parameters/BusinessId" }],
         "requestBody": {
           "required": false,
@@ -808,7 +852,30 @@
             }
           },
           "401": { "$ref": "#/components/responses/Unauthorized" },
-          "403": { "$ref": "#/components/responses/BusinessForbidden" },
+          "403": {
+            "description": "A business you do not manage, or an id that does not exist (`You cannot act as this business.`). Also returned to an admin of the platform: only an owner may invite the client.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" },
+                "examples": {
+                  "not_yours": {
+                    "value": {
+                      "statusCode": 403,
+                      "message": "You cannot act as this business.",
+                      "timestamp": "2026-09-28T12:00:00.000Z"
+                    }
+                  },
+                  "owner_only": {
+                    "value": {
+                      "statusCode": 403,
+                      "message": "Only an owner of your platform can invite the client as admin.",
+                      "timestamp": "2026-09-28T12:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
           "409": { "$ref": "#/components/responses/ClientJoined" }
         }
       },
@@ -831,7 +898,7 @@
         "tags": ["Businesses"],
         "operationId": "createBusinessVerificationLink",
         "summary": "Create a verification link",
-        "description": "The identity check link for your client (Stripe's Account Links). You send it; only your client can complete it. Needs a live key: a test key gets `403 live_key_required`. While a check is open, calling again returns the same check. `url` is `null` when the client is already verified. For another app of your own company it returns `409 identity_from_company`: its identity check is your company's.",
+        "description": "The identity check link for your client. You send it; only your client can complete it. Needs a live key: a test key gets `403 live_key_required`. While a check is open, calling again returns the same check. `url` is `null` when the client is already verified. For another app of your own company it returns `409 identity_from_company`: its identity check is your company's.",
         "parameters": [{ "$ref": "#/components/parameters/BusinessId" }],
         "responses": {
           "201": {
@@ -1920,7 +1987,7 @@
           "payer_address": { "type": ["string", "null"], "description": "On-chain payer wallet. null for card/bank rails." },
           "tx_hash": { "type": ["string", "null"], "description": "null for card/bank rails, use vendor_reference there instead." },
           "vendor_reference": { "type": ["string", "null"], "description": "Off-chain audit reference (card-processor payment reference, bank reference). Mutually exclusive with tx_hash." },
-          "network": { "type": "string", "description": "CAIP-2 network ID for on-chain rails, or stripe for card/bank." },
+          "network": { "type": "string", "description": "CAIP-2 network ID for on-chain rails, or `stripe` for card/bank." },
           "seller_of_record": {
             "type": "string",
             "enum": ["aristokrates_ou", "merchant"],
@@ -2031,7 +2098,7 @@
         "type": "object",
         "properties": {
           "url": { "type": ["string", "null"], "description": "The identity check link to send your client, or null when already verified." },
-          "status": { "type": "string", "description": "Where the identity check stands, as the check reports it. `Approved` when done." }
+          "status": { "type": "string", "description": "Where the identity check stands. These are the check's own states, not a business status: `Not Started`, `In Progress`, `Awaiting User`, `In Review`, `Approved`, `Declined`, `Resubmitted`, `Expired`, `Kyc Expired` or `Abandoned`. `Approved` means the check is done." }
         },
         "required": ["url", "status"]
       }

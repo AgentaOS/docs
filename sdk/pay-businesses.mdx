@@ -58,7 +58,7 @@ The business starts in test mode and goes live after its own verification.
 
 <ResponseField name="business" type="Business">The new business.</ResponseField>
 <ResponseField name="inviteToken" type="string | null">The invitation token, or `null` without `clientEmail`.</ResponseField>
-<ResponseField name="inviteUrl" type="string | null">The link your client opens to accept, or `null` without `clientEmail`. Ready to send as it is.</ResponseField>
+<ResponseField name="inviteUrl" type="string | null">The link your client opens to accept, or `null` without `clientEmail`. Ready to send as it is. The invitation expires after 7 days.</ResponseField>
 
 ## `businesses.resendInvitation(id, params?)`
 
@@ -66,7 +66,7 @@ The business starts in test mode and goes live after its own verification.
 const { inviteUrl } = await agentaos.businesses.resendInvitation(biz.id, { sendInvitationEmail: false });
 ```
 
-Sends the invitation again, to the person last invited. It is a new link: the old one stops working.
+Sends the invitation again, to the person last invited. It is a new link: the old one stops working. The new invitation expires after 7 days.
 
 <ParamField path="id" type="string" required>The business id.</ParamField>
 <ParamField body="sendInvitationEmail" type="boolean" default="true">`false`: no email, you send the link yourself.</ParamField>
@@ -98,10 +98,10 @@ The identity check link for your client. You send it; only your client can compl
 <ParamField path="id" type="string" required>The business id.</ParamField>
 
 <ResponseField name="url" type="string | null">The link to send. `null` when the client is already verified: nothing to send.</ResponseField>
-<ResponseField name="status" type="string">Where the identity check stands, as the check reports it. `Approved` when it is done.</ResponseField>
+<ResponseField name="status" type="string">Where the identity check stands. These are the check's own states, not a business status: `Not Started`, `In Progress`, `Awaiting User`, `In Review`, `Approved`, `Declined`, `Resubmitted`, `Expired`, `Kyc Expired` or `Abandoned`. `Approved` means the check is done.</ResponseField>
 
 <Warning>
-Needs a live key (`sk_live_...`). A test key gets `403 live_key_required`. For another app of your own company it returns `409 identity_from_company`: its identity check is your company's.
+Needs a live key (`sk_live_...`). A test key gets `403 live_key_required`. The CLI signed in with `agenta login`, and the **ID check link** button in the dashboard, work in test mode too. For another app of your own company it returns `409 identity_from_company`: its identity check is your company's.
 </Warning>
 
 Calling it again while a check is open gives back the same check.
@@ -112,7 +112,7 @@ Calling it again while a check is open gives back the same check.
 <ResponseField name="name" type="string">The name buyers see.</ResponseField>
 <ResponseField name="country" type="string | null">ISO 3166-1 alpha-2.</ResponseField>
 <ResponseField name="status" type="'test_only' | 'in_review' | 'changes_needed' | 'on_hold' | 'rejected' | 'live'">
-  Where the business stands. `live` means verified and with a payout account. `changes_needed` means we asked the business for a change.
+  Where the business stands. `live` means verified and with a payout account. `changes_needed` means we asked the business for a change. See [Business status](#business-status).
 </ResponseField>
 <ResponseField name="platformOrgId" type="string">Your own id: the platform that manages it.</ResponseField>
 <ResponseField name="createdAt" type="string">ISO 8601.</ResponseField>
@@ -141,6 +141,21 @@ Calling it again while a check is open gives back the same check.
   "identityVerified": false
 }
 ```
+
+### Business status
+
+The dashboard, the `status` field and the [`account.updated`](/connect/webhooks) event name the same states with different words:
+
+| Dashboard | `status` | `account.updated` `verification` |
+|---|---|---|
+| **Test only** | `test_only` | `unverified` |
+| **In review** | `in_review` | `in_review` |
+| **Changes needed** | `changes_needed` | `in_review`, with `changes_requested: true` (`changesRequested` in the SDK) |
+| **On hold** | `on_hold` | `on_hold` |
+| **Rejected** | `rejected` | `rejected` |
+| **Live** | `live` | `verified` |
+
+A business is live when it is verified and has a payout account saved. Until it has a payout account, a verified business shows **Test only** (`test_only`), and `verification` is already `verified`.
 
 ## Acting for a business
 
@@ -172,7 +187,7 @@ Filing a client's verification with `accountReview.submit(…, { business })` is
 
 <CardGroup cols={2}>
   <Card title="Build a platform" icon="route" href="/guides/build-a-platform">
-    The five steps end to end.
+    End to end.
   </Card>
   <Card title="Businesses (CLI)" icon="terminal" href="/cli/businesses">
     The same from the terminal.

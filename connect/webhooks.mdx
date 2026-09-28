@@ -4,7 +4,7 @@ description: "One webhook endpoint for all your clients. Every event says which 
 tag: "Private preview"
 ---
 
-As a platform you do not set up a webhook for each client. **Your own webhook endpoint also receives every event of every business you manage**, signed with your own signing secret. It works in test mode too.
+As a platform you do not set up a webhook for each client. **Your own webhook endpoint also receives every event of every business you manage**, signed with your own signing secret. It works in test mode too. `account.updated` is always a live event (`livemode: true`), because it is about your client's real verification. It still reaches your endpoint while you build in test mode, because an account has one webhook endpoint.
 
 Set your endpoint once, as any account does: see [Webhooks](/payments/webhooks).
 
@@ -59,7 +59,7 @@ If the client has its own webhook URL, it still gets its own copy, signed with i
   Always `true`: verification is about live money.
 </ResponseField>
 
-A typical use: when `identity_verified` turns `true`, stop reminding your client to complete the identity check. To read the current state at any time, call [`businesses.retrieve(id)`](/sdk/pay-businesses) and look at `status` and `identityVerified`.
+A typical use: when `identity_verified` turns `true`, stop reminding your client to complete the identity check. To read the current state at any time, call [`businesses.retrieve(id)`](/sdk/pay-businesses) and look at `status` and `identityVerified`. [Business status](/sdk/pay-businesses#business-status) shows how `verification` matches `status` and the status in the dashboard.
 
 ## Next steps
 

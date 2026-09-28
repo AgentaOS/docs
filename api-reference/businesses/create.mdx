@@ -4,7 +4,7 @@ openapi: "POST /gateway/businesses"
 ---
 
 <Note>
-The business starts in test mode and goes live after its own verification. With `clientEmail`, we email your client an invitation. With `sendInvitationEmail: false` we send nothing: send `inviteUrl` yourself, under your own brand.
+The business starts in test mode and goes live after its own verification. With `clientEmail`, we email your client an invitation. The invitation expires after 7 days. With `sendInvitationEmail: false` we send nothing: send `inviteUrl` yourself, under your own brand.
 </Note>
 
 <Tip>
@@ -13,7 +13,7 @@ Store the returned `business.id` on your side, next to your record of the client
 
 <CardGroup cols={2}>
   <Card title="Build a platform" icon="route" href="/guides/build-a-platform">
-    The five steps end to end.
+    End to end.
   </Card>
   <Card title="Platform fees" icon="percent" href="/connect/fees">
     Set your share in the dashboard.

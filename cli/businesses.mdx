@@ -1,6 +1,6 @@
 ---
 title: "Businesses"
-description: "Manage your clients' businesses from the terminal, and run any command as one of them with --business."
+description: "Manage your clients' businesses from the terminal, and run any command as one of them with the business option."
 tag: "Private preview"
 ---
 
@@ -108,7 +108,7 @@ agenta businesses id-link <id>
   Send your client this link — only they can complete the identity check: https://…
 ```
 
-If the client is already verified it says so and gives no link. The identity check is real, so a test API key is refused; your `agenta login` session works. Another app of your own company has no identity check of its own.
+If the client is already verified it says so and gives no link. The identity check is real, so a test API key is refused. Signed in with `agenta login`, the command works in test mode too, as the **ID check link** button in the dashboard does. Another app of your own company has no identity check of its own.
 
 ## `--business` on every command
 
@@ -131,7 +131,7 @@ Add `--json` to any command for a single JSON object, e.g. `agenta businesses cr
 
 <CardGroup cols={2}>
   <Card title="Build a platform" icon="route" href="/guides/build-a-platform">
-    The five steps end to end.
+    End to end.
   </Card>
   <Card title="Businesses (SDK)" icon="code" href="/sdk/pay-businesses">
     Every method and field.

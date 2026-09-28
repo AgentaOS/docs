@@ -8,7 +8,7 @@ A platform is an AgentaOS account that manages other businesses. An agency that 
 
 Each business you manage gets its own name on the checkout, its own invoices, and its own bank account and payouts. You run all of them from your account, and you can take a share of every sale a client makes. AgentaOS is the merchant of record for every sale, yours and theirs.
 
-There is nothing to apply for. Any AgentaOS account can add a business.
+Platforms are in private preview. Tell us at contact@agentaos.ai before you run your first client through it, so we can support you directly; nothing needs switching on in the dashboard.
 
 <Info>
 New to platforms? [Platforms](/connect/overview) explains the two kinds of business and who does what.
@@ -16,7 +16,7 @@ New to platforms? [Platforms](/connect/overview) explains the two kinds of busin
 
 ## In the dashboard
 
-You need an AgentaOS account. Test mode is enough for every step below.
+You need an AgentaOS account. Every step below works in test mode, including the **ID check link** button.
 
 <Steps>
   <Step title="Add the business">
@@ -72,7 +72,7 @@ You need an AgentaOS account. Test mode is enough for every step below.
 
     Another app of your own company skips both parts. It is verified with you, and only its product is reviewed.
 
-    The row shows the status: **Test only**, **In review**, **Live** or **On hold**. If you use webhooks, an `account.updated` event tells you when the status changes.
+    The row shows the status: **Test only**, **In review**, **Changes needed**, **On hold**, **Rejected** or **Live**. If you use webhooks, an `account.updated` event tells you when the status changes. See [Business status](/sdk/pay-businesses#business-status) for how the three sets of names match.
   </Step>
 
   <Step title="Set your share">
@@ -84,7 +84,7 @@ You need an AgentaOS account. Test mode is enough for every step below.
 
     The share is fixed on each sale at the moment of the sale. A change applies to future sales only. Your client sees the share on every sale as **Platform fee**, before their net.
 
-    <Frame caption="What the client sees on a sale: VAT, the AgentaOS fee, your share, and their net.">
+    <Frame caption="What the client sees on a sale: VAT, the AgentaOS fee, your share, and their net. The AgentaOS fee of €1.24 on €12.40 includes the 1.5% surcharge for a card issued outside the EEA; the test card counts as one.">
       <img src="/images/connect/client-sale.png" alt="A client's sale page: Paid €12.40, VAT (24%) €2.40, AgentaOS fee €1.24, Platform fee (AgencyOne) −€1.50, Your net €7.26, and a sentence explaining when the share leaves" />
     </Frame>
 
@@ -96,7 +96,7 @@ You need an AgentaOS account. Test mode is enough for every step below.
   </Step>
 
   <Step title="Watch your fees">
-    Your fees appear on your own **Balances** page, in the **Platform fees** card. The card shows the total not yet paid to you, then **When you get it**: one line per day, soonest first.
+    Your fees appear on your own **Balances** page, in the **Overview** tab, in the **Platform fees** card. The card shows the total not yet paid to you, then **When you get it**: one line per day for the next five days, soonest first, then one **Later** line.
 
     <Frame caption="Platform fees on your Balances page. A client that is not verified yet holds its fees.">
       <img src="/images/connect/platform-fees.png" alt="Platform fees card: €4.74, When you get it, Jan 26 2027, ClientCo, 3 sales, Paid once ClientCo is verified, and the note that fees ride your own payout" />
@@ -112,7 +112,7 @@ Every step above is also an API call or a CLI command, made with your own key. U
 
 Any call can act as a business you manage. Name the business with `{ business }` in the SDK, `--business <id>` in the CLI, or the `AgentaOS-Account` header.
 
-You need an API key from **Settings → Developers → API Keys**. A test key (`sk_test_...`) works for every step except the identity check link, which needs a live key. For the CLI, run `agenta login` first. See [Install the CLI](/cli/install).
+You need an API key from **Settings → Developers → API Keys**. A test key (`sk_test_...`) works for every step except the identity check link: from the API, that call needs a live key. For the CLI, run `agenta login` first. The CLI signed in this way can create the identity check link too. See [Install the CLI](/cli/install).
 
 <Steps>
   <Step title="Create the business">
