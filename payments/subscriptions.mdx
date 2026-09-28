@@ -78,6 +78,30 @@ Click **Cancel subscription** on the subscription page and confirm. The subscrip
 
 Until the period ends, **Resume subscription** undoes the cancellation. A subscription always runs to the end of the period it is in; it cannot be ended earlier.
 
+## Credits
+
+A credit takes money off a subscriber's next invoice, for example to make up for two days of downtime. It is not a refund: no money goes back to the card, and receipts already sent stay as they are. The credit comes out of what you earn on that invoice.
+
+To give one, open the subscription and click **Give credit** under **Credit**. Type the **Amount** and a **Reason**, then click **Confirm credit**. The form says of the reason: "The subscriber never sees this. It is what you and your team read later."
+
+<Frame caption="Giving a €10 credit from the subscription page.">
+  <img src="/images/subscriptions/credit-form.png" alt="The Credit section of a subscription with Amount 10, Reason Two days of downtime in September, and the buttons Confirm credit and Cancel." />
+</Frame>
+
+The panel then shows what the next invoice will charge.
+
+<Frame caption="The credit and the smaller next invoice.">
+  <img src="/images/subscriptions/credit-given.png" alt="The Credit section reads: €10.00 credited. It comes off their next invoice on Oct 12, 2026, leaving €50.76 to pay." />
+</Frame>
+
+- A credit can cover the whole next invoice, and no more.
+- The subscription must be `active` or `trialing`, not scheduled to cancel, and without a scheduled plan change.
+- While a subscriber has credit left, a plan change waits until their next invoice.
+- The unspent credit belongs to the buyer, and it is shared by every subscription they have with you.
+- Only an owner or admin can give or see credits. An API key cannot.
+
+The buyer pays less on their next charge. When a credit covers a whole month, their receipt says the credit covered it and nothing was charged to the card.
+
 ## Discount codes
 
 A buyer can type a discount code at checkout. On a subscription, the discount applies to the first invoice only, and every renewal charges the full price. The subscription records which code the buyer used, so you can list the subscribers each code brought in. See [Discount codes](/payments/discount-codes).
@@ -106,6 +130,10 @@ The same actions are in the SDK (`@agentaos/pay`) and the CLI (`agenta`). The SD
 
     # Cancel at the end of the period
     agenta subscriptions cancel <subscriptionId>
+
+    # Give a €10 credit, then list the credits given
+    agenta subscriptions credit <subscriptionId> -a 10 --reason "Two days of downtime"
+    agenta subscriptions credits <subscriptionId>
     ```
   </Tab>
   <Tab title="SDK">
@@ -133,11 +161,19 @@ The same actions are in the SDK (`@agentaos/pay`) and the CLI (`agenta`). The SD
 
     // Cancel at the end of the period
     const cancel = await agentaos.subscriptions.cancel(subscriptionId);
+
+    // Give a €10 credit (integer cents), then list the credits given
+    const credit = await agentaos.subscriptions.credit(subscriptionId, {
+      amountMinor: 1000,
+      reason: 'Two days of downtime',
+      idempotencyKey: randomUUID(), // from node:crypto; reuse the same key on a retry
+    });
+    const credits = await agentaos.subscriptions.credits(subscriptionId);
     ```
   </Tab>
 </Tabs>
 
-The quote has `direction` (`upgrade`, `downgrade`, or `revert`), `dueTodayMinor`, `nextInvoiceMinor`, and `nextInvoiceAt`. Amounts that end in `Minor` are integer cents: `4900` is €49.00. Show the quote to the person who approves the change before you apply it, because an upgrade charges the card. Every field is in the reference: [SDK subscriptions](/sdk/pay-subscriptions) and [CLI subscriptions](/cli/subscriptions).
+The quote has `direction` (`upgrade`, `downgrade`, or `revert`), `dueTodayMinor`, `nextInvoiceMinor`, and `nextInvoiceAt`. Amounts that end in `Minor` are integer cents: `4900` is €49.00. Show the quote to the person who approves the change before you apply it, because an upgrade charges the card. Credits need an owner or admin who is signed in, through `agenta login` or the dashboard session: an API key is refused. Every field is in the reference: [SDK subscriptions](/sdk/pay-subscriptions) and [CLI subscriptions](/cli/subscriptions).
 
 ## Next steps
 

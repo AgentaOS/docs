@@ -1,6 +1,6 @@
 ---
 title: "Subscriptions"
-description: "Read and manage recurring billing with agentaos.subscriptions: list, invoices, free trials, plan changes, cancel. No create, by design."
+description: "Read and manage recurring billing with agentaos.subscriptions: list, invoices, free trials, plan changes, cancel, credits. No create, by design."
 ---
 
 `agentaos.subscriptions` is a read/manage surface, not a creation API. A subscription comes into existence when a buyer pays a [payment link](/sdk/pay-payment-links) created with `type: 'subscription'`, AgentaOS bills them every `billingInterval` from then on through Merchant of Record (card or bank). There is no `subscriptions.create()`: to start recurring billing, create a subscription payment link and let the buyer check out.
@@ -203,6 +203,49 @@ await agentaos.subscriptions.cancel(sub.id);
   "effectiveCancelDate": "2026-09-06"
 }
 ```
+
+## `subscriptions.credit(id, { amountMinor, reason, idempotencyKey })`
+
+Put credit on the subscriber's account. It comes off their next invoice and lowers what the card is charged. It is not a refund: no money goes back to the card. The client must be signed in as an owner or admin; an API key is refused with `403`.
+
+```typescript
+import { randomUUID } from 'node:crypto';
+
+const credit = await agentaos.subscriptions.credit(sub.id, {
+  amountMinor: 1000, // €10.00 in the plan's currency
+  reason: 'Two days of downtime',
+  idempotencyKey: randomUUID(),
+});
+credit.nextInvoiceDueAfterCreditMinor; // what the next invoice will charge
+```
+
+<ParamField body="amountMinor" type="number" required>Positive integer minor units. There is no currency field: the subscription's currency is used. At most the whole next invoice.</ParamField>
+<ParamField body="reason" type="string" required>Why you give it. The subscriber never sees it.</ParamField>
+<ParamField body="idempotencyKey" type="string" required>One key per credit you mean to give. Send the same key again when you retry after a timeout; a new key gives a second credit.</ParamField>
+
+<ResponseField name="id" type="string">The ledger entry id.</ResponseField>
+<ResponseField name="amountMinor" type="number" />
+<ResponseField name="currency" type="string" />
+<ResponseField name="reason" type="string" />
+<ResponseField name="creditBalanceMinor" type="number">All unspent credit this buyer has with you now.</ResponseField>
+<ResponseField name="nextInvoiceMinor" type="number">What the next invoice would have charged before this credit.</ResponseField>
+<ResponseField name="nextInvoiceDueAfterCreditMinor" type="number">What it charges after it.</ResponseField>
+<ResponseField name="nextInvoiceAt" type="string">ISO 8601.</ResponseField>
+<ResponseField name="createdBy" type="string">The id of the person who gave it.</ResponseField>
+<ResponseField name="createdAt" type="string">ISO 8601.</ResponseField>
+
+The subscription must be `active` or `trialing`, not scheduled to cancel, and without a pending plan change; otherwise the call returns `400`. While the buyer has credit left, `previewPlanChange` and `changePlan` return `400` until the next invoice.
+
+## `subscriptions.credits(id)`
+
+The credits given on this subscription, newest first, and what is still unspent. Owner or admin only, like `credit`.
+
+```typescript
+const { items, balanceMinor } = await agentaos.subscriptions.credits(sub.id);
+```
+
+<ResponseField name="items" type="CreditEntry[]">`{ id, amountMinor, reason, createdBy, createdAt }` for each credit.</ResponseField>
+<ResponseField name="balanceMinor" type="number">Unspent credit on the buyer, shared by every subscription they have with you.</ResponseField>
 
 ## Next steps
 
