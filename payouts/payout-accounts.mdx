@@ -1,0 +1,72 @@
+---
+title: "Add a payout account"
+description: "Save the bank account we pay your EUR or USD balance to, and read the name check that follows."
+---
+
+A payout account is the bank account we send your balance to. You add one per currency, EUR or USD. You can add an account before your verification is done, so your first payout is ready to go when it is.
+
+To be paid to a stablecoin wallet instead, see [Stablecoin payouts](/payouts/stablecoin-payouts).
+
+## Add a bank account
+
+<Steps>
+  <Step title="Open Payout accounts">
+    In the dashboard sidebar, click **Balances**. Then click the **Payout accounts** tab.
+  </Step>
+  <Step title="Start a new account">
+    Click **Add bank account**. The **Add payout account** panel opens.
+  </Step>
+  <Step title="Choose the currency and the account">
+    - **Pay me in**: choose **EUR** or **USD**. This is the currency of the balance that pays out to this account.
+    - **Account type**: choose **Inside Europe** or **Outside Europe**.
+    - **Account holder type**: choose **Person** or **Business**.
+  </Step>
+  <Step title="Fill in the bank details">
+    For a EUR account inside Europe, the form asks for:
+    - **Full name of the account holder**: the name exactly as your bank holds it, including a legal suffix such as Ltd or GmbH.
+    - **Bank code (BIC/SWIFT)**: optional.
+    - **IBAN**.
+
+    Our banking partner decides the fields for each currency and account type, so a USD account or an account outside Europe asks for different details.
+  </Step>
+  <Step title="Save">
+    Click **Save account**. The panel shows **Account saved** and the result of the name check.
+  </Step>
+</Steps>
+
+<Frame caption="The Add payout account panel for a EUR business account inside Europe.">
+  <img src="/images/payouts/add-bank-account.png" alt="The Add payout account panel on the Payout accounts tab, with Pay me in set to EUR, Account type set to Inside Europe, the account holder name AgencyOne OÜ, an empty optional bank code and an Estonian IBAN" />
+</Frame>
+
+The **Payout accounts** section says: "The holder name should match your verified legal name." Use the name from your [account review](/mor/account-review).
+
+## The name check
+
+When you save the account, our banking partner asks your bank whether the holder name matches the account. The account then shows one of these labels:
+
+| Label | What it means | What to do |
+|---|---|---|
+| **Ready for payouts** | The name matches, or your bank's country has no name check. | Nothing. |
+| **Ready — check the name** | "Only part of the name matched the bank". Payouts still go to this account. | Confirm the name is correct. |
+| **Not usable yet** | "The name doesn't match the bank's records". We cannot pay out to this account. | Deactivate the account. Add it again with the name exactly as your bank holds it. |
+
+When only part of the name matches, the panel shows **Double-check the name**. When the name does not match, the panel shows **Name doesn't match**. If the name still does not match after you add the account again, ask your bank for the exact name on the account.
+
+When your bank's country has no name check, the panel shows **Nothing to do here**. The account is ready for payouts, but make sure that the name is correct.
+
+## Which account gets paid
+
+For each currency, a payout goes to your newest bank account that is ready for payouts. The top of the **Payout accounts** section shows, per currency, the account that the next payout uses.
+
+To change the account, add the new one. To stop using an account, click the trash icon on its row, then click **Deactivate**.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Payouts" icon="money-bill-transfer" href="/payouts/overview">
+    The schedule, the fees, and the documents for each payout.
+  </Card>
+  <Card title="Supported countries" icon="globe" href="/mor/supported-countries">
+    Where bank payouts reach, and the payout fee table.
+  </Card>
+</CardGroup>

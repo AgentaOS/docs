@@ -20,14 +20,16 @@
               "getting-started/quickstart",
               "getting-started/test-mode",
               "getting-started/dashboard",
-              "getting-started/glossary"
+              "getting-started/glossary",
+              "getting-started/release-phases"
             ]
           },
           {
             "group": "Build with AI agents",
             "pages": [
               "agents/overview",
-              "mcp/setup"
+              "mcp/setup",
+              "experimental/agent-wallet"
             ]
           },
           {
@@ -36,6 +38,7 @@
               "payments/payment-links",
               "payments/checkouts",
               "payments/subscriptions",
+              "payments/discount-codes",
               "payments/invoices",
               "payments/receipts",
               "payments/customers",
@@ -57,8 +60,16 @@
               "mor/supported-countries",
               "mor/tax",
               "mor/pricing",
-              "mor/account-review",
-              "payouts/overview"
+              "mor/account-review"
+            ]
+          },
+          {
+            "group": "Payouts",
+            "pages": [
+              "payouts/overview",
+              "payouts/payout-accounts",
+              "payouts/stablecoin-payouts",
+              "payouts/statements"
             ]
           },
           {
@@ -72,13 +83,6 @@
             "group": "For customers",
             "pages": [
               "for-customers/why-charged"
-            ]
-          },
-          {
-            "group": "Experimental",
-            "pages": [
-              "experimental/stablecoin-payouts",
-              "experimental/agent-wallet"
             ]
           }
         ]
@@ -291,6 +295,10 @@
     {
       "source": "/guides/saas-subscriptions",
       "destination": "/guides/sell-a-subscription"
+    },
+    {
+      "source": "/experimental/stablecoin-payouts",
+      "destination": "/payouts/stablecoin-payouts"
     }
   ]
 }

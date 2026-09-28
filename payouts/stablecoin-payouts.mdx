@@ -1,52 +1,98 @@
 ---
-title: "Stablecoin payouts (experimental)"
-description: "An optional, advanced way to withdraw your AgentaOS balance on-chain to a wallet you control, from anywhere."
+title: "Stablecoin payouts"
+description: "Be paid in USDC or EURC to a wallet instead of your bank account, per currency."
+tag: "Public preview"
 ---
 
-Stablecoin payout is an **optional, advanced** way to move your available balance on-chain to a wallet you control. You are moving your own balance to your own address, so no third-party bank sits in between and no extra verification is required. It works from anywhere, which makes it a useful fallback when bank payouts do not yet reach your country.
+<Note>Stablecoin payouts are in public preview: open to every account, and we switch the wallet rail on for yours when you ask at contact@agentaos.ai. Details can still change. See [Product release phases](/getting-started/release-phases).</Note>
 
-<Note>
-  Most merchants don't need this. Your standard payout account already receives **EUR and USD** by bank transfer through our banking partner. See [Payouts](/payouts/overview) for the primary flow.
-</Note>
+A stablecoin payout sends your balance to a wallet instead of your bank account. You choose it per currency: your EUR balance pays out in EURC and your USD balance pays out in USDC. Payouts keep the same schedule as bank payouts, the 1st and the 15th of each month. See [Payouts](/payouts/overview).
 
-## How it works
+A stablecoin payout needs a verified account, the same as a bank payout. See [Go live](/guides/go-live).
+
+Until we switch it on for your account, the **Payout accounts** tab shows no wallet section, and the API answers "Wallet payouts are not open for this account yet."
+
+## Networks
+
+| Pay me in | You receive | Networks |
+|---|---|---|
+| EUR | EURC | Base, Ethereum, Solana |
+| USD | USDC | Base, Ethereum, Polygon, Solana |
+
+## Add a wallet
 
 <Steps>
-  <Step title="Add a wallet address">
-    On the **Payouts** page, add a wallet address you control as a payout destination.
+  <Step title="Open Payout accounts">
+    In the dashboard sidebar, click **Balances**. Then click the **Payout accounts** tab. The **Digital wallet payouts** section is below your bank accounts.
   </Step>
-  <Step title="Let your balance clear">
-    Sales move from **Incoming** to **Available** the same way they do for bank payouts.
+  <Step title="Start a new wallet">
+    Click **Add digital wallet**. The **Add digital wallet** panel opens.
   </Step>
-  <Step title="Withdraw on-chain">
-    Your available balance is sent on-chain to your address. You pay network gas only, with no AgentaOS markup.
+  <Step title="Choose the currency and the network">
+    - **Pay me in**: choose **EUR** or **USD**.
+    - **Network**: choose the network your wallet receives on. **Base** is selected first.
+  </Step>
+  <Step title="Enter the wallet">
+    - **Wallet address**: paste the address. "Payouts to a wallet cannot be recalled. Check the address before you save it."
+    - **Name**: optional, for example "Treasury".
+    - **Who holds this wallet**: choose **My own wallet — I hold the keys** or **An exchange account that holds it for me**.
+  </Step>
+  <Step title="Save">
+    Click **Save wallet**.
   </Step>
 </Steps>
 
-## Good to know
+<Frame caption="The Digital wallet payouts section appears below your bank accounts once stablecoin payouts are on for your account.">
+  <img src="/images/payouts/wallet-section.png" alt="The Payout accounts tab with the Payout accounts section for bank accounts and, below it, the Digital wallet payouts section with an Add digital wallet button and the empty state No digital wallet yet" />
+</Frame>
 
-<CardGroup cols={2}>
-  <Card title="You keep custody" icon="key">
-    Funds go to an address you control. No third-party bank sits in the middle.
-  </Card>
-  <Card title="Works worldwide" icon="globe">
-    Not limited by country, so it reaches places bank payouts don't yet cover.
-  </Card>
-  <Card title="Fees pass through" icon="coins">
-    You pay network gas only. AgentaOS adds no markup on top.
-  </Card>
-  <Card title="Same clearing rules" icon="clock">
-    Your balance still clears over about 14 days on newer accounts before it's payable.
-  </Card>
-</CardGroup>
+<Frame caption="The Add digital wallet panel for a EUR payout on Base to a wallet you hold the keys to.">
+  <img src="/images/payouts/add-wallet.png" alt="The Add digital wallet panel with Pay me in set to EUR, Network set to Base, the warning that payouts to a wallet cannot be recalled, a wallet address, the name Treasury, and My own wallet selected under Who holds this wallet" />
+</Frame>
+
+We check the address before we save it. We refuse an address that is not valid on the network you chose, the burn address, and the contract address of a USDC or EURC token. Anything sent to those addresses cannot be recovered.
+
+We send your answer to **Who holds this wallet** with each payout, as part of the information that crypto transfers must carry about the sender and the receiver.
+
+## Pay a currency to the wallet
+
+Saving a wallet does not move your payouts to it. Your bank account keeps receiving them until you choose the wallet:
+
+1. On the wallet's row, click **Use for EUR payouts** or **Use for USD payouts**.
+2. The row then shows "Pays your EUR payouts." (or USD).
+
+If you have no bank account in that currency and have not chosen a wallet, that currency is not paid out.
+
+To return to your bank account, click **Switch back to bank** on the wallet's row. If you remove the wallet that pays a currency, that currency goes back to your bank account.
+
+<Frame caption="A saved EURC wallet on Base, before it pays your EUR payouts. The badge shows the date it becomes payable.">
+  <img src="/images/payouts/wallet-saved.png" alt="The Digital wallet payouts section with one wallet named Treasury, EURC on Base with a shortened address, the badge Payable from September 29, 2026, and the link Use for EUR payouts" />
+</Frame>
+
+## The 24-hour wait
+
+We do not pay a new wallet until 24 hours after you save it. Until then, its row shows **Payable from** and the date. After that, it shows **Ready for payouts**.
+
+If a payout window falls inside those 24 hours and the wallet pays that currency, the payout waits for the next window. It does not go to your bank account instead.
+
+You cannot edit a wallet's address, network or currency. To use a different address, add a new wallet. The new wallet gets its own 24-hour wait.
+
+## Fees
+
+A stablecoin payout carries two fees, both listed on the payout statement:
+
+- **Payout fee**: 1% of the amount paid out, with a minimum of €1 or $1, the same as a bank payout.
+- **Wallet corridor fee**: 1% of the amount paid out, plus €2 or $2, plus the cost of the bank transfer that funds the stablecoin payout. The network fee is included.
+
+On **You ask**, the **Payouts** tab shows what you would receive today and the fees before you request the payout.
 
 ## Next steps
 
 <CardGroup cols={2}>
   <Card title="Payouts" icon="money-bill-transfer" href="/payouts/overview">
-    The primary bank payout flow, in EUR and USD.
+    Your balance, the schedule, and the documents for each payout.
   </Card>
-  <Card title="Supported countries" icon="globe" href="/mor/supported-countries">
-    Where bank payouts reach, and the payout fee table.
+  <Card title="Add a payout account" icon="building-columns" href="/payouts/payout-accounts">
+    Save a bank account for the currencies you do not pay to a wallet.
   </Card>
 </CardGroup>

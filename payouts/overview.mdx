@@ -1,113 +1,105 @@
 ---
 title: "Payouts"
-description: "How your AgentaOS balance clears, and how payouts reach your bank account or your wallet."
+description: "How a sale becomes money you can pay out, where the payout goes, when it runs, what it costs, and the documents you get for each payout."
 ---
 
-Every payment you accept, card, bank transfer, or stablecoin, settles to one AgentaOS balance. You don't reconcile three settlement accounts for three payment methods. Your balance settles in **EUR or USD**, and from that one balance payouts run automatically to your bank account.
+Your card and bank sales collect in one AgentaOS balance per currency, EUR or USD. Payouts run twice a month, on the 1st and the 15th, and send the available part of that balance to your payout account: a bank account, or a stablecoin wallet if we switched that on for you. Each payout comes with a payout statement and a self-billed invoice for your books.
 
-<Frame caption="Your balance, in EUR and USD, on the Payments page.">
-  <img src="/images/product/payments-balance.png" alt="AgentaOS Payments page showing EUR and USD balances and the balance summary" />
+Before your first payout, you need two things:
+
+- A verified account. See [Go live](/guides/go-live) and [Account review](/mor/account-review).
+- A payout account in the currency of your balance. See [Add a payout account](/payouts/payout-accounts).
+
+<Frame caption="Balances → Overview for a EUR balance: each row, and the Total they add up to.">
+  <img src="/images/product/balances.png" alt="The Overview tab on the Balances page, with the EUR balance split into Available now, On the way with its date, and Reserve with the date it frees up, above the Total" />
 </Frame>
 
 ## Your balance
 
-Money doesn't move from "buyer paid" to "in your bank account" instantly. It passes through a few states first, mirroring how card networks and banking rails actually clear funds.
+In the dashboard, open **Balances**. The **Overview** tab shows your **Balance** for each currency, split into rows that add up to the **Total**:
 
-<CardGroup cols={2}>
-  <Card title="Incoming" icon="clock">
-    A payment has been confirmed, but it's still clearing. New card and bank sales clear over about 14 days before they're payable, the same way they would through any card acquirer.
-  </Card>
-  <Card title="Available" icon="wallet">
-    Cleared and yours to pay out. This is what moves on your next payout.
-  </Card>
-  <Card title="In reserve" icon="vault">
-    A small reserve is held on newer accounts to cover refunds and chargebacks. It releases over time as your payment history builds.
-  </Card>
-  <Card title="Next payout" icon="calendar">
-    The date your available balance is scheduled to move. Shown per currency on the **Payouts** page.
-  </Card>
-</CardGroup>
+| Row | What it holds |
+|---|---|
+| **Available now** | Cleared money. The next payout sends it. |
+| **On the way** | Sales that are still clearing, with the date each amount becomes available. |
+| **Reserve** | "Safety hold on new accounts". The row shows the date the reserve frees up. |
+| **To your bank** | A payout in progress. It leaves your balance when it lands. |
+| **Paused (disputed)** | Money from a sale that a buyer disputes, held until the dispute ends. |
 
-```mermaid
-flowchart LR
-  A[Buyer pays<br/>card, bank, or stablecoin] --> B[Incoming<br/>clearing ~14 days]
-  B --> C[Available]
-  C --> D[Payout<br/>bank, EUR or USD]
-  B -.->|newer accounts| E[In reserve]
-  E -.->|releases over time| C
-```
+A new sale clears for 14 days before it moves from **On the way** to **Available now**.
 
 ## Where payouts go
 
-Your balance pays out by bank transfer, same-currency: EUR to a EUR account and USD to a USD account, with no cross-currency FX.
+Payouts are same-currency. A EUR balance pays to a EUR account and a USD balance pays to a USD account, so no currency conversion happens inside a payout.
 
-<Card title="Bank account" icon="building-columns">
-  Paid through our banking partner to the countries listed in [Supported countries](/mor/supported-countries), in the currency your balance holds. Cross-border routes carry a Swift fee (see the fee table on that page).
-</Card>
+<CardGroup cols={2}>
+  <Card title="Bank account" icon="building-columns" href="/payouts/payout-accounts">
+    Paid through our banking partner. For each currency, we use your newest bank account that is ready for payouts.
+  </Card>
+  <Card title="Stablecoin wallet" icon="wallet" href="/payouts/stablecoin-payouts">
+    Public preview. EUR pays out in EURC and USD pays out in USDC, to a wallet you choose per currency.
+  </Card>
+</CardGroup>
+
+To see which countries bank payouts reach, go to [Supported countries](/mor/supported-countries).
 
 ## Schedule
 
-Payouts **run automatically twice a month**. Your available balance moves to your bank account on the scheduled payout date, shown per currency on the **Payouts** page. There's nothing to trigger by hand.
+Payouts run in two windows each month: the 1st and the 15th. On the **Payouts** tab, the **Payout schedule** section has two options:
+
+- **Automatic**: "Paid automatically every window (1st & 15th)." Set a **Minimum payout**. Below that amount, we hold your balance for the next window.
+- **You ask**: "Queued for the next window when you request it." Click **Request payout**. The next window pays what is available at that time, including sales that clear before then.
+
+A new account starts on **You ask**. The smallest payout is €50 or $50. When your balance is below that amount, it waits for a later window.
 
 ## Fees
 
-Payout fees are a **pass-through, at cost, with no markup**. AgentaOS doesn't add anything on top of what the banking or on-chain rail actually costs to move your money. For bank payouts, cross-border routes carry a Swift fee, see the fee table on [Supported countries](/mor/supported-countries) for the current routes and amounts.
+Each payout carries a **Payout fee** of 1% of the amount paid out, with a minimum of €1 or $1. The route adds its own cost:
 
-## Getting paid out
+- **Bank transfer fee**: what our banking partner charges for the transfer, passed through at cost. It depends on the country and currency. See the payout fee table on [Supported countries](/mor/supported-countries).
+- **Wallet corridor fee**: for a stablecoin payout. See [Stablecoin payouts](/payouts/stablecoin-payouts#fees).
 
-<Steps>
-  <Step title="Accept a payment">
-    Any completed checkout, card, bank, or stablecoin, adds to your balance. See [Checkouts](/payments/checkouts) and [Payment links](/payments/payment-links).
-  </Step>
-  <Step title="Let it clear">
-    Funds move from **Incoming** to **Available** automatically, over about 14 days for new card and bank sales. No action needed on your end.
-  </Step>
-  <Step title="Add a bank account">
-    Add the bank account where you want to receive your payouts, in EUR or USD.
-  </Step>
-  <Step title="Get paid">
-    Your available balance moves to your bank account automatically, twice a month, on the schedule shown on the **Payouts** page.
-  </Step>
-</Steps>
+On **You ask**, the **Payouts** tab shows what you would receive today and the fees before you click **Request payout**. The payout statement lists each fee after the payout.
+
+## What you get on payout day
+
+Every payout gets two documents on the **Payouts** tab:
+
+- **Payout statement**: "What was paid this run: the covered sales, our commission, the payout fee, the bank transfer fee, and what reached your bank." Use it to match the payout to your bank statement.
+- **Self-billed invoice**: your supply to AgentaOS, one line per sale that the payout covers, with the fees deducted beneath. The total is what reached your account. "VAT treatment depends on your tax status."
+
+Give both documents to your accountant. See [Payout statements and self-billed invoices](/payouts/statements) for each line and how to use the documents in your books.
 
 ## FAQ
 
 <AccordionGroup>
-  <Accordion title="What currencies can I pay out in?">
-    Your balance settles in EUR or USD. Bank payouts are same-currency, EUR to a EUR account and USD to a USD account, with no cross-currency FX.
+  <Accordion title="Which currencies can I be paid in?">
+    EUR and USD. Each currency pays out to an account in the same currency.
   </Accordion>
-  <Accordion title="How often do payouts run?">
-    Automatically, twice a month. Your available balance moves on the scheduled payout date shown on the **Payouts** page.
+  <Accordion title="Why was my payout not sent?">
+    Check four things. Your account must be verified. You must have a payout account in that currency. Your available balance must be at least the minimum payout. On **You ask**, you must request the payout.
   </Accordion>
-  <Accordion title="Do I need to set up anything before I can pay out?">
-    Yes. Add the bank account you want to receive payouts to first.
+  <Accordion title="Can I be paid to a bank account and a wallet?">
+    Yes, per currency. For example, EUR can pay out to your bank and USD to a wallet. See [Stablecoin payouts](/payouts/stablecoin-payouts).
   </Accordion>
-  <Accordion title="Does a refund or chargeback affect my balance?">
-    Yes, refunded or disputed amounts are deducted from your balance rather than paid out. On newer accounts a small reserve is held to cover them.
+  <Accordion title="Does a dispute change my payout?">
+    Yes. The money from a disputed sale moves to **Paused (disputed)** and is not paid out until the dispute ends.
   </Accordion>
 </AccordionGroup>
-
-## Experimental
-
-<CardGroup cols={1}>
-  <Card title="Stablecoin payouts (experimental)" icon="wallet" href="/experimental/stablecoin-payouts">
-    An optional, advanced way to withdraw your balance on-chain to a wallet you control, from anywhere. You're moving your own balance to your own address.
-  </Card>
-</CardGroup>
 
 ## Next steps
 
 <CardGroup cols={2}>
+  <Card title="Add a payout account" icon="building-columns" href="/payouts/payout-accounts">
+    Save the bank account we pay you to.
+  </Card>
   <Card title="Supported countries" icon="globe" href="/mor/supported-countries">
     Where bank payouts reach, and the payout fee table.
   </Card>
+  <Card title="Go live" icon="rocket" href="/guides/go-live">
+    Verify your account to take live payments and receive payouts.
+  </Card>
   <Card title="How Merchant of Record works" icon="scale-balanced" href="/mor/how-it-works">
-    How a payment turns into money on your balance in the first place.
-  </Card>
-  <Card title="Checkouts" icon="link" href="/payments/checkouts">
-    Create the payments that fund your balance.
-  </Card>
-  <Card title="Webhooks" icon="bell" href="/payments/webhooks">
-    Get notified the moment a checkout completes.
+    How a payment becomes money in your balance.
   </Card>
 </CardGroup>
