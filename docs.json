@@ -58,6 +58,7 @@
             "group": "Merchant of Record",
             "pages": [
               "mor/how-it-works",
+              "mor/verification",
               "mor/supported-countries",
               "mor/tax",
               "mor/pricing",
