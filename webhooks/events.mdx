@@ -3,14 +3,14 @@ title: "Events"
 description: "Every webhook event AgentaOS sends: full payload fields, types, and a JSON example for each."
 ---
 
-AgentaOS sends webhook events for checkouts, outbound sends, subscriptions, disputes, and account verification. Every event shares the same envelope, an `id`, a `type`, a `business`, and a `data` object whose shape depends on the type. See [Webhooks](/payments/webhooks) for how to register a URL and verify the signature before trusting any of this.
+AgentaOS sends 12 webhook event types, for checkouts, outbound sends, subscriptions, disputes, account verification, and the dashboard's test event. This page is the full list. Every event shares the same envelope: an `id`, a `type`, a `business`, and a `data` object whose shape depends on the type. See [Webhooks](/payments/webhooks) for how to register a URL and verify the signature before you trust any of this.
 
 <Note>
 Every `amount` field below is a **string** (e.g. `"49.99"`), not a number. This differs from `amount` on SDK create calls (checkouts, payment links), which is a plain number in currency units. Parse it before doing arithmetic.
 </Note>
 
 <Note>
-The field names below are the literal snake_case keys AgentaOS `POST`s to your `webhookUrl`, what you parse in any language. As returned by the SDK `webhooks.verify()` (Node.js) the same fields come back camelCased and typed: `link_id` becomes `linkId`, `session_id` becomes `sessionId`, `tx_hash` becomes `txHash`, `payer_type` becomes `payerType`, `chain_id` becomes `chainId`, `transaction_id` becomes `transactionId`, and so on. This page mirrors the raw body documented in [Webhooks](/api-reference/webhooks).
+The field names below are the literal snake_case keys AgentaOS `POST`s to your `webhookUrl`, what you parse in any language. As returned by the SDK `webhooks.verify()` (Node.js) the same fields come back camelCased and typed: `link_id` becomes `linkId`, `session_id` becomes `sessionId`, `tx_hash` becomes `txHash`, `payer_type` becomes `payerType`, `chain_id` becomes `chainId`, `transaction_id` becomes `transactionId`, and so on.
 </Note>
 
 <ResponseField name="id" type="string">
@@ -18,7 +18,7 @@ The field names below are the literal snake_case keys AgentaOS `POST`s to your `
 </ResponseField>
 
 <ResponseField name="type" type="string">
-  One of `checkout.session.completed`, `send.completed`, `send.failed`, a `subscription.*` event, `dispute.created`, `dispute.closed`, `account.updated`, or `webhook.test` (the sample the dashboard sends). Switch on this to decide how to parse `data`.
+  One of `checkout.session.completed`, `send.completed`, `send.failed`, `subscription.created`, `subscription.renewed`, `subscription.payment_failed`, `subscription.updated`, `subscription.canceled`, `dispute.created`, `dispute.closed`, `account.updated`, or `webhook.test`. Switch on this to decide how to parse `data`.
 </ResponseField>
 
 <ResponseField name="business" type="string">
@@ -28,6 +28,10 @@ The field names below are the literal snake_case keys AgentaOS `POST`s to your `
 <ResponseField name="data" type="object">
   Event-specific payload. See each event below.
 </ResponseField>
+
+## Which URL receives an event
+
+A `checkout.session.completed` event goes to one URL: the checkout's own `webhookUrl` if it has one, else its payment link's, else your account's webhook URL. The first one found is the only one that receives it. Every other event goes to your account's webhook URL. If no URL applies, AgentaOS sends nothing and shows no error.
 
 ---
 
@@ -79,6 +83,10 @@ Fired when a checkout is paid, by card, wallet, or stablecoin. This is the event
 
 <Note>
 `tx_hash`, `payer`, and `network` describe on-chain settlement. For checkouts paid by card, these fields are empty, use `vendor_reference` for the off-chain reference and don't assume the on-chain fields are always populated. Key fulfillment off `session_id` and `amount`/`currency`, which are present for every payment method.
+</Note>
+
+<Note>
+`rail`, `vendor_reference`, and `overpaid_by_cents` are in the body, but the SDK's TypeScript types do not list them yet. Read them from the raw body, or cast the event in TypeScript.
 </Note>
 
 ```json Example
@@ -234,7 +242,7 @@ Subscription lifecycle events, delivered to your **organization** webhook endpoi
 
 <Expandable title="data fields" defaultOpen>
   <ResponseField name="id" type="string">The subscription ID.</ResponseField>
-  <ResponseField name="status" type="string">Stripe status: `active`, `trialing`, `past_due`, `unpaid`, `canceled`, `incomplete`.</ResponseField>
+  <ResponseField name="status" type="string">Status: `active`, `trialing`, `past_due`, `unpaid`, `canceled`, `incomplete`.</ResponseField>
   <ResponseField name="plan_name" type="string | null">Plan name, from the backing payment link.</ResponseField>
   <ResponseField name="currency" type="string">e.g. `"EUR"`.</ResponseField>
   <ResponseField name="amount_minor" type="number">Per-cycle price in integer minor units. `1000` = `€10.00`.</ResponseField>
@@ -243,6 +251,9 @@ Subscription lifecycle events, delivered to your **organization** webhook endpoi
   <ResponseField name="link_id" type="string">The current plan's payment-link id (the `linkId` you pass to `checkouts.create`).</ResponseField>
   <ResponseField name="pending_plan" type="object | null">
     Null unless a downgrade is scheduled. Then `{ link_id, plan_name, amount_minor, effective_at }`: the plan the subscription switches to at `effective_at` (the period end). `plan_name`, `link_id` and `amount_minor` above stay what the buyer paid for until then.
+  </ResponseField>
+  <ResponseField name="discount" type="object | null">
+    Null unless the subscriber redeemed a discount code. Then `{ code, kind }`, where `kind` is `discount` or `tracking` (a code that changes no price). The amount the code took off is on the subscription's first invoice. The SDK's TypeScript types do not list this field yet.
   </ResponseField>
   <ResponseField name="customer_email" type="string | null" />
   <ResponseField name="customer_name" type="string | null" />
@@ -258,10 +269,13 @@ Subscription lifecycle events, delivered to your **organization** webhook endpoi
     "id": "sub_6pC2lNB6joCRQIZ1aMrTpi",
     "status": "active",
     "plan_name": "Pro Monthly",
+    "link_id": "mZrESFyR7RC9RPsJfZCVkg",
     "currency": "EUR",
     "amount_minor": 1000,
     "current_period_end": "2026-09-19T12:00:00.000Z",
     "cancel_at_period_end": false,
+    "pending_plan": null,
+    "discount": null,
     "customer_email": "customer@example.com",
     "customer_name": "Alex Rivera",
     "livemode": true
@@ -322,6 +336,27 @@ Fired when a business's verification changes: its identity check lands (verified
     "changes_requested": false,
     "identity_verified": true,
     "livemode": true
+  }
+}
+```
+
+## `webhook.test`
+
+Sent when you send a test event from the dashboard, so you can check that your endpoint receives and verifies events. It goes to your account's webhook URL, signed like every other event.
+
+<Expandable title="data fields" defaultOpen>
+  <ResponseField name="message" type="string">Always `"Test event from AgentaOS"`.</ResponseField>
+  <ResponseField name="livemode" type="boolean">`true` if you sent it from live mode, `false` from test mode.</ResponseField>
+</Expandable>
+
+```json Example
+{
+  "id": "evt_test_5c2e9a1f0b7d3e48",
+  "type": "webhook.test",
+  "business": "9a8b7c6d-5e4f-3a2b-1c0d-9e8f7a6b5c4d",
+  "data": {
+    "message": "Test event from AgentaOS",
+    "livemode": false
   }
 }
 ```

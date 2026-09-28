@@ -1,6 +1,6 @@
 ---
 title: "Platforms"
-description: "Run sales for your clients, or for other apps of your own company, from one AgentaOS account. What a platform is, who does what, and how it maps to Stripe Connect."
+description: "Run sales for your clients, or for other apps of your own company, from one AgentaOS account. What a platform is and who does what."
 tag: "Private preview"
 ---
 
@@ -58,20 +58,6 @@ const client = new AgentaOS(process.env.AGENTAOS_API_KEY!, { business: biz.id })
 ```
 
 Only your own key or session may act for a business you manage. Any other id returns `403 You cannot act as this business.` See [Acting for a business](/sdk/pay-businesses#acting-for-a-business).
-
-## Coming from Stripe Connect
-
-| Stripe Connect | AgentaOS |
-|---|---|
-| Connected account | Business (a client's business, or another app of the same company) |
-| `Stripe-Account: acct_…` / `{ stripeAccount }` | `AgentaOS-Account: <business id>` / `{ business }` |
-| Account Links | ID check link — only the client completes it |
-| Platform submits the account's details | Platform may file the client's verification; recorded as filed by the platform |
-| `application_fee_amount` | Share: % of the price before VAT + fixed, set in the dashboard |
-| Connect webhook, `account` on events | The platform's own webhook receives its clients' events, `business` on every event |
-| `account.updated` | `account.updated` |
-
-The main difference: we are the Merchant of Record, so the share is taken from the price before VAT, and the identity check stays with the person whose company it is.
 
 ## Next steps
 

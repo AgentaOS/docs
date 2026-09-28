@@ -4,7 +4,7 @@ description: "Manage your clients' businesses with agentaos.businesses, and act 
 tag: "Private preview"
 ---
 
-`agentaos.businesses` is for [platforms](/connect/overview): the businesses you manage, whether a client's business or another app of your own company. Stripe calls these connected accounts.
+`agentaos.businesses` is for [platforms](/connect/overview): the businesses you manage, whether a client's business or another app of your own company.
 
 Every method acts on your own account (the platform), so call `businesses.*` on your platform client, not on one made with `{ business }` (that one acts as the client, which manages no businesses of its own). To do anything **as** one of the businesses, see [Acting for a business](#acting-for-a-business).
 
@@ -93,7 +93,7 @@ const { url, status } = await agentaos.businesses.createVerificationLink(biz.id)
 if (url) sendToClient(url);
 ```
 
-The identity check link for your client, like Stripe's Account Links. You send it; only your client can complete it.
+The identity check link for your client. You send it; only your client can complete it.
 
 <ParamField path="id" type="string" required>The business id.</ParamField>
 
@@ -144,7 +144,7 @@ Calling it again while a check is open gives back the same check.
 
 ## Acting for a business
 
-Any call on any resource can run as a business you manage. This is Stripe's `stripeAccount`.
+Any call on any resource can run as a business you manage.
 
 **For a whole client**, pass `business` when you create it. Every request it sends acts as that business:
 

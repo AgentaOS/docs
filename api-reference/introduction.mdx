@@ -34,7 +34,7 @@ A missing or invalid key returns `401 Unauthorized`. There's no separate bearer-
 
 ## Acting for a business
 
-A [platform](/connect/overview) can call any endpoint as a business it manages. Send the business's id in the `AgentaOS-Account` header, and the request runs as that business: the checkout, product or invoice is the business's, not yours. This is Stripe's `Stripe-Account` header.
+A [platform](/connect/overview) can call any endpoint as a business it manages. Send the business's id in the `AgentaOS-Account` header, and the request runs as that business: the checkout, product or invoice is the business's, not yours.
 
 ```bash
 curl https://api.agentaos.ai/api/v1/gateway/sessions \
