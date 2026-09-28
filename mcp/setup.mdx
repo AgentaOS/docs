@@ -5,9 +5,13 @@ description: "Connect Claude, ChatGPT, Cursor or any MCP client to AgentaOS, and
 
 The AgentaOS MCP server gives your AI agent the same operations as the `agenta` CLI: products, checkouts, verification, subscriptions, discount codes, customers and invoices. The CLI commands and the MCP tools come from one catalogue, so each tool has a matching command with the same inputs and the same answer.
 
-The dashboard shows the same setup steps for each client: go to **Settings → Developers** and click **Connect an AI agent**.
-
 ## Connect your agent
+
+Start in the dashboard: go to **Settings → Developers** and click **Connect an AI agent**. The **Set up your AI agent** dialog asks "Where does your agent run?" and shows the steps for the client you pick.
+
+<Frame caption="The Set up your AI agent dialog with Claude Code picked: install the plugin, then approve it in AgentaOS.">
+  <img src="/images/agents/set-up-your-ai-agent.png" alt="The Set up your AI agent dialog in Settings. The Claude Code tab is selected next to Cursor, ChatGPT, Claude.ai and Other. Step 1, Install the plugin, shows two claude plugins commands with copy buttons. Step 2, Approve it here, says to type /mcp, choose agentaos, then Authenticate, and pick Test or Live on the AgentaOS page." />
+</Frame>
 
 Every client that can open a browser uses the hosted server at `https://mcp.agentaos.ai/mcp`. You approve the connection once, on an AgentaOS page, and you pick **Test mode** or **Live mode** there. You paste no key.
 
@@ -16,8 +20,8 @@ Every client that can open a browser uses the hosted server at `https://mcp.agen
     Install the AgentaOS plugin. It adds the hosted server and a skill that teaches your agent the tools.
 
     ```bash
-    claude plugin marketplace add AgentaOS/agentaos
-    claude plugin install agentaos@agentaos
+    claude plugins marketplace add AgentaOS/agentaos
+    claude plugins install agentaos@agentaos
     ```
 
     In Claude Code, type `/mcp`, choose `agentaos`, then **Authenticate**. An AgentaOS page opens in your browser: pick Test or Live and press **Approve**.

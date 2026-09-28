@@ -32,7 +32,7 @@ agenta --version
 ```
 
 ```bash Output
-1.2.0
+3.1.0
 ```
 
 If `agenta` isn't found after a curl install, open a new shell so your `PATH` picks up the change.
@@ -51,10 +51,11 @@ Then re-run `npm install -g agentaos`.
 
 ## AI agent setup
 
-Building an agent or automation that should use AgentaOS on your behalf? Install the skill for guided setup instead of hand-rolling the integration:
+Building an agent or automation that should use AgentaOS on your behalf? In Claude Code, install the plugin; any other agent can read the skill directly:
 
 ```bash
-npx skills add AgentaOS/skills@agenta
+claude plugins marketplace add AgentaOS/agentaos
+claude plugins install agentaos@agentaos
 ```
 
 Or read it directly at [agentaos.ai/SKILL.md](https://agentaos.ai/SKILL.md).
