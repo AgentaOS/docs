@@ -4,13 +4,13 @@ description: "Be paid in USDC or EURC to a wallet instead of your bank account, 
 tag: "Public preview"
 ---
 
-<Note>Stablecoin payouts are in public preview: open to every account, and we switch the wallet rail on for yours when you ask at contact@agentaos.ai. Details can still change. See [Product release phases](/getting-started/release-phases).</Note>
+<Note>Stablecoin payouts are in public preview: open to every account, and AgentaOS turns wallet payouts on for your account when you ask at [contact@agentaos.ai](mailto:contact@agentaos.ai). Details can still change. See [Product release phases](/getting-started/release-phases).</Note>
 
 A stablecoin payout sends your balance to a wallet instead of your bank account. You choose it per currency: your EUR balance pays out in EURC and your USD balance pays out in USDC. Payouts keep the same schedule as bank payouts, the 1st and the 15th of each month. See [Payouts](/payouts/overview).
 
 A stablecoin payout needs a verified account, the same as a bank payout. See [Go live](/guides/go-live).
 
-Until we switch it on for your account, the **Payout accounts** tab shows no wallet section, and the API answers "Wallet payouts are not open for this account yet."
+Until AgentaOS turns it on for your account, the **Payout accounts** tab shows no wallet section, and the API answers "Wallet payouts are not open for this account yet."
 
 ## Networks
 
@@ -50,9 +50,9 @@ Until we switch it on for your account, the **Payout accounts** tab shows no wal
   <img src="/images/payouts/add-wallet.png" alt="The Add digital wallet panel with Pay me in set to EUR, Network set to Base, the warning that payouts to a wallet cannot be recalled, a wallet address, the name Treasury, and My own wallet selected under Who holds this wallet" />
 </Frame>
 
-We check the address before we save it. We refuse an address that is not valid on the network you chose, the burn address, and the contract address of a USDC or EURC token. Anything sent to those addresses cannot be recovered.
+AgentaOS checks the address before it saves it. It refuses an address that is not valid on the network you chose, the burn address, and the contract address of a USDC or EURC token. Anything sent to those addresses cannot be recovered.
 
-We send your answer to **Who holds this wallet** with each payout, as part of the information that crypto transfers must carry about the sender and the receiver.
+AgentaOS sends your answer to **Who holds this wallet** with each payout, as part of the information that crypto transfers must carry about the sender and the receiver.
 
 ## Pay a currency to the wallet
 
@@ -71,7 +71,7 @@ To return to your bank account, click **Switch back to bank** on the wallet's ro
 
 ## The 24-hour wait
 
-We do not pay a new wallet until 24 hours after you save it. Until then, its row shows **Payable from** and the date. After that, it shows **Ready for payouts**.
+AgentaOS does not pay a new wallet until 24 hours after you save it. Until then, its row shows **Payable from** and the date. After that, it shows **Ready for payouts**.
 
 If a payout window falls inside those 24 hours and the wallet pays that currency, the payout waits for the next window. It does not go to your bank account instead.
 
@@ -81,7 +81,7 @@ You cannot edit a wallet's address, network or currency. To use a different addr
 
 A stablecoin payout carries two fees, both listed on the payout statement:
 
-- **Payout fee**: 1% of the amount paid out, with a minimum of €1 or $1, the same as a bank payout.
+- **Payout fee**: the same as a bank payout. See [Payouts](/payouts/overview#fees).
 - **Wallet corridor fee**: 1% of the amount paid out, plus €2 or $2, plus the cost of the bank transfer that funds the stablecoin payout. The network fee is included.
 
 On **You ask**, the **Payouts** tab shows what you would receive today and the fees before you request the payout.

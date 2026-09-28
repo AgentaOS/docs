@@ -10,28 +10,28 @@ New to payments? These are the terms that show up across the docs, in one place.
     The legal seller of your product. Your buyer pays AgentaOS, not you, so AgentaOS collects the money, charges and remits the tax, issues the invoice, and pays you out. You carry none of the tax or payment liability.
   </Accordion>
   <Accordion title="Destination VAT">
-    VAT charged at the rate of the **buyer's** country, not yours. As your Merchant of Record, AgentaOS calculates it from the buyer's country at checkout and remits it for you.
+    VAT charged at the rate of the **buyer's** country, not yours. While AgentaOS sells under the EU distance-selling threshold, the checkout charges EU consumers the Estonian rate instead. See [How tax works](/mor/tax#the-rate-on-eu-sales-today).
   </Accordion>
   <Accordion title="OSS (One-Stop Shop)">
-    The EU scheme that lets one registration cover VAT across all EU countries. AgentaOS files EU VAT through OSS (via Estonia), so you never register in each country you sell to.
+    The EU scheme that lets one registration cover VAT across all EU countries. AgentaOS does not use OSS: it sells under the EU distance-selling threshold from its registration in Estonia. Either way, you never register in each country you sell to.
   </Accordion>
   <Accordion title="Reverse charge">
     For a B2B sale to a VAT-registered business in another EU country, VAT shifts to the buyer, so the invoice shows no VAT. A buyer who enters a valid EU VAT ID at checkout is handled this way.
   </Accordion>
   <Accordion title="Product">
-    The dashboard name for a payment link. There is no separate `product` API. The product's API id is `linkId`.
+    The thing you sell, with its price. The API calls a product a payment link; there is no separate `product` API. The product's API ID is the `linkId`.
   </Accordion>
   <Accordion title="linkId">
-    The payment link UUID (`paymentLinks.id`). Pass it to `checkouts.create({ linkId })`. On the product page this is **For your app** / **Copy link ID**. It is not the `/pay/…` URL and not the checkout `sessionId`.
+    The payment link UUID (`paymentLinks.id`). Pass it to `checkouts.create({ linkId })`. On the product page, open **Building this into your site?** and click **Copy ID**. It is not the `/pay/…` URL and not the checkout `sessionId`.
   </Accordion>
-  <Accordion title="Payment link">
-    A reusable, shareable URL for one product. `checkoutUrl` (`/pay/…`) is for buyers. `id` / `linkId` is for the API.
+  <Accordion title="Buyer link">
+    The public `/pay/…` URL of one product, which every buyer can open. In the API it is the payment link's `checkoutUrl`. The `id` / `linkId` is for the API.
   </Accordion>
   <Accordion title="Checkout">
-    A single attempt to collect one payment. Created on its own or from a payment link via `checkouts.create({ linkId })`. Every checkout has a `checkoutUrl` you send the buyer to (`/checkout/{sessionId}`).
+    A single attempt to collect one payment. Created on its own or from a product with `checkouts.create({ linkId })`. Every checkout has a `checkoutUrl` you send the buyer to (`/checkout/{sessionId}`).
   </Accordion>
   <Accordion title="Subscription">
-    A recurring charge on a card on file, billed automatically every cycle until cancelled.
+    A recurring charge on a card on file, billed automatically every cycle until canceled.
   </Accordion>
   <Accordion title="Invoice vs. receipt">
     An **invoice** is the tax document for a sale (seller, buyer, VAT breakdown), issued automatically on every payment. A **receipt** is the emailed confirmation the buyer gets that they paid.
@@ -52,9 +52,9 @@ New to payments? These are the terms that show up across the docs, in one place.
     When a buyer's bank reverses a card payment. The disputed amount is deducted from your balance rather than paid out.
   </Accordion>
   <Accordion title="Test mode vs. live mode">
-    **Test mode** uses fake money and test cards, safe to explore, no verification needed. **Live mode** takes real money and unlocks after business verification (KYB).
+    **Test mode** uses fake money and test cards, safe to explore, no verification needed. **Live mode** takes real money and unlocks after business verification.
   </Accordion>
   <Accordion title="Webhook">
-    A signed HTTP call AgentaOS makes to your server the moment something happens (like a completed checkout), so your app can react without polling.
+    A signed HTTP call AgentaOS makes to your server when something happens (like a completed checkout), so your app does not have to keep asking.
   </Accordion>
 </AccordionGroup>

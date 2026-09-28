@@ -6,7 +6,7 @@ description: "Create a product in the dashboard, share its buyer link, and get p
 
 A product is one thing you sell at one price. It is a one-time payment or a subscription billed monthly or yearly. Every product has a buyer link, a public URL in the shape `https://app.agentaos.ai/pay/…`. You share that link, and each buyer who opens it gets their own checkout. One link can be paid any number of times.
 
-AgentaOS is the merchant of record for card and bank sales. The checkout asks for the buyer's country, adds the correct VAT, and issues the invoice. You do not register for VAT in the buyer's country. See [How Merchant of Record works](/mor/how-it-works).
+AgentaOS is the merchant of record for card and bank sales. The checkout asks for the buyer's country, adds the correct VAT, and issues the invoice. You do not register for VAT in the buyer's country. See [How merchant of record works](/mor/how-it-works).
 
 The API calls a product a payment link. Both names mean the same object, and the product's ID is the `linkId` in the API.
 
@@ -117,11 +117,11 @@ You can create and manage products with the SDK, the CLI, or the REST API. The f
   </Tab>
 </Tabs>
 
-`amount` is in currency units: `49.99` means €49.99, not cents. See the [money model](/payments/checkouts#money-model). The CLI creates test-mode products; create live products in the dashboard.
+`amount` is in currency units: `49.99` means €49.99, not cents. See the [money model](/api-reference/introduction#money-model). The CLI creates test-mode products; create live products in the dashboard.
 
 ### One-time vs. subscription
 
-A product is `type: 'one_time'` by default. Every payment is independent, and the link can be paid any number of times. Set `type: 'subscription'` to make a recurring plan. A subscription needs a `billingInterval` and an account that accepts card and bank payments; a crypto-only account cannot sell one.
+A product is `type: 'one_time'` by default. Every payment is independent, and the link can be paid any number of times. Set `type: 'subscription'` to make a recurring plan. A subscription needs a `billingInterval`.
 
 ```typescript
 const plan = await agentaos.paymentLinks.create({
@@ -170,7 +170,7 @@ Creating a subscription product does not create a subscription. A subscription s
   </Tab>
 </Tabs>
 
-A list call returns `{ items, total, hasMore }`. Cancelling a product stops new checkouts on its link. Checkouts already in progress and subscriptions already running from it continue.
+A list call returns `{ items, total, hasMore }`. Canceling a product stops new checkouts on its link. Checkouts already in progress and subscriptions already running from it continue.
 
 ## Next steps
 

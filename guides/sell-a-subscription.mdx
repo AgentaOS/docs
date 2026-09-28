@@ -29,7 +29,7 @@ How subscriptions behave over their life, and the same actions from code, are on
     In **Free trial (days)**, type `14`. Leave **Trial price** empty for a free trial.
   </Step>
   <Step title="Create it">
-    Click **Create product**. The next screen says "Pro is live".
+    Click **Create product**. The next screen says "Pro is live". Live here is the product's word for published. You are still in test mode.
   </Step>
 </Steps>
 
@@ -56,6 +56,8 @@ Open the link in your second browser and pay as the buyer.
     <Frame caption="The first checkout step for a plan with a free trial.">
       <img src="/images/subscriptions/checkout-trial.png" alt="The checkout for Pro with the buyer's email, name, and Germany filled in. The summary shows Pro €29.00, Tax 24% €6.96, and Due today €0.00, then €35.96 a month after the 14-day free trial." />
     </Frame>
+
+    The 24% is the Estonian rate. The checkout charges it to every EU consumer while AgentaOS sells under the EU distance-selling threshold. See [How tax works](/mor/tax#the-rate-on-eu-sales-today).
   </Step>
   <Step title="Continue to payment">
     Click **Continue to payment**.
@@ -123,15 +125,15 @@ After you confirm a downgrade, the subscription shows **Scheduled change** with 
   </Step>
 </Steps>
 
-<Frame caption="Cancelling keeps the period the buyer already has.">
+<Frame caption="Canceling keeps the period the buyer already has.">
   <img src="/images/subscriptions/cancel-dialog.png" alt="The Cancel subscription? dialog. It says the subscription stays active until the end of the current period, Oct 12, 2026, the customer keeps what they have paid for, and there is no refund." />
 </Frame>
 
-The status changes to **Cancels** and the end date. The subscriber keeps access until then, and nothing more is charged. To keep them after all, click **Resume subscription** before that date.
+The status changes to **Cancels** followed by the end date. The subscriber keeps access until then, and nothing more is charged. To keep them after all, click **Resume subscription** before that date.
 
 ## From code: subscribe a signed-in user
 
-When the buyer already has an account in your app, create the checkout from your server with the plan's link ID. Your own user ID in `metadata` comes back to you in the webhook. The link ID is on the plan's page under **Building this into your site?**.
+When the buyer already has an account in your app, create the checkout from your server with the plan's link ID. Your own user ID in `metadata` comes back to you in the webhook. To copy the link ID, open **Building this into your site?** on the plan's page and click **Copy ID**.
 
 ```typescript
 import { AgentaOS } from '@agentaos/pay';
@@ -149,7 +151,7 @@ const checkout = await agentaos.checkouts.create({
 
 When they finish, `checkout.session.completed` carries your `customerId` and the new `subscriptionId` in `data.metadata`. Store the `subscriptionId` on your user. Renewals do not carry your `customerId`, so match them by that `subscriptionId`. See [Handle webhooks](/guides/handle-webhooks) to verify the event.
 
-Creating plans, listing subscriptions, plan changes, and cancelling from code are on the [Subscriptions](/payments/subscriptions#from-code) page.
+Creating plans, listing subscriptions, plan changes, and canceling from code are on the [Subscriptions](/payments/subscriptions#from-code) page.
 
 ## Next steps
 

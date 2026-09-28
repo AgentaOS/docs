@@ -11,9 +11,9 @@ agenta status
 
 Alias: `agenta whoami`.
 
-## What it checks
+## Status checks
 
-- **Account**: who you are signed in as, and for which organization.
+- **Account**: who you are signed in as, and for which business.
 - **Going live**: how many go-live steps are done, your business verification, the free Revenue & Pricing Audit, and your payout account.
 - **Next step**: the one command that moves you forward, when there is one.
 
@@ -43,7 +43,7 @@ agenta status [--business <id>] [--json]
   Next: start with the free audit (agenta audit request).
 ```
 
-The three go-live steps are a first product or payment, a verified business and a payout account. The first line changes as you go:
+The three go-live steps are a first product or payment, a verified business and a payout account. The dashboard's setup guide counts four items: the same three, and **Go live** as the fourth. The first line changes as you go:
 
 | Where you are | First line |
 |---|---|
@@ -55,7 +55,7 @@ The `Next` line names the step that blocks you first:
 
 | Where you are | `Next` points to |
 |---|---|
-| We asked for changes on your verification | `agenta verify resubmit` |
+| AgentaOS asked for changes on your verification | `agenta verify resubmit` |
 | Not verified, no audit requested | `agenta audit request` |
 | Not verified, audit requested | `agenta verify submit` |
 | Verified, no payout account | Adding a payout account in the dashboard |
@@ -111,8 +111,8 @@ In every other case there is no `Next` line, for example while your verification
 |---|---|
 | `account.authenticated` | Whether you have a valid session. |
 | `account.email` | Account email, decoded from your session token. |
-| `account.organization` | Your organization's name. |
-| `account.orgId` | Your organization's id. |
+| `account.organization` | Your business's name. |
+| `account.orgId` | Your business's ID. |
 | `account.paymentTools.ready` | Always `true` once you are signed in: test payments work. |
 | `account.paymentTools.next` | A command to try a test payment. |
 | `account.jwtExpiresAt` | ISO 8601 timestamp your session token expires at. |
@@ -122,7 +122,7 @@ In every other case there is no `Next` line, for example while your verification
 | `goLive.progress` | Go-live steps done, out of the total. |
 | `goLive.verification.state` | `unverified`, `in_review`, `on_hold`, `verified` or `rejected`. |
 | `goLive.verification.label` | The same state in words, including `Changes requested`. |
-| `goLive.verification.changesRequested` | What we asked you to change. Empty when we asked for nothing. |
+| `goLive.verification.changesRequested` | What AgentaOS asked you to change. Empty when it asked for nothing. |
 | `goLive.audit` | Where the free audit stands, with the report link once it exists. |
 | `goLive.payouts.connected` | Whether you have added a payout account. |
 | `goLive.milestones` | When you made your first product, test payment and live payment, and your live payment count. |

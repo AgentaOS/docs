@@ -7,7 +7,7 @@ A checkout is one attempt to collect one payment. Each time a buyer opens a prod
 
 The **Checkouts** tab on the Products page lists every checkout with its status: **Open**, **Completed**, or **Expired**.
 
-## What the buyer sees
+## The buyer's checkout
 
 The hosted checkout has two steps. The order summary stays on the left: the product, the subtotal, the tax, and the total due. Under the summary, the page states **Sold by AgentaOS, merchant of record.**
 
@@ -158,13 +158,13 @@ The company, VAT number, and address are printed on the invoice. The buyer canno
   </Tab>
 </Tabs>
 
-An open checkout expires after `expiresIn` seconds: 1800 by default, from 300 to 86400. Cancelling stops the buyer from paying. A payment that cleared before the cancel still completes.
+An open checkout expires after `expiresIn` seconds: 1800 by default, from 300 to 86400. Canceling stops the buyer from paying. A payment that cleared before the cancel still completes.
 
 The full parameter and response reference is in [Checkouts (SDK)](/sdk/pay-checkouts) and [agenta pay](/cli/pay).
 
 ## Money model
 
-A plain `amount` is in currency units: `49.99` means €49.99, never cents. This applies to products, checkouts, and invoices. A field whose name ends in `Minor`, such as `unitAmountMinor` on a subscription, is an integer in the smallest unit: `1999` means €19.99. Webhook payloads carry `amount` as a string, such as `"49.99"`.
+A plain `amount` is in currency units (`49.99` means €49.99), and a field whose name ends in `Minor` is an integer in minor units. The full rules are in the [money model](/api-reference/introduction#money-model).
 
 ## Next steps
 

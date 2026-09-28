@@ -1,12 +1,12 @@
 ---
-title: "Monetize your product in a day."
+title: "Monetize your product in a day"
 description: "Set up in minutes and start selling the same day. Card, Apple Pay, and Google Pay, with subscriptions, tax, invoices, and payouts all handled for you."
 ---
 
-Getting paid shouldn't be harder than building, but for most founders it is: subscriptions, global cards, sales tax, chargebacks, invoices. None of it is your product, and all of it stands between you and revenue. AgentaOS runs the whole money layer so you never build a billing team to get paid.
+Getting paid shouldn't be harder than building, but for most founders it is: subscriptions, global cards, sales tax, chargebacks, invoices. None of it is your product, and all of it stands between you and revenue. AgentaOS runs billing, tax, invoices, and payouts, so you do not build a billing team to get paid.
 
 <Card title="Building with an agent? Hand it the docs." icon="robot" href="/agents/overview">
-  Paste this into Cursor or Claude Code and it sets up billing and hands you a live checkout link:
+  Paste this into Cursor or Claude Code. The agent sets up billing and returns a buyer link:
 
   ```text
   Read https://agentaos.ai/SKILL.md and set up AgentaOS for me.
@@ -16,7 +16,7 @@ Getting paid shouldn't be harder than building, but for most founders it is: sub
 ## Start where you are
 
 <CardGroup cols={2}>
-  <Card title="Add a payment link" icon="link" href="/payments/payment-links">
+  <Card title="Share a buyer link" icon="link" href="/payments/payment-links">
     A shareable URL you can charge many times. No code to share it.
   </Card>
   <Card title="Sell a subscription" icon="rotate" href="/guides/sell-a-subscription">
@@ -30,15 +30,15 @@ Getting paid shouldn't be harder than building, but for most founders it is: sub
   </Card>
 </CardGroup>
 
-## What is AgentaOS?
+## AgentaOS as your merchant of record
 
-AgentaOS is the billing and payments platform for AI founders, and a **Merchant of Record**. That means we become the legal seller of your product: your buyer pays AgentaOS, and we handle the payment, the VAT, the invoice, and the payout to you. You never register for tax abroad, file a cross-border return, or reconcile three processors. As the registered seller of record we carry the payment and tax liability, not you, and we are PCI-compliant and bank-grade secure. See [How it works](/mor/how-it-works).
+AgentaOS is a billing and payments platform for AI founders, and your **merchant of record**: the legal seller of your product. Your buyer pays AgentaOS, and AgentaOS takes the payment, charges the VAT, issues the invoice and pays you out. As the registered seller, AgentaOS carries the payment and tax liability, so you do not register for tax abroad, file a cross-border return, or reconcile three processors. AgentaOS is PCI compliant. See [How it works](/mor/how-it-works).
 
-## Why founders switch
+## Reasons founders switch
 
 <AccordionGroup>
   <Accordion title="Tax compliance is eating your time">
-    Cross-border VAT means registering and filing in every country you sell to. As your Merchant of Record, AgentaOS calculates, collects, and remits it, so you never file a cross-border return again.
+    Cross-border VAT means registering and filing in every country you sell to. As your merchant of record, AgentaOS calculates it, collects it, and pays it to the tax office, so you do not file a cross-border return.
   </Accordion>
   <Accordion title="Your payment stack was not built for how you sell">
     Card, Apple Pay, and Google Pay settle to one balance through one typed SDK, with tax and invoicing built in. No stitching a processor, a tax engine, and an invoicing tool together yourself.
@@ -51,8 +51,8 @@ AgentaOS is the billing and payments platform for AI founders, and a **Merchant 
 ## Core features
 
 <CardGroup cols={3}>
-  <Card title="Payment links & products" icon="link" href="/payments/payment-links">
-    Create a shareable link or reusable product. One-time or subscription. No code required.
+  <Card title="Products and buyer links" icon="link" href="/payments/payment-links">
+    Create a product and share its buyer link. One-time or subscription. No code required.
   </Card>
   <Card title="Subscriptions" icon="rotate" href="/payments/subscriptions">
     Recurring billing with automatic renewals. List, inspect, and cancel from the API, CLI, or dashboard.
@@ -67,7 +67,7 @@ AgentaOS is the billing and payments platform for AI founders, and a **Merchant 
     Every buyer who paid you, with email, country, and VAT number.
   </Card>
   <Card title="Webhooks" icon="bell" href="/payments/webhooks">
-    Get notified the moment a checkout completes. Signed and verifiable.
+    Get a signed event you can verify when a checkout completes.
   </Card>
 </CardGroup>
 
@@ -87,7 +87,7 @@ AgentaOS is the billing and payments platform for AI founders, and a **Merchant 
 
 ## AI agent integration
 
-Your AI agents can set up and operate AgentaOS on their own. No dashboards, no clicking.
+Your AI agents can set up and operate AgentaOS on their own, without the dashboard.
 
 ```text
 Read https://agentaos.ai/SKILL.md and set up AgentaOS for me
@@ -117,18 +117,18 @@ To integrate with code, follow the [code integration](/getting-started/quickstar
 
 <AccordionGroup>
   <Accordion title="How fast can I start accepting payments?">
-    Minutes in test mode. Create an account, grab a test key, and create your first checkout. Going live needs a short business verification, see [Account review](/mor/account-review).
+    Minutes in test mode. Create an account, grab a test key, and create your first checkout. Going live needs a short business verification: see [Account review](/mor/account-review).
   </Accordion>
   <Accordion title="What payment methods do you support?">
     Card, Apple Pay, and Google Pay. Cards work in 135+ currencies, from buyers worldwide.
   </Accordion>
   <Accordion title="Which countries and taxes do you cover?">
-    Cards reach buyers in 135+ currencies. We handle destination VAT for the EU (via Estonia OSS) today, and add jurisdictions as we grow. See [Supported countries](/mor/supported-countries).
+    AgentaOS charges EU consumers VAT at the Estonian rate while its EU sales are under the €10,000 threshold, and charges no tax to buyers outside the EU. See [How tax works](/mor/tax#the-rate-on-eu-sales-today) and [Supported countries](/mor/supported-countries).
   </Accordion>
   <Accordion title="Can my AI agents manage my store?">
     Yes. Point any AI agent at `SKILL.md`, or connect the MCP server, and it can create products, read customers and subscriptions, and send receipts on your behalf.
   </Accordion>
   <Accordion title="I bought something and see AgentaOS on my statement">
-    AgentaOS is the Merchant of Record, so we appear as the seller. See [Why was I charged](/for-customers/why-charged).
+    AgentaOS is the merchant of record, so AgentaOS appears as the seller. See [Why was I charged](/for-customers/why-charged).
   </Accordion>
 </AccordionGroup>

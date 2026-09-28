@@ -3,7 +3,7 @@ title: "Pay"
 description: "Create, check, and list checkout sessions from the terminal with agenta pay."
 ---
 
-`agenta pay` wraps the same checkout flow as the `@agentaos/pay` SDK and the dashboard: create a checkout, get back a payment link, and track its status, all without leaving the terminal. Useful for one-off invoicing, quick testing, and scripting payment creation into whatever tool you already use.
+`agenta pay` wraps the same checkout flow as the `@agentaos/pay` SDK and the dashboard: create a checkout, get back its checkout URL, and track its status from the terminal. Use it for one-off invoicing, quick testing, and scripts that create payments.
 
 <Note>
 `agenta pay` commands authenticate with your `agenta login` session, not an API key. For key-based auth in a backend or script, use [`@agentaos/pay`](/sdk/pay-overview) or the REST API with an `sk_live_`/`sk_test_` key instead.
@@ -92,7 +92,7 @@ agenta pay get mZrESFyR7RC9RPsJfZCVkg
 ```
 
 <Note>
-`amount` here reflects a per-checkout override and can be `null` if this checkout used its payment link's own amount rather than overriding it. `status` is one of `open`, `completed`, `expired`, `cancelled`.
+`amount` here reflects a per-checkout override and can be `null` if this checkout used its product's own amount rather than overriding it. `status` is one of `open`, `completed`, `expired`, `cancelled`.
 </Note>
 
 ## List checkouts
@@ -162,6 +162,6 @@ Every `agenta pay` command supports `--json`, and JSON output kicks in automatic
     Create checkouts from your own backend.
   </Card>
   <Card title="Checkouts (concept)" icon="book" href="/payments/checkouts">
-    How checkouts, payment links, and settlement fit together.
+    How checkouts, products, and settlement fit together.
   </Card>
 </CardGroup>

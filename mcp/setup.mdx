@@ -3,7 +3,7 @@ title: "MCP server"
 description: "Connect Claude, ChatGPT, Cursor or any MCP client to AgentaOS, and every tool your agent can then use."
 ---
 
-The AgentaOS MCP server gives your AI agent the same operations as the `agenta` CLI: products, checkouts, verification, subscriptions, discount codes, customers and invoices. The CLI commands and the MCP tools come from one catalogue, so each tool has a matching command with the same inputs and the same answer.
+The AgentaOS MCP server gives your AI agent the same operations as the `agenta` CLI: products, checkouts, verification, subscriptions, discount codes, customers and invoices. The CLI commands and the MCP tools come from one catalog, so each tool has a matching command with the same inputs and the same answer.
 
 ## Connect your agent
 
@@ -94,7 +94,7 @@ A headless agent or a CI job runs the server on its own machine instead, with an
 
 A test key (`sk_test_`) sees test data only, so the agent cannot move real money.
 
-## How tools answer
+## Tool answers
 
 Every tool answers twice: a plain sentence written for you, and the same result as JSON for code. The sentence is the one the CLI prints. The JSON is what the CLI prints with `--json`.
 
@@ -112,7 +112,7 @@ The server has 31 tools. The CLI column is the same operation in the terminal.
 | `agenta_verify_declaration` | `agenta verify declaration` | The five statements you attest to when you submit verification. |
 | `agenta_verify_submit` | `agenta verify submit` | Submit business verification, so you can accept live payments. |
 | `agenta_verify_status` | `agenta verify status` | Where your verification stands. |
-| `agenta_verify_resubmit` | `agenta verify resubmit` | Send your verification back for review after the changes we asked for. |
+| `agenta_verify_resubmit` | `agenta verify resubmit` | Send your verification back for review after the changes AgentaOS asked for. |
 
 ### Products and checkouts
 
@@ -121,7 +121,7 @@ The server has 31 tools. The CLI column is the same operation in the terminal.
 | `agenta_products_create` | `agenta products create` | Create a product (one-time) or a subscription plan. |
 | `agenta_products_list` | `agenta products list` | List your products and plans. |
 | `agenta_pay_checkout` | `agenta pay checkout` | Create a checkout and get the link to share. |
-| `agenta_pay_get` | `agenta pay get <sessionId>` | Whether a checkout is paid, still open, expired or cancelled. |
+| `agenta_pay_get` | `agenta pay get <sessionId>` | Whether a checkout is paid, still open, expired or canceled. |
 | `agenta_pay_list` | `agenta pay list` | List your checkouts, optionally by status. |
 
 ### Subscriptions and discount codes
@@ -129,7 +129,7 @@ The server has 31 tools. The CLI column is the same operation in the terminal.
 | Tool | CLI | What it does |
 |---|---|---|
 | `agenta_subscriptions_list` | `agenta subscriptions list` | List your subscriptions. |
-| `agenta_subscriptions_cancel` | `agenta subscriptions cancel <id>` | Cancel a subscription, at the end of the current period by default. |
+| `agenta_subscriptions_cancel` | `agenta subscriptions cancel <id>` | Cancel a subscription at the end of the current period. |
 | `agenta_subscriptions_change_plan` | `agenta subscriptions change-plan <id>` | Move a subscription to another plan. An upgrade charges now; a downgrade starts at the end of the period. |
 | `agenta_subscriptions_credit` | `agenta subscriptions credit <id>` | Put credit on a subscriber's account. It comes off their next invoice. |
 | `agenta_subscriptions_credits` | `agenta subscriptions credits <id>` | The credits given on a subscription, and what is still unspent. |
@@ -160,9 +160,9 @@ For [platforms](/connect/overview) only.
 | `agenta_businesses_revoke_invite` | `agenta businesses revoke-invite <id>` | Withdraw your client's open invitation. |
 | `agenta_businesses_id_link` | `agenta businesses id-link <id>` | The identity check link for your client. Only they can complete it. |
 
-## Act for a business you manage
+## Act as a business you manage
 
-If you run a platform, every tool takes an optional `business` input: the id of a business you manage. The tool then acts for that business instead of for you. Leave `business` out to act as yourself. In the CLI, the same input is `--business <id>`.
+If you run a platform, every tool takes an optional `business` input: the id of a business you manage. The tool then acts as that business instead of as you. Leave `business` out to act as yourself. In the CLI, the same input is `--business <id>`.
 
 ## Next steps
 

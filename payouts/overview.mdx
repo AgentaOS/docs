@@ -3,7 +3,7 @@ title: "Payouts"
 description: "How a sale becomes money you can pay out, where the payout goes, when it runs, what it costs, and the documents you get for each payout."
 ---
 
-Your card and bank sales collect in one AgentaOS balance per currency, EUR or USD. Payouts run twice a month, on the 1st and the 15th, and send the available part of that balance to your payout account: a bank account, or a stablecoin wallet if we switched that on for you. Each payout comes with a payout statement and a self-billed invoice for your books.
+Your card and bank sales collect in one AgentaOS balance per currency, EUR or USD. Payouts run twice a month, on the 1st and the 15th, and send the available part of that balance to your payout account: a bank account, or a stablecoin wallet if AgentaOS turned that on for you. Each payout comes with a payout statement and a self-billed invoice for your books.
 
 Before your first payout, you need two things:
 
@@ -34,7 +34,7 @@ Payouts are same-currency. A EUR balance pays to a EUR account and a USD balance
 
 <CardGroup cols={2}>
   <Card title="Bank account" icon="building-columns" href="/payouts/payout-accounts">
-    Paid through our banking partner. For each currency, we use your newest bank account that is ready for payouts.
+    Paid through our banking partner. For each currency, AgentaOS uses your newest bank account that is ready for payouts.
   </Card>
   <Card title="Stablecoin wallet" icon="wallet" href="/payouts/stablecoin-payouts">
     Public preview. EUR pays out in EURC and USD pays out in USDC, to a wallet you choose per currency.
@@ -47,10 +47,12 @@ To see which countries bank payouts reach, go to [Supported countries](/mor/supp
 
 Payouts run in two windows each month: the 1st and the 15th. On the **Payouts** tab, the **Payout schedule** section has two options:
 
-- **Automatic**: "Paid automatically every window (1st & 15th)." Set a **Minimum payout**. Below that amount, we hold your balance for the next window.
+- **Automatic**: "Paid automatically every window (1st & 15th)." Set a **Minimum payout**. Below that amount, AgentaOS holds your balance for the next window.
 - **You ask**: "Queued for the next window when you request it." Click **Request payout**. The next window pays what is available at that time, including sales that clear before then.
 
 A new account starts on **You ask**. The smallest payout is €50 or $50. When your balance is below that amount, it waits for a later window.
+
+With a verified account and a payout account, your first payout goes out in the first window after all three are true: your first sales have cleared (14 days after each sale), your **Available now** amount is at least €50 or $50, and you have clicked **Request payout**. Money in **Reserve** is not paid out yet: the **Reserve** row shows the amount and, once it is set, the date it frees up.
 
 ## Fees
 
@@ -61,12 +63,12 @@ Each payout carries a **Payout fee** of 1% of the amount paid out, with a minimu
 
 On **You ask**, the **Payouts** tab shows what you would receive today and the fees before you click **Request payout**. The payout statement lists each fee after the payout.
 
-## What you get on payout day
+## Documents for each payout
 
 Every payout gets two documents on the **Payouts** tab:
 
 - **Payout statement**: "What was paid this run: the covered sales, our commission, the payout fee, the bank transfer fee, and what reached your bank." Use it to match the payout to your bank statement.
-- **Self-billed invoice**: your supply to AgentaOS, one line per sale that the payout covers, with the fees deducted beneath. The total is what reached your account. "VAT treatment depends on your tax status."
+- **Self-billed invoice**: your supply to AgentaOS, one line per sale that the payout covers, with the fees deducted beneath. The total is what reached your account. It shows no VAT line: it records the value of your supply to AgentaOS (Aristokrates OÜ, Estonia).
 
 Give both documents to your accountant. See [Payout statements and self-billed invoices](/payouts/statements) for each line and how to use the documents in your books.
 
@@ -91,7 +93,7 @@ Give both documents to your accountant. See [Payout statements and self-billed i
 
 <CardGroup cols={2}>
   <Card title="Add a payout account" icon="building-columns" href="/payouts/payout-accounts">
-    Save the bank account we pay you to.
+    Save the bank account AgentaOS pays you to.
   </Card>
   <Card title="Supported countries" icon="globe" href="/mor/supported-countries">
     Where bank payouts reach, and the payout fee table.
@@ -99,7 +101,7 @@ Give both documents to your accountant. See [Payout statements and self-billed i
   <Card title="Go live" icon="rocket" href="/guides/go-live">
     Verify your account to take live payments and receive payouts.
   </Card>
-  <Card title="How Merchant of Record works" icon="scale-balanced" href="/mor/how-it-works">
+  <Card title="How merchant of record works" icon="scale-balanced" href="/mor/how-it-works">
     How a payment becomes money in your balance.
   </Card>
 </CardGroup>

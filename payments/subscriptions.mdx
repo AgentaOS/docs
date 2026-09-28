@@ -39,6 +39,8 @@ A trial belongs to the plan. Type the number of days in **Free trial (days)**, f
   <img src="/images/subscriptions/checkout-start-trial.png" alt="The checkout for the Pro plan. Due today is €0.00, the note says €35.96 a month after the 14-day free trial, and the button reads Start 14-day free trial." />
 </Frame>
 
+The €35.96 is the €29.00 plan price plus 24% VAT, the Estonian rate. The checkout charges it to every EU consumer while AgentaOS sells under the EU distance-selling threshold. See [How tax works](/mor/tax#the-rate-on-eu-sales-today).
+
 When the buyer clicks **Start 14-day free trial**, their card is saved and the subscription starts as `trialing`. The first charge happens when the trial ends. The buyer and you each get an email when the trial starts.
 
 To charge for the trial instead of giving it free, type an amount in **Trial price**. That amount covers the whole trial, and the buyer pays it at checkout.
@@ -162,7 +164,7 @@ The same actions are in the SDK (`@agentaos/pay`) and the CLI (`agenta`). The SD
     // Cancel at the end of the period
     const cancel = await agentaos.subscriptions.cancel(subscriptionId);
 
-    // Give a €10 credit (integer cents), then list the credits given
+    // Give a €10 credit (minor units), then list the credits given
     const credit = await agentaos.subscriptions.credit(subscriptionId, {
       amountMinor: 1000,
       reason: 'Two days of downtime',
@@ -173,7 +175,7 @@ The same actions are in the SDK (`@agentaos/pay`) and the CLI (`agenta`). The SD
   </Tab>
 </Tabs>
 
-The quote has `direction` (`upgrade`, `downgrade`, or `revert`), `dueTodayMinor`, `nextInvoiceMinor`, and `nextInvoiceAt`. Amounts that end in `Minor` are integer cents: `4900` is €49.00. Show the quote to the person who approves the change before you apply it, because an upgrade charges the card. Credits need an owner or admin who is signed in, through `agenta login` or the dashboard session: an API key is refused. Every field is in the reference: [SDK subscriptions](/sdk/pay-subscriptions) and [CLI subscriptions](/cli/subscriptions).
+The quote has `direction` (`upgrade`, `downgrade`, or `revert`), `dueTodayMinor`, `nextInvoiceMinor`, and `nextInvoiceAt`. Amounts that end in `Minor` are in minor units: `4900` is €49.00. Show the quote to the person who approves the change before you apply it, because an upgrade charges the card. Credits need an owner or admin who is signed in, through `agenta login` or the dashboard session: an API key is refused. Every field is in the reference: [SDK subscriptions](/sdk/pay-subscriptions) and [CLI subscriptions](/cli/subscriptions).
 
 ## Next steps
 

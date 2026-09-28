@@ -1,9 +1,9 @@
 ---
 title: "Discounts"
-description: "Create, list, inspect and stop the discount codes buyers type at checkout on a subscription plan."
+description: "Create, list, inspect and stop the discount codes buyers type at checkout."
 ---
 
-`agenta discounts` manages [discount codes](/payments/discount-codes): codes a buyer types at checkout on a subscription plan. A code takes a percentage or a fixed amount off the first invoice. A code with neither changes no price and records who it brought in, which is how a referral code works.
+`agenta discounts` manages [discount codes](/payments/discount-codes): codes a buyer types at checkout. A code works on any product, one-time or subscription. A code takes a percentage or a fixed amount off the first invoice. A code with neither changes no price and records who it brought in, which is how a referral code works.
 
 ```bash
 agenta discounts list
@@ -18,7 +18,7 @@ agenta discounts list
 | `agenta discounts show <id>` | What one code takes off, and how many people used it. |
 | `agenta discounts archive <id>` | Stop a code. |
 
-Every command takes `--json` for one JSON object, and `--business <id>` to act for a [business you manage](/cli/businesses).
+Every command takes `--json` for one JSON object, and `--business <id>` to act as a [business you manage](/cli/businesses).
 
 ## Create
 
@@ -30,7 +30,7 @@ agenta discounts create --code <code> [--percent-off <value> | --amount-off <val
   The code buyers type at checkout. Letters, numbers, dashes and underscores, up to 64.
 </ParamField>
 <ParamField query="-n, --name" type="string">
-  Your label for the code, shown on the buyer's invoice.
+  Your label for the code, for your records. Buyers never see it.
 </ParamField>
 <ParamField query="--percent-off" type="number">
   The percentage off the first invoice, e.g. `20`.

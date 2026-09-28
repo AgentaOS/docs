@@ -16,9 +16,9 @@ agenta verify status
 | `agenta verify declaration` | The five statements you attest to when you submit. |
 | `agenta verify submit …` | Submit business verification. |
 | `agenta verify status` | Where your verification stands. |
-| `agenta verify resubmit` | Send it back for review after the changes we asked for. |
+| `agenta verify resubmit` | Send it back for review after the changes AgentaOS asked for. |
 
-Every command takes `--json` for one JSON object, and `--business <id>` to act for a [business you manage](/cli/businesses).
+Every command takes `--json` for one JSON object, and `--business <id>` to act as a [business you manage](/cli/businesses).
 
 ## Declaration
 
@@ -166,11 +166,11 @@ The first line depends on where your verification stands:
 | On hold | Your account is on hold. |
 | Rejected | Your verification was rejected. |
 
-When we ask for changes, the next line lists them and ends with "Send it back with verify resubmit once done." On hold and rejected add the reason, and a rejection can add the date after which you can apply again.
+When AgentaOS asks for changes, the next line lists them and ends with "Send it back with verify resubmit once done." On hold and rejected add the reason, and a rejection can add the date after which you can apply again.
 
 ## Resubmit
 
-Make the changes we asked for, then send the application back. You retype nothing: the application on file is reused.
+Make the changes AgentaOS asked for, then send the application back. You retype nothing: the application on file is reused.
 
 ```bash
 agenta verify resubmit
