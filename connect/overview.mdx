@@ -43,11 +43,13 @@ White-label: create the business with `sendInvitationEmail: false` and we send n
 Every API call can run as a business you manage. Send its id in the `AgentaOS-Account` header, or pass `{ business }` in the SDK, or `--business <id>` in the CLI. Without it, the call acts on your own account.
 
 ```typescript
-// Every call on this client runs as the business
-const client = new AgentaOS(process.env.AGENTAOS_API_KEY!, { business: biz.id });
+const agentaos = new AgentaOS(process.env.AGENTAOS_API_KEY!);
 
-// Or one call only
+// One call only
 await agentaos.checkouts.create({ amount: 49, currency: 'EUR' }, { business: biz.id });
+
+// Or a client on which every call runs as the business
+const client = new AgentaOS(process.env.AGENTAOS_API_KEY!, { business: biz.id });
 ```
 
 Only your own key or session may act for a business you manage. Any other id returns `403 You cannot act as this business.` See [Acting for a business](/sdk/pay-businesses#acting-for-a-business).

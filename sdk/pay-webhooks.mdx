@@ -82,7 +82,10 @@ A discriminated union on `type`. `switch`/narrow on it to get typed `data`.
 <ResponseField name="id" type="string">
   Unique event ID, `evt_<uuid>`. Present on every event, both on the wire and on the object `verify()` returns.
 </ResponseField>
-<ResponseField name="type" type="'checkout.session.completed' | 'send.completed' | 'send.failed' | 'subscription.created' | 'subscription.renewed' | 'subscription.payment_failed' | 'subscription.updated' | 'subscription.canceled'" />
+<ResponseField name="type" type="'checkout.session.completed' | 'send.completed' | 'send.failed' | 'subscription.created' | 'subscription.renewed' | 'subscription.payment_failed' | 'subscription.updated' | 'subscription.canceled' | 'dispute.created' | 'dispute.closed' | 'account.updated' | 'webhook.test'" />
+<ResponseField name="business" type="string">
+  The id of the business the event happened in: your own, or one of the [businesses you manage](/connect/webhooks). Present on every event.
+</ResponseField>
 
 <Warning>
 Inside every event's `data`, **`amount` is a string**, e.g. `"49.99"`, not the `number` you get back from `checkouts.create()` or `paymentLinks.create()`. Parse it before doing math. See the [money model](/sdk/pay-overview#the-money-model).
@@ -150,6 +153,33 @@ All five `subscription.*` events carry the same `SubscriptionData`, delivered to
 </ResponseField>
 <ResponseField name="customerEmail" type="string | null" />
 <ResponseField name="customerName" type="string | null" />
+<ResponseField name="livemode" type="boolean">`true` in live mode, `false` in test mode.</ResponseField>
+
+### `dispute.created` / `dispute.closed`
+
+A buyer's bank opened, or closed, a chargeback on a sale. Both carry the same `DisputeData`.
+
+<ResponseField name="disputeId" type="string" />
+<ResponseField name="status" type="string">The dispute's state, as the dashboard shows it.</ResponseField>
+<ResponseField name="transactionId" type="string">The sale the dispute is about.</ResponseField>
+<ResponseField name="amountMinor" type="number">Integer minor units. `1240` means `€12.40`.</ResponseField>
+<ResponseField name="currency" type="string" />
+<ResponseField name="livemode" type="boolean">`true` in live mode, `false` in test mode.</ResponseField>
+
+### `account.updated`
+
+A business's verification changed: its identity check landed, or we approved, held, resumed or rejected it, or asked it for changes. For a platform, `business` names the client it happened to. See [Platform webhooks](/connect/webhooks).
+
+<ResponseField name="verification" type="'unverified' | 'in_review' | 'verified' | 'on_hold' | 'rejected'">Where the business's review stands, in the words the dashboard uses.</ResponseField>
+<ResponseField name="changesRequested" type="boolean">We have asked the business something and are waiting on it.</ResponseField>
+<ResponseField name="identityVerified" type="boolean">The identity check is done — its own, or its company's for another app of the same company.</ResponseField>
+<ResponseField name="livemode" type="boolean">`true` in live mode, `false` in test mode.</ResponseField>
+
+### `webhook.test`
+
+The sample event the dashboard's **Send test event** button fires at your endpoint.
+
+<ResponseField name="message" type="string" />
 <ResponseField name="livemode" type="boolean">`true` in live mode, `false` in test mode.</ResponseField>
 
 <AccordionGroup>

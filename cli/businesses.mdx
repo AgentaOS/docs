@@ -14,7 +14,7 @@ agenta businesses list
 | Command | What it does |
 |---|---|
 | `agenta businesses list` | Every business you manage, with its status. |
-| `agenta businesses get <id>` | One business, with your share. |
+| `agenta businesses get <id>` | One business, with its status. |
 | `agenta businesses create --name … --country … [--client-email …] [--same-company] [--no-invite-email]` | Add a business. |
 | `agenta businesses invite <id> [--no-email]` | Send your client's invitation again. A new link; the old one stops working. |
 | `agenta businesses revoke-invite <id>` | Withdraw the open invitation. Its link stops working. |
@@ -39,8 +39,7 @@ agenta businesses get <id>
 ```
 
 ```bash Output
-  ClientCo (in review) — 5b1f0c2e-8a4d-4c7b-9e21-3f6a7d8c9b10
-  Your share: 10% of each sale's price before VAT + 0.50 fixed
+  ClientCo (in review, invitation open for founder@clientco.com) — 5b1f0c2e-8a4d-4c7b-9e21-3f6a7d8c9b10
   Act as it: add --business 5b1f0c2e-8a4d-4c7b-9e21-3f6a7d8c9b10 to any command.
 ```
 

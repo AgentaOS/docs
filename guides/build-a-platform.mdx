@@ -139,7 +139,11 @@ New to platforms? Read [Platforms](/connect/overview) first: what a business is,
 
         // Or a client that always acts as the business
         const clientco = new AgentaOS(process.env.AGENTAOS_API_KEY!, { business: biz.id });
-        const product = await clientco.paymentLinks.create({ /* … */ });
+        const product = await clientco.paymentLinks.create({
+          amount: 49,
+          currency: 'EUR',
+          name: 'Pro plan',
+        });
 
         console.log(checkout.checkoutUrl);
         ```
