@@ -182,7 +182,7 @@ Show the quote to the merchant (or the subscriber) before calling this: the upgr
 
 ## `subscriptions.cancel(id)`
 
-Cancels at period end. The subscriber keeps access until `currentPeriodEnd`. No refund. Calling it again is a no-op. Pass `{ atPeriodEnd: false }` to cancel immediately instead.
+The cancellation takes effect at the end of the current period. The subscriber keeps access until `currentPeriodEnd`. No refund. Calling it again is a no-op.
 
 ```typescript
 await agentaos.subscriptions.cancel(sub.id);

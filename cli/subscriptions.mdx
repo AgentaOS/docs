@@ -76,14 +76,13 @@ The human table formats the amount for you (`€19.99/month`). In JSON, `unitAmo
 ## Cancel a subscription
 
 ```bash
-agenta subscriptions cancel <id> [--now] [--json]
+agenta subscriptions cancel <id> [--json]
 ```
+
+The cancellation takes effect at the end of the current period: the subscriber keeps access until their paid period ends, and nothing is refunded.
 
 <ParamField path="id" type="string" required>
   Subscription ID, e.g. `253dbe6a-6b4d-4c40-a16f-aae31cfea271`.
-</ParamField>
-<ParamField query="--now" type="boolean" default="false">
-  Cancel immediately instead of at the end of the current billing period. Without this flag, the subscriber keeps access until their paid period ends and nothing is refunded.
 </ParamField>
 <ParamField query="--json" type="boolean">
   Output a single JSON object instead of the human-readable summary.
@@ -101,25 +100,6 @@ agenta subscriptions cancel 253dbe6a-6b4d-4c40-a16f-aae31cfea271
   "currentPeriodEnd": "2026-09-06T00:00:00.000Z"
 }
 ```
-
-Cancel immediately:
-
-```bash
-agenta subscriptions cancel 253dbe6a-6b4d-4c40-a16f-aae31cfea271 --now
-```
-
-```json --json
-{
-  "status": "canceled",
-  "cancelAtPeriodEnd": false,
-  "effectiveCancelDate": "2026-08-06",
-  "currentPeriodEnd": "2026-09-06T00:00:00.000Z"
-}
-```
-
-<Tip>
-Default to the no-flag form. `--now` skips the grace period the subscriber already paid for, so reach for it only when that's actually the ask (fraud, duplicate signup, an explicit "cancel me right now").
-</Tip>
 
 ## Change the plan (upgrade or downgrade)
 

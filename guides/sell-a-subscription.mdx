@@ -1,265 +1,169 @@
 ---
-title: "Sell a Subscription"
-description: "Create a product once. Share the buyer link, or create a checkout for a logged-in user. Then list, invoice, and cancel."
+title: "Sell a subscription"
+description: "Create a monthly plan with a free trial, share it, take your first subscriber, change their plan, and cancel. All from the dashboard, in test mode."
 ---
 
-By the end of this guide you'll have a subscription product, a test subscriber, and you'll know how to see who's subscribed and cancel them. This runs in **test mode**. The "buyer" is you, paying with the test card.
+This guide takes you from no plan to a running subscription in the dashboard. You create a monthly plan with a 14-day free trial, pay for it yourself as a test buyer, then move the subscriber to another plan and cancel. Everything runs in **Test mode**, so no real money moves.
 
-<Warning>
-There is no `subscriptions.create()`. You create a **product** once. The buyer pays. That payment is what starts the subscription.
-</Warning>
+How subscriptions behave over their life, and the same actions from code, are on the [Subscriptions](/payments/subscriptions) page.
 
 ## Before you start
 
-- An AgentaOS account and a test API key (`sk_test_...`) from **Settings → Developers → API Keys**. See [Accept your first payment](/guides/accept-your-first-payment) if you haven't.
-- Card and bank are on by default. Wallet-only accounts cannot sell subscriptions. KYB is only needed for **live**. See [Go live](/guides/go-live).
+- An AgentaOS account. The dashboard opens in **Test mode**. You only need to verify your business to take real money: see [Go live](/guides/go-live).
+- A second browser, or a private window, to act as the buyer.
+- The test card `4242 4242 4242 4242`, with any future expiry date and any CVC. Type it only into the card form on the checkout page.
 
-Test card, typed on the hosted page only: `4242 4242 4242 4242`, any future expiry, any CVC. Never send a card number to the API.
-
-## The one id
-
-The dashboard calls this a **product**. The API creates it with `paymentLinks.create`. The id you pass around is `linkId`.
-
-| Name | What it is | Where you see it |
-|---|---|---|
-| `linkId` | The product's UUID | Product page → **Copy link ID**, or `product.id` |
-| Buyer link | `/pay/…` URL | Product page → **Copy link**. Anyone can open this. |
-| `sessionId` | One checkout attempt | `checkouts.create` → `checkout.sessionId` |
-
-`linkId` is what `checkouts.create({ linkId })` wants. It is not the `/pay/…` slug.
+## Create the plan
 
 <Steps>
-  <Step title="Create the product once">
-    One product per price. **Catalog → Products**, or in code:
-
-    <Tabs>
-      <Tab title="SDK">
-        ```typescript
-        import { AgentaOS } from '@agentaos/pay';
-
-        const agentaos = new AgentaOS(process.env.AGENTAOS_API_KEY!); // sk_test_...
-
-        const product = await agentaos.paymentLinks.create({
-          amount: 19.99,
-          currency: 'EUR',
-          description: 'Pro, monthly',
-          type: 'subscription',
-          billingInterval: 'month', // 'month' | 'year'
-        });
-
-        // product.id is the linkId
-        // product.checkoutUrl is the /pay/… buyer link
-        ```
-      </Tab>
-      <Tab title="cURL">
-        ```bash
-        curl -X POST https://api.agentaos.ai/api/v1/gateway/payment-links \
-          -H "x-api-key: sk_test_..." \
-          -H "Content-Type: application/json" \
-          -d '{
-            "amount": 19.99,
-            "currency": "EUR",
-            "description": "Pro, monthly",
-            "type": "subscription",
-            "billingInterval": "month"
-          }'
-        ```
-      </Tab>
-    </Tabs>
-
-    `amount: 19.99` means €19.99, not cents. Create this once, not once per buyer.
-
-    <Note>
-    From the terminal: `agenta products create --name "Pro" -a 19.99 -c EUR --subscription --interval month --json`
-    returns the same product; its `id` is the `linkId`. Needs `agentaos` 2.1 or newer (`npm install -g agentaos@latest`).
-    `agenta pay checkout` still only makes a one-time checkout.
-    </Note>
+  <Step title="Start a new product">
+    In the sidebar, click **Products**, then click **New product**.
   </Step>
-
-  <Step title="Get them to pay">
-    Two ways. Same product. Same `linkId`.
-
-    <Tabs>
-      <Tab title="Anyone (share the link)">
-        Send `product.checkoutUrl`. Every visitor gets their own checkout. You do not know who they are until they type an email and pay.
-
-        This is the dashboard **Copy link** button.
-      </Tab>
-      <Tab title="Logged-in user">
-        They already have an account in **your** app. Create a checkout from `linkId` and pass your user id:
-
-        ```typescript
-        const checkout = await agentaos.checkouts.create({
-          linkId: product.id,
-          buyerEmail: user.email,
-          buyerCountry: user.country, // ISO-2, e.g. 'DE'
-          metadata: { customerId: user.id },
-        });
-
-        // Save checkout.sessionId as pending.
-        // Redirect them to checkout.checkoutUrl
-        ```
-
-        `buyerEmail` should match their profile. That is how AgentaOS attaches the customer.
-
-        Do **not** send them the `/pay/…` link. That page has no `metadata.customerId`.
-
-        Store `linkId` on the product, your user id in your database, and after they pay the AgentaOS `subscription.id`.
-      </Tab>
-    </Tabs>
-
-    | Field | Value |
-    |---|---|
-    | Card number | `4242 4242 4242 4242` |
-    | Expiry | Any future date |
-    | CVC | Any 3 digits |
+  <Step title="Name it">
+    Under **Details**, type a **Product name**, for example `Pro`. Buyers see the name and the description on the checkout.
   </Step>
-
-  <Step title="Confirm they paid">
-    Shared the `/pay/…` link? List subscriptions and find them by email:
-
-    ```typescript
-    const page = await agentaos.subscriptions.list({ limit: 20, offset: 0 });
-    const sub = page.items.find((s) => s.customerEmail === 'you@example.com');
-    console.log(sub?.status);          // 'active'
-    console.log(sub?.unitAmountMinor); // 1999
-    ```
-
-    ```bash
-    agenta subscriptions list --json
-    ```
-
-    Created a checkout for a logged-in user? Prefer the webhook. `checkout.session.completed` includes `event.data.metadata`. Your `customerId` is there. So is `subscriptionId` after they start the card form.
-
-    ```typescript
-    case 'checkout.session.completed': {
-      const { sessionId, metadata } = event.data;
-      const customerId = metadata?.customerId as string | undefined;
-      const subscriptionId =
-        typeof metadata?.subscriptionId === 'string' ? metadata.subscriptionId : null;
-
-      if (!customerId || !subscriptionId) break;
-
-      // Save subscriptionId on your user (customerId).
-      // Key idempotency on sessionId.
-      break;
-    }
-    ```
-
-    `subscriptions.list()` does **not** copy your metadata. Later renewals fire the same event without `customerId`. Look up the user by the `subscription.id` you stored the first time.
-
-    Or poll `checkouts.retrieve(sessionId)` until `completed`, `expired`, or `cancelled`. Verify the signature: [Handle webhooks](/guides/handle-webhooks).
-
-    <Info>
-    `unitAmountMinor` is cents. `1999` means €19.99. Every other `amount` in this API is already decimal (`19.99`).
-    </Info>
+  <Step title="Set the price">
+    Under **Pricing**, type the price, for example `29`, and pick **EUR** or **USD**. Click **Subscription**, then **Monthly**.
   </Step>
-
-  <Step title="Status, invoices, cancel">
-    Use the `subscription.id`.
-
-    ```typescript
-    const page = await agentaos.subscriptions.list({ limit: 100 });
-    const sub = page.items.find((s) => s.id === subscriptionId);
-
-    sub?.status; // active | trialing | past_due | canceled | ...
-    sub?.cancelAtPeriodEnd;
-    sub?.currentPeriodEnd;
-
-    const invoices = await agentaos.subscriptions.invoices(sub.id);
-
-    await agentaos.subscriptions.cancel(sub.id);
-    ```
-
-    Cancel does not refund. It stops the next renewal. They keep access until `currentPeriodEnd`. Pass `{ atPeriodEnd: false }` (CLI: `--now`) to cancel immediately instead. Calling cancel again is a no-op.
-
-    PDF: `agentaos.invoices.downloadPdf(invoice.id)` and `agentaos.invoices.getReceipt(invoice.id)`.
-
-    <Tabs>
-      <Tab title="CLI">
-        ```bash
-        agenta subscriptions cancel 7c1e9b2a-4f6d-4a3b-9c8e-2d5f0a1b3c4d
-        ```
-      </Tab>
-      <Tab title="cURL">
-        ```bash
-        curl -X POST https://api.agentaos.ai/api/v1/gateway/subscriptions/7c1e9b2a-4f6d-4a3b-9c8e-2d5f0a1b3c4d/cancel \
-          -H "x-api-key: sk_test_..." \
-          -H "Content-Type: application/json" \
-          -d '{ "atPeriodEnd": true }'
-        ```
-      </Tab>
-    </Tabs>
+  <Step title="Add the trial">
+    In **Free trial (days)**, type `14`. Leave **Trial price** empty for a free trial.
   </Step>
-  <Step title="Optional: a free trial">
-    A trial is a property of the plan. Add `trialPeriodDays` (1 to 730) when you create it; nothing else changes.
-
-    ```typescript theme={null}
-    const product = await agentaos.paymentLinks.create({
-      amount: 19.99,
-      currency: 'EUR',
-      description: 'Pro, monthly',
-      type: 'subscription',
-      billingInterval: 'month',
-      trialPeriodDays: 14,
-    });
-    ```
-
-    ```bash theme={null}
-    agenta products create --name "Pro" -a 19.99 -c EUR --subscription --interval month --trial-days 14 --json
-    ```
-
-    The hosted checkout says "Due today €0.00, then €19.99/mo after your 14-day free trial", saves the card, and creates the subscription as `trialing`. The first charge happens when the trial ends. `checkout.session.completed` fires at trial start with `amount: "0"`, `trial: true` and `trial_end`; treat it as "trial started", not as money received.
-  </Step>
-
-  <Step title="Optional: upgrade or downgrade">
-    Each price is its own product. To move a subscriber, quote the change, show it, then apply it with the quote's `prorationDate`.
-
-    <Tabs>
-      <Tab title="SDK">
-        ```typescript theme={null}
-        const quote = await agentaos.subscriptions.previewPlanChange(sub.id, PRO_PLUS_LINK_ID);
-        // quote.direction 'upgrade' | 'downgrade', quote.dueTodayMinor, quote.effectiveAt
-
-        const result = await agentaos.subscriptions.changePlan(sub.id, {
-          targetLinkId: PRO_PLUS_LINK_ID,
-          prorationDate: quote.prorationDate,
-        });
-        ```
-      </Tab>
-
-      <Tab title="CLI">
-        ```bash theme={null}
-        agenta subscriptions change-plan <subscriptionId> --to <linkId> --dry-run --json   # quote only
-        agenta subscriptions change-plan <subscriptionId> --to <linkId> --json             # quote, then apply
-        ```
-      </Tab>
-    </Tabs>
-
-    An **upgrade** charges the prorated difference on the saved card now and the new price applies immediately. A **downgrade** charges nothing today; the subscriber keeps the current plan until `effectiveAt`, the current period end, and the subscription reports the switch as `pendingPlanChange` until then. To cancel a scheduled downgrade, change the plan to the current plan again (`direction: 'revert'`, nothing charged). The target must be a different plan in the same currency and billing interval, and the subscription must be `active` or `trialing`. Each of these fires `subscription.updated`.
+  <Step title="Create it">
+    Click **Create product**. The next screen says "Pro is live".
   </Step>
 </Steps>
 
-## Verify it worked
+Click **View product** to open the plan's page.
 
-- `subscriptions.list()` shows `status: 'active'` and the right `unitAmountMinor`.
-- Shared-link buyer: they used `/pay/…` and appear under [Customers](/payments/customers).
-- Logged-in buyer: they landed on `/checkout/…`. The webhook has `metadata.customerId` and `metadata.subscriptionId`. `subscriptions.list()` does not contain `customerId`.
-- Cancel sets `cancelAtPeriodEnd: true`. Access stays until `currentPeriodEnd`.
+<Frame caption="The plan's page. Copy link gives you the link for buyers.">
+  <img src="/images/subscriptions/plan-page.png" alt="The product page for Pro: Active, Subscription, EUR, €29.00 per month, VAT added at checkout, with the buttons Copy link, Edit, Copy to live, Preview, QR code, and Deactivate." />
+</Frame>
+
+## Share the link or embed it
+
+Click **Copy link** and send the link to a buyer: in an email, on your pricing page, or in a post. One link works for every buyer.
+
+To show the checkout on your own site instead, open **Building this into your site?** on the plan's page. Under **Embed on your site**, click **Copy snippet** and paste it into your page. The snippet works only on sites you approve under **Settings → Developers → Approved sites**. See [Embedded checkout](/payments/embedded-checkout).
+
+## Take the first subscriber
+
+Open the link in your second browser and pay as the buyer.
+
+<Steps>
+  <Step title="Fill in the buyer details">
+    Type an email such as `buyer@example.com` and pick a **Country**. The checkout shows **Due today** €0.00 and the monthly price after the trial, with any VAT for that country.
+
+    <Frame caption="The first checkout step for a plan with a free trial.">
+      <img src="/images/subscriptions/checkout-trial.png" alt="The checkout for Pro with the buyer's email, name, and Germany filled in. The summary shows Pro €29.00, Tax 24% €6.96, and Due today €0.00, then €35.96 a month after the 14-day free trial." />
+    </Frame>
+  </Step>
+  <Step title="Continue to payment">
+    Click **Continue to payment**.
+  </Step>
+  <Step title="Enter the test card">
+    Type `4242 4242 4242 4242` in **Card number**, any future date in **Expiration date**, and any three digits in **Security code**.
+  </Step>
+  <Step title="Start the trial">
+    Click **Start 14-day free trial**. The checkout confirms "Trial started" and €0.00 due today.
+  </Step>
+</Steps>
+
+<Frame caption="What the buyer sees after starting the trial.">
+  <img src="/images/subscriptions/trial-started.png" alt="The confirmation page: Trial started, €0.00 due today, then €35.96 a month after your 14-day free trial, and Card saved with AgentaOS." />
+</Frame>
+
+The buyer and you each get an email that the trial started. The first charge happens on the day the trial ends.
+
+## See the subscriber
+
+In the sidebar, click **Subscriptions**. The new subscriber shows with the status **Trialing** and the date of the first charge under **Renews**.
+
+<Frame caption="The first subscriber, in their free trial.">
+  <img src="/images/subscriptions/subscriptions-list.png" alt="The Subscriptions list with one row: Alex Buyer, buyer@example.com, Trialing, Pro, €35.96/mo, renews Oct 12, 2026." />
+</Frame>
+
+The price in the list includes any VAT the buyer pays, so it can be higher than the plan price. Click the subscriber's name to open the subscription.
+
+<Frame caption="The subscription page. Change plan and Cancel subscription are on the right.">
+  <img src="/images/subscriptions/subscription-page.png" alt="The subscription page for Pro: €35.96/mo, Trialing, with the customer's name and email, the plan details, and the buttons Change plan and Cancel subscription." />
+</Frame>
+
+## Change their plan
+
+A plan change needs a second plan in the same currency and with the same interval. Create a product named `Pro Plus` at `49`, **Subscription**, **Monthly**, the same way as above.
+
+<Steps>
+  <Step title="Open the dialog">
+    On the subscription page, click **Change plan**.
+  </Step>
+  <Step title="Pick the new plan">
+    Pick **Pro Plus** from the list. The dialog shows what is due today and the price from the next renewal.
+  </Step>
+  <Step title="Confirm">
+    Click **Confirm change**. An upgrade applies at once, so the subscription now shows Pro Plus.
+  </Step>
+</Steps>
+
+A move to a cheaper plan waits for the end of the period. The dialog says "No charge today" and the date the change takes effect.
+
+<Frame caption="A downgrade back to Pro: nothing is charged today.">
+  <img src="/images/subscriptions/change-plan-downgrade.png" alt="The Change plan dialog with Pro at €29.00 a month selected. It says No charge today, and Takes effect Oct 12, 2026, then €35.96 a month." />
+</Frame>
+
+After you confirm a downgrade, the subscription shows **Scheduled change** with the new plan and its start date. To drop the scheduled change, click **Change plan** again and pick the plan marked "current plan".
+
+## Cancel
+
+<Steps>
+  <Step title="Start the cancellation">
+    On the subscription page, click **Cancel subscription**.
+  </Step>
+  <Step title="Confirm">
+    Read the dialog, then click **Cancel subscription** again.
+  </Step>
+</Steps>
+
+<Frame caption="Cancelling keeps the period the buyer already has.">
+  <img src="/images/subscriptions/cancel-dialog.png" alt="The Cancel subscription? dialog. It says the subscription stays active until the end of the current period, Oct 12, 2026, the customer keeps what they have paid for, and there is no refund." />
+</Frame>
+
+The status changes to **Cancels** and the end date. The subscriber keeps access until then, and nothing more is charged. To keep them after all, click **Resume subscription** before that date.
+
+## From code: subscribe a signed-in user
+
+When the buyer already has an account in your app, create the checkout from your server with the plan's link ID. Your own user ID in `metadata` comes back to you in the webhook. The link ID is on the plan's page under **Building this into your site?**.
+
+```typescript
+import { AgentaOS } from '@agentaos/pay';
+
+const agentaos = new AgentaOS(process.env.AGENTAOS_API_KEY!);
+
+const checkout = await agentaos.checkouts.create({
+  linkId: PRO_LINK_ID,
+  buyerEmail: user.email,
+  buyerCountry: user.country, // ISO 3166-1 alpha-2, for example 'DE'
+  metadata: { customerId: user.id },
+});
+// Send the user to checkout.checkoutUrl
+```
+
+When they finish, `checkout.session.completed` carries your `customerId` and the new `subscriptionId` in `data.metadata`. Store the `subscriptionId` on your user. Renewals do not carry your `customerId`, so match them by that `subscriptionId`. See [Handle webhooks](/guides/handle-webhooks) to verify the event.
+
+Creating plans, listing subscriptions, plan changes, and cancelling from code are on the [Subscriptions](/payments/subscriptions#from-code) page.
 
 ## Next steps
 
 <CardGroup cols={2}>
+  <Card title="Subscriptions" icon="rotate" href="/payments/subscriptions">
+    Trials, plan changes, cancellation, and the code for each.
+  </Card>
+  <Card title="Discount codes" icon="ticket" href="/payments/discount-codes">
+    Give new subscribers money off their first invoice.
+  </Card>
   <Card title="Handle webhooks" icon="bell" href="/guides/handle-webhooks">
-    Verify the signature and handle the same event twice.
-  </Card>
-  <Card title="Checkouts" icon="cart-shopping" href="/sdk/pay-checkouts">
-    `checkouts.create({ linkId })` and every field on the session.
-  </Card>
-  <Card title="Subscriptions" icon="rotate" href="/sdk/pay-subscriptions">
-    List, invoices, and cancel.
+    Unlock access when a subscriber pays.
   </Card>
   <Card title="Go live" icon="rocket" href="/guides/go-live">
-    Take this product from test mode to real money.
+    Take real payments.
   </Card>
 </CardGroup>
