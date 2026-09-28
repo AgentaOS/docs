@@ -1,0 +1,21 @@
+---
+title: "List businesses"
+openapi: "GET /gateway/businesses"
+---
+
+<Info>
+Every field on this resource is camelCase on the wire. See [Naming convention](/api-reference/introduction#naming-convention).
+</Info>
+
+<Note>
+Returns a plain array, not the paginated envelope. These are the businesses **you** manage as a platform. To act as one of them on any other endpoint, send its `id` in the [`AgentaOS-Account` header](/api-reference/introduction#acting-for-a-business).
+</Note>
+
+<CardGroup cols={2}>
+  <Card title="Platforms" icon="building" href="/connect/overview">
+    What a platform is, and who does what.
+  </Card>
+  <Card title="SDK: businesses.list()" icon="code" href="/sdk/pay-businesses">
+    The same call from TypeScript.
+  </Card>
+</CardGroup>

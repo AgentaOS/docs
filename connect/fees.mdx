@@ -1,0 +1,54 @@
+---
+title: "Platform fees"
+description: "Take a share of each client sale: a percentage of the price before VAT plus a fixed amount, paid to you once the sale clears."
+---
+
+As a platform you can take a **share** of every sale a client business makes. You set it per business. Another app of your own company carries no share.
+
+## How the share is worked out
+
+The share is a **percentage of the sale's price before VAT, plus a fixed amount** per sale.
+
+On a €100 sale (before VAT) with a 10% + €0.50 share, you get €10.50.
+
+- **VAT is left out.** We are the Merchant of Record and remit the VAT; it is never part of your share.
+- **Our own fee stays on the total paid**, as for any sale. See [Pricing](/mor/pricing). The client keeps what remains after our fee and your share.
+- **The share is fixed on each sale when it is made.** Changing it later affects new sales only. Past sales keep the share they were made with.
+
+## Set the share
+
+The share is set in the dashboard only. There is no API for it.
+
+<Steps>
+  <Step title="Open your businesses">
+    **Settings → Business → Businesses you manage**.
+  </Step>
+  <Step title="Set share">
+    Click **Set share** on the business, enter the percentage and the fixed amount. The editor shows what the client keeps on an example sale, after our fee and yours.
+  </Step>
+</Steps>
+
+You can read the current share on each business as `platformFee` (`{ bps, fixedMinor }`: basis points, where `1000` is 10%, and the fixed part in minor units). See [Business fields](/sdk/pay-businesses#business-fields).
+
+## When you are paid
+
+Your share is paid to you with **your own payout**, once that sale's reserve period has cleared, the same wait as the client's money from that sale.
+
+The client must be in good standing at that point: verified, and not on hold. A share from a client that is not yet verified waits until they are.
+
+## See what is coming
+
+The **Platform fees** card on the **Payments** page shows each day's fees with its date: the next five days first, then one total for later. A day where the client is not yet in good standing says it is paid once that client is verified.
+
+For a quick total per business, `feesThisMonth` on each [business](/sdk/pay-businesses#business-fields) gives your share of its live sales this month, per currency, ready to show.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Platforms" icon="building" href="/connect/overview">
+    What a platform is, and who does what.
+  </Card>
+  <Card title="Payouts" icon="building-columns" href="/payouts/overview">
+    How your balance moves before it pays out.
+  </Card>
+</CardGroup>

@@ -1,0 +1,84 @@
+---
+title: "Platforms"
+description: "Run sales for your clients, or for other apps of your own company, from one AgentaOS account. What a platform is, who does what, and how it maps to Stripe Connect."
+---
+
+A **platform** is an AgentaOS account that manages other businesses. You build software for other people: an agency that launches products for clients, a site builder, a marketplace of apps. Each of your clients gets its own **business** on AgentaOS. It sells under its own name, gets its own invoices and payouts, and you run it with your own API key.
+
+AgentaOS stays the Merchant of Record for every sale, yours and your clients'.
+
+## Two kinds of business
+
+<CardGroup cols={2}>
+  <Card title="A client's business" icon="building">
+    Someone else's company. It is verified on its own, including an identity check that only the client can complete. You can take a share of each of its sales.
+  </Card>
+  <Card title="Another app of your own company" icon="layer-group">
+    A second product you own ("same company"). It is verified and priced with you. It carries no share and no identity check of its own.
+  </Card>
+</CardGroup>
+
+You choose when you create the business: `sameLegalEntity: true` in the SDK, `--same-company` in the CLI.
+
+## Who does what
+
+| Step | Who does it |
+|---|---|
+| Create the business | You |
+| Invite the client to log in (optional) | You. We email the invitation, or you send the link yourself. |
+| File the business details, product and declarations | You or the client. If you file it, the review records that the platform filed it, and our reviewers see that. |
+| Identity check | **Only the client.** You can generate the link and send it; you cannot complete it for them. |
+| Create products, checkouts and payment links | You, acting as the business, or the client |
+| Set your share of its sales | You, in the dashboard only |
+| Receive its webhook events | Your own webhook endpoint, automatically |
+
+Most clients never log in. You can run everything for them and only send them the identity check link.
+
+<Note>
+White-label: create the business with `sendInvitationEmail: false` and we send no email. You get `inviteUrl` back and send it to your client yourself, under your own brand.
+</Note>
+
+## Acting as a business
+
+Every API call can run as a business you manage. Send its id in the `AgentaOS-Account` header, or pass `{ business }` in the SDK, or `--business <id>` in the CLI. Without it, the call acts on your own account.
+
+```typescript
+// Every call on this client runs as the business
+const client = new AgentaOS(process.env.AGENTAOS_API_KEY!, { business: biz.id });
+
+// Or one call only
+await agentaos.checkouts.create({ amount: 49, currency: 'EUR' }, { business: biz.id });
+```
+
+Only your own key or session may act for a business you manage. Any other id returns `403 You cannot act as this business.` See [Acting for a business](/sdk/pay-businesses#acting-for-a-business).
+
+## Coming from Stripe Connect
+
+| Stripe Connect | AgentaOS |
+|---|---|
+| Connected account | Business (a client's business, or another app of the same company) |
+| `Stripe-Account: acct_…` / `{ stripeAccount }` | `AgentaOS-Account: <business id>` / `{ business }` |
+| Account Links | ID check link — only the client completes it (BR-15) |
+| Platform submits the account's details | Platform may file the client's verification; recorded as filed by the platform (decision 14) |
+| `application_fee_amount` | Share: % of the price before VAT + fixed, set in the dashboard (decision 13) |
+| Connect webhook, `account` on events | The platform's own webhook receives its clients' events, `business` on every event (FR-33) |
+| `account.updated` | `account.updated` (FR-32) |
+
+The main difference: we are the Merchant of Record, so the share is taken from the price before VAT, and the identity check stays with the person whose company it is.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Build a platform" icon="route" href="/guides/build-a-platform">
+    The five steps, in the SDK and the CLI.
+  </Card>
+  <Card title="Platform fees" icon="percent" href="/connect/fees">
+    Your share of each client sale, and when it is paid.
+  </Card>
+  <Card title="Platform webhooks" icon="webhook" href="/connect/webhooks">
+    One endpoint for all your clients' events.
+  </Card>
+  <Card title="Businesses (SDK)" icon="code" href="/sdk/pay-businesses">
+    Every method, parameter and field.
+  </Card>
+</CardGroup>

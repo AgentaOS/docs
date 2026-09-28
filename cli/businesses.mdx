@@ -1,0 +1,145 @@
+---
+title: "Businesses"
+description: "Manage your clients' businesses from the terminal, and run any command as one of them with --business."
+---
+
+`agenta businesses` is for [platforms](/connect/overview): the businesses you manage, whether a client's business or another app of your own company.
+
+```bash
+agenta businesses list
+```
+
+## Commands
+
+| Command | What it does |
+|---|---|
+| `agenta businesses list` | Every business you manage, with its status. |
+| `agenta businesses get <id>` | One business, with your share. |
+| `agenta businesses create --name … --country … [--client-email …] [--same-company] [--no-invite-email]` | Add a business. |
+| `agenta businesses invite <id> [--no-email]` | Send your client's invitation again. A new link; the old one stops working. |
+| `agenta businesses revoke-invite <id>` | Withdraw the open invitation. Its link stops working. |
+| `agenta businesses id-link <id>` | The identity check link for your client. Only they can complete it. |
+
+## List
+
+```bash
+agenta businesses list
+```
+
+```bash Output
+  2 businesses:
+    - ClientCo (in review, invitation open for founder@clientco.com) — 5b1f0c2e-8a4d-4c7b-9e21-3f6a7d8c9b10
+    - Acme Notes (live, your own company, identity verified) — 7c2e1d3f-9b5e-4d8c-0f32-4a7b8e9d0c21
+```
+
+## Get
+
+```bash
+agenta businesses get <id>
+```
+
+```bash Output
+  ClientCo (in review) — 5b1f0c2e-8a4d-4c7b-9e21-3f6a7d8c9b10
+  Your share: 10% of each sale's price before VAT + 0.50 fixed
+  Act as it: add --business 5b1f0c2e-8a4d-4c7b-9e21-3f6a7d8c9b10 to any command.
+```
+
+## Create
+
+```bash
+agenta businesses create --name <name> --country <code> [--client-email <email>] [--same-company] [--no-invite-email]
+```
+
+<ParamField query="-n, --name" type="string" required>
+  The name buyers see.
+</ParamField>
+<ParamField query="--country" type="string" required>
+  Where it is registered, two-letter code, e.g. `DE`.
+</ParamField>
+<ParamField query="--client-email" type="string">
+  Invite your client as its admin. Leave it out to run the business yourself.
+</ParamField>
+<ParamField query="--same-company" type="boolean">
+  Another app of your own company: verified and priced with you, with no share and no identity check of its own.
+</ParamField>
+<ParamField query="--no-invite-email" type="boolean">
+  We send no email. The command prints the link for you to send yourself.
+</ParamField>
+
+```bash
+agenta businesses create --name ClientCo --country DE --client-email founder@clientco.com --no-invite-email
+```
+
+```bash Output
+  Added ClientCo. It starts in test mode and goes live after its own verification.
+  Business id: 5b1f0c2e-8a4d-4c7b-9e21-3f6a7d8c9b10 — add --business 5b1f0c2e-8a4d-4c7b-9e21-3f6a7d8c9b10 to any command to act as it.
+  Send ClientCo this link to accept: https://app.agentaos.ai/invite/…
+```
+
+## Invite
+
+```bash
+agenta businesses invite <id> [--no-email]
+```
+
+<ParamField query="--no-email" type="boolean">
+  Don't email it. The command prints the new link for you to send.
+</ParamField>
+
+Once your client has joined, the invitation is theirs to manage and this is refused.
+
+## Revoke invite
+
+```bash
+agenta businesses revoke-invite <id>
+```
+
+```bash Output
+  Invitation withdrawn: its link no longer works.
+```
+
+## ID link
+
+```bash
+agenta businesses id-link <id>
+```
+
+```bash Output
+  Send your client this link — only they can complete the identity check: https://…
+```
+
+If the client is already verified it says so and gives no link. The identity check is real, so a test API key is refused; your `agenta login` session works. Another app of your own company has no identity check of its own.
+
+## `--business` on every command
+
+Add `--business <id>` to **any** `agenta` command to run it as a business you manage. Leave it out to act as yourself.
+
+```bash
+agenta products create … --business <id>
+agenta pay checkout -a 49 -c EUR --business <id>
+agenta verify submit … --business <id>
+agenta invoices list --business <id>
+```
+
+Filing a client's verification with `agenta verify submit … --business <id>` is recorded as filed by the platform. A business you do not manage is refused with `You cannot act as this business.`
+
+<Tip>
+Add `--json` to any command for a single JSON object, e.g. `agenta businesses create … --json` returns `business`, `inviteToken` and `inviteUrl`.
+</Tip>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Build a platform" icon="route" href="/guides/build-a-platform">
+    The five steps end to end.
+  </Card>
+  <Card title="Businesses (SDK)" icon="code" href="/sdk/pay-businesses">
+    Every method and field.
+  </Card>
+  <Card title="Platform fees" icon="percent" href="/connect/fees">
+    Set your share in the dashboard.
+  </Card>
+  <Card title="Platforms" icon="building" href="/connect/overview">
+    What a platform is, and who does what.
+  </Card>
+</CardGroup>

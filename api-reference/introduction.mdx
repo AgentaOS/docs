@@ -32,6 +32,34 @@ curl https://api.agentaos.ai/api/v1/gateway/payment-links \
 
 A missing or invalid key returns `401 Unauthorized`. There's no separate bearer-token flow for API keys, only the CLI's browser login session uses `Authorization: Bearer` internally; server-to-server integrations always use `x-api-key`.
 
+## Acting for a business
+
+A [platform](/connect/overview) can call any endpoint as a business it manages. Send the business's id in the `AgentaOS-Account` header, and the request runs as that business: the checkout, product or invoice is the business's, not yours. This is Stripe's `Stripe-Account` header.
+
+```bash
+curl https://api.agentaos.ai/api/v1/gateway/sessions \
+  -H "x-api-key: sk_live_..." \
+  -H "AgentaOS-Account: 5b1f0c2e-8a4d-4c7b-9e21-3f6a7d8c9b10" \
+  -H "Content-Type: application/json" \
+  -d '{"amount": 49, "currency": "EUR"}'
+```
+
+<ParamField header="AgentaOS-Account" type="string">
+  The id of a business you manage. Leave it out, or send your own id, to act as yourself.
+</ParamField>
+
+Only a platform's key, or a signed-in owner or admin of the platform, may send it, and only for a business that platform manages. Any other value (another platform's business, an account nobody manages, an id that does not exist) returns the same `403`:
+
+```json 403
+{
+  "statusCode": 403,
+  "message": "You cannot act as this business.",
+  "timestamp": "2026-09-28T12:00:00.000Z"
+}
+```
+
+The SDK sends this header for you with `{ business }` and the CLI with `--business <id>`. See [Acting for a business](/sdk/pay-businesses#acting-for-a-business).
+
 ## Environments (test vs live)
 
 A key's prefix is both its identity and its environment. There's no separate "mode" parameter to set.

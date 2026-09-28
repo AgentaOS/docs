@@ -1,0 +1,21 @@
+---
+title: "Create a business"
+openapi: "POST /gateway/businesses"
+---
+
+<Note>
+The business starts in test mode and goes live after its own verification. With `clientEmail`, we email your client an invitation. With `sendInvitationEmail: false` we send nothing: send `inviteUrl` yourself, under your own brand.
+</Note>
+
+<Tip>
+Store the returned `business.id` on your side, next to your record of the client. There is no metadata on a business: the id is the link between the two.
+</Tip>
+
+<CardGroup cols={2}>
+  <Card title="Build a platform" icon="route" href="/guides/build-a-platform">
+    The five steps end to end.
+  </Card>
+  <Card title="Platform fees" icon="percent" href="/connect/fees">
+    Set your share in the dashboard.
+  </Card>
+</CardGroup>

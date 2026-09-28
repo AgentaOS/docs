@@ -3,7 +3,7 @@ title: "Events"
 description: "Every webhook event AgentaOS sends: full payload fields, types, and a JSON example for each."
 ---
 
-AgentaOS sends webhook events for checkouts, outbound sends, and subscriptions. Every event shares the same envelope, an `id`, a `type`, and a `data` object whose shape depends on the type. See [Webhooks](/payments/webhooks) for how to register a URL and verify the signature before trusting any of this.
+AgentaOS sends webhook events for checkouts, outbound sends, subscriptions, disputes, and account verification. Every event shares the same envelope, an `id`, a `type`, a `business`, and a `data` object whose shape depends on the type. See [Webhooks](/payments/webhooks) for how to register a URL and verify the signature before trusting any of this.
 
 <Note>
 Every `amount` field below is a **string** (e.g. `"49.99"`), not a number. This differs from `amount` on SDK create calls (checkouts, payment links), which is a plain number in currency units. Parse it before doing arithmetic.
@@ -18,7 +18,11 @@ The field names below are the literal snake_case keys AgentaOS `POST`s to your `
 </ResponseField>
 
 <ResponseField name="type" type="string">
-  One of `checkout.session.completed`, `send.completed`, `send.failed`, or a `subscription.*` event. Switch on this to decide how to parse `data`.
+  One of `checkout.session.completed`, `send.completed`, `send.failed`, a `subscription.*` event, `dispute.created`, `dispute.closed`, or `account.updated`. Switch on this to decide how to parse `data`.
+</ResponseField>
+
+<ResponseField name="business" type="string">
+  The id of the business the event happened in. On your own events it is your own id. If you are a [platform](/connect/overview), your webhook also receives the events of every business you manage, and there `business` is your client's id. See [Platform webhooks](/connect/webhooks).
 </ResponseField>
 
 <ResponseField name="data" type="object">
@@ -81,6 +85,7 @@ Fired when a checkout is paid, by card, wallet, or stablecoin. This is the event
 {
   "id": "evt_8c7d6e5f-4a3b-2c1d-0e9f-8a7b6c5d4e3f",
   "type": "checkout.session.completed",
+  "business": "9a8b7c6d-5e4f-3a2b-1c0d-9e8f7a6b5c4d",
   "data": {
     "link_id": "mZrESFyR7RC9RPsJfZCVkg",
     "session_id": "kR9pQwErTyUiOpAsDfGh",
@@ -140,6 +145,7 @@ Fired when an outbound stablecoin send you initiated confirms on-chain.
 {
   "id": "evt_9d8e7f6a-5b4c-3d2e-1f0a-9b8c7d6e5f4a",
   "type": "send.completed",
+  "business": "9a8b7c6d-5e4f-3a2b-1c0d-9e8f7a6b5c4d",
   "data": {
     "transaction_id": "9d8e7f6a-5b4c-3d2e-1f0a-9b8c7d6e5f4a",
     "tx_hash": "0xabc123...",
@@ -196,6 +202,7 @@ Fired when an outbound send fails to broadcast, network error, insufficient bala
 {
   "id": "evt_8fae0d2b-7d54-4b3e-9a41-2b3f9c1e0aa2",
   "type": "send.failed",
+  "business": "9a8b7c6d-5e4f-3a2b-1c0d-9e8f7a6b5c4d",
   "data": {
     "transaction_id": "8fae0d2b-7d54-4b3e-9a41-2b3f9c1e0aa2",
     "tx_hash": null,
@@ -246,6 +253,7 @@ Subscription lifecycle events, delivered to your **organization** webhook endpoi
 {
   "id": "evt_3f2a1b0c-9d8e-7f6a-5b4c-3d2e1f0a9b8c",
   "type": "subscription.renewed",
+  "business": "9a8b7c6d-5e4f-3a2b-1c0d-9e8f7a6b5c4d",
   "data": {
     "id": "sub_6pC2lNB6joCRQIZ1aMrTpi",
     "status": "active",
@@ -261,6 +269,63 @@ Subscription lifecycle events, delivered to your **organization** webhook endpoi
 }
 ```
 
+## Dispute events
+
+Fired when a buyer's bank opens a chargeback on a sale, and when it closes. Both share the same `data` shape.
+
+- **`dispute.created`** a buyer's bank opened a dispute on a sale.
+- **`dispute.closed`** the dispute closed in your favour (`status` is `won`).
+
+<Expandable title="data fields" defaultOpen>
+  <ResponseField name="dispute_id" type="string">The dispute's id at the card processor.</ResponseField>
+  <ResponseField name="status" type="string">The dispute's status as the card processor reports it, e.g. `needs_response` or `won`.</ResponseField>
+  <ResponseField name="transaction_id" type="string">The sale the dispute is about.</ResponseField>
+  <ResponseField name="amount_minor" type="number">Disputed amount in integer minor units. `4999` = `€49.99`.</ResponseField>
+  <ResponseField name="currency" type="string">e.g. `"EUR"`.</ResponseField>
+  <ResponseField name="livemode" type="boolean">`true` in live mode, `false` in test mode.</ResponseField>
+</Expandable>
+
+```json Example
+{
+  "id": "evt_1a2b3c4d5e6f7a8b",
+  "type": "dispute.created",
+  "business": "9a8b7c6d-5e4f-3a2b-1c0d-9e8f7a6b5c4d",
+  "data": {
+    "dispute_id": "dp_1P...",
+    "status": "needs_response",
+    "transaction_id": "8c7d6e5f-4a3b-2c1d-0e9f-8a7b6c5d4e3f",
+    "amount_minor": 4999,
+    "currency": "EUR",
+    "livemode": true
+  }
+}
+```
+
+## `account.updated`
+
+Fired when a business's verification changes: its identity check lands (verified, or declined), or our reviewers approve, reject, hold or resume it, or ask for a change. Sent to the business's own endpoint and, for a managed business, to its platform's. The body is the state after the change.
+
+<Expandable title="data fields" defaultOpen>
+  <ResponseField name="verification" type="string">`unverified`, `in_review`, `verified`, `on_hold`, or `rejected`.</ResponseField>
+  <ResponseField name="changes_requested" type="boolean">We asked the business for a change and are waiting on it.</ResponseField>
+  <ResponseField name="identity_verified" type="boolean">The identity check is done. For another app of your own company, this is your company's check.</ResponseField>
+  <ResponseField name="livemode" type="boolean">Always `true`: verification is about live money.</ResponseField>
+</Expandable>
+
+```json Example
+{
+  "id": "evt_4e1b9a0c2d3f5a67",
+  "type": "account.updated",
+  "business": "5b1f0c2e-8a4d-4c7b-9e21-3f6a7d8c9b10",
+  "data": {
+    "verification": "verified",
+    "changes_requested": false,
+    "identity_verified": true,
+    "livemode": true
+  }
+}
+```
+
 ## Next steps
 
 <CardGroup cols={2}>
@@ -269,5 +334,8 @@ Subscription lifecycle events, delivered to your **organization** webhook endpoi
   </Card>
   <Card title="Payment SDK: Webhooks" icon="node-js" href="/sdk/pay-webhooks">
     The `webhooks` resource in `@agentaos/pay`.
+  </Card>
+  <Card title="Platform webhooks" icon="building" href="/connect/webhooks">
+    One endpoint for all the businesses you manage.
   </Card>
 </CardGroup>

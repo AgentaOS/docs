@@ -1,0 +1,185 @@
+---
+title: "Businesses"
+description: "Manage your clients' businesses with agentaos.businesses, and act for any of them with the business option."
+---
+
+`agentaos.businesses` is for [platforms](/connect/overview): the businesses you manage, whether a client's business or another app of your own company. Stripe calls these connected accounts.
+
+Every method acts on your own account (the platform). To do anything **as** one of the businesses, see [Acting for a business](#acting-for-a-business).
+
+## `businesses.list()`
+
+```typescript
+const businesses = await agentaos.businesses.list();
+for (const b of businesses) console.log(b.name, b.status);
+```
+
+Returns `Business[]`: every business you manage. Not paginated.
+
+## `businesses.retrieve(id)`
+
+```typescript
+const biz = await agentaos.businesses.retrieve('5b1f0c2e-8a4d-4c7b-9e21-3f6a7d8c9b10');
+```
+
+<ParamField path="id" type="string" required>The business id.</ParamField>
+
+Returns one `Business`, the same shape as a row of `list()`.
+
+## `businesses.create(params)`
+
+```typescript
+const { business, inviteToken, inviteUrl } = await agentaos.businesses.create({
+  name: 'ClientCo',
+  country: 'DE',
+  clientEmail: 'founder@clientco.com',
+  sendInvitationEmail: false,
+});
+```
+
+<ParamField body="name" type="string" required>
+  The name buyers see. A brand, not an email. Up to 100 characters.
+</ParamField>
+<ParamField body="country" type="string" required>
+  Where the business is registered, ISO 3166-1 alpha-2 in upper case, e.g. `'DE'`.
+</ParamField>
+<ParamField body="clientEmail" type="string">
+  Invite your client as the business's admin. Leave it out to run the business yourself. Only an owner of your platform may invite.
+</ParamField>
+<ParamField body="sameLegalEntity" type="boolean" default="false">
+  `true` for another app of your own company: verified and priced with you, with no share and no identity check of its own.
+</ParamField>
+<ParamField body="sendInvitationEmail" type="boolean" default="true">
+  `false`: we send no email. You send `inviteUrl` to your client yourself (white-label).
+</ParamField>
+
+The business starts in test mode and goes live after its own verification.
+
+<ResponseField name="business" type="Business">The new business.</ResponseField>
+<ResponseField name="inviteToken" type="string | null">The invitation token, or `null` without `clientEmail`.</ResponseField>
+<ResponseField name="inviteUrl" type="string | null">The link your client opens to accept, or `null` without `clientEmail`. Ready to send as it is.</ResponseField>
+
+## `businesses.resendInvitation(id, params?)`
+
+```typescript
+const { inviteUrl } = await agentaos.businesses.resendInvitation(biz.id, { sendInvitationEmail: false });
+```
+
+Sends the invitation again, to the person last invited. It is a new link: the old one stops working.
+
+<ParamField path="id" type="string" required>The business id.</ParamField>
+<ParamField body="sendInvitationEmail" type="boolean" default="true">`false`: no email, you send the link yourself.</ParamField>
+
+<ResponseField name="inviteToken" type="string">The new invitation token.</ResponseField>
+<ResponseField name="inviteUrl" type="string">The new link to send.</ResponseField>
+
+Once your client has joined, the invitation is theirs to manage: this returns `409 client_joined`.
+
+## `businesses.revokeInvitation(id)`
+
+```typescript
+await agentaos.businesses.revokeInvitation(biz.id);
+```
+
+<ParamField path="id" type="string" required>The business id.</ParamField>
+
+Withdraws the open invitation. Its link stops working. Returns nothing. `409 client_joined` once your client has joined.
+
+## `businesses.createVerificationLink(id)`
+
+```typescript
+const { url, status } = await agentaos.businesses.createVerificationLink(biz.id);
+if (url) sendToClient(url);
+```
+
+The identity check link for your client, like Stripe's Account Links. You send it; only your client can complete it.
+
+<ParamField path="id" type="string" required>The business id.</ParamField>
+
+<ResponseField name="url" type="string | null">The link to send. `null` when the client is already verified: nothing to send.</ResponseField>
+<ResponseField name="status" type="string">Where the identity check stands, as the check reports it. `Approved` when it is done.</ResponseField>
+
+<Warning>
+Needs a live key (`sk_live_...`). A test key gets `403 live_key_required`. For another app of your own company it returns `409 identity_from_company`: its identity check is your company's.
+</Warning>
+
+Calling it again while a check is open gives back the same check.
+
+## Business fields
+
+<ResponseField name="id" type="string">Business UUID. Use it as `{ business }` and in `AgentaOS-Account`.</ResponseField>
+<ResponseField name="name" type="string">The name buyers see.</ResponseField>
+<ResponseField name="country" type="string | null">ISO 3166-1 alpha-2.</ResponseField>
+<ResponseField name="status" type="'test_only' | 'in_review' | 'changes_needed' | 'on_hold' | 'rejected' | 'live'">
+  Where the business stands. `live` means verified and with a payout account. `changes_needed` means we asked the business for a change.
+</ResponseField>
+<ResponseField name="platformOrgId" type="string">Your own id: the platform that manages it.</ResponseField>
+<ResponseField name="createdAt" type="string">ISO 8601.</ResponseField>
+<ResponseField name="platformFee" type="{ bps: number; fixedMinor: number }">
+  Your share of its new sales: basis points of the price before VAT (`1000` = 10%) plus a fixed amount in minor units. Set in the dashboard. See [Platform fees](/connect/fees).
+</ResponseField>
+<ResponseField name="sameLegalEntity" type="boolean">`true` for another app of your own company.</ResponseField>
+<ResponseField name="feesThisMonth" type="Array<{ currency: string; feesMinor: number; feesDisplay: string }>">
+  Your share of its live sales this month, per currency. `feesDisplay` is ready to show, e.g. `"€12.50"`.
+</ResponseField>
+<ResponseField name="invitedEmail" type="string | null">Who an open invitation is waiting on, or `null`.</ResponseField>
+<ResponseField name="identityVerified" type="boolean">The identity check is done: its own, or your company's for another app of your own company.</ResponseField>
+
+```json
+{
+  "id": "5b1f0c2e-8a4d-4c7b-9e21-3f6a7d8c9b10",
+  "name": "ClientCo",
+  "country": "DE",
+  "status": "in_review",
+  "platformOrgId": "0e6d2c1a-3b4f-4a5e-8c7d-9f1a2b3c4d5e",
+  "createdAt": "2026-09-28T10:00:00.000Z",
+  "platformFee": { "bps": 1000, "fixedMinor": 50 },
+  "sameLegalEntity": false,
+  "feesThisMonth": [{ "currency": "EUR", "feesMinor": 1250, "feesDisplay": "€12.50" }],
+  "invitedEmail": "founder@clientco.com",
+  "identityVerified": false
+}
+```
+
+## Acting for a business
+
+Any call on any resource can run as a business you manage. This is Stripe's `stripeAccount`.
+
+**For a whole client**, pass `business` when you create it. Every request it sends acts as that business:
+
+```typescript
+const clientco = new AgentaOS(process.env.AGENTAOS_API_KEY!, { business: biz.id });
+
+await clientco.paymentLinks.list();
+```
+
+**For one call**, pass `{ business }` as the last argument of any method. It overrides the client's `business`:
+
+```typescript
+await agentaos.checkouts.create({ amount: 49, currency: 'EUR' }, { business: biz.id });
+await agentaos.accountReview.submit(details, { business: biz.id });
+await agentaos.invoices.list({ limit: 20 }, { business: biz.id });
+```
+
+Either way the SDK sends the id in the `AgentaOS-Account` header. Leave it out to act as yourself. A business you do not manage returns `403 You cannot act as this business.`, the same answer for an id that does not exist.
+
+<Tip>
+Filing a client's verification with `accountReview.submit(…, { business })` is recorded as filed by the platform. Only your client can complete the identity check: send them the link from `createVerificationLink`.
+</Tip>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Build a platform" icon="route" href="/guides/build-a-platform">
+    The five steps end to end.
+  </Card>
+  <Card title="Businesses (CLI)" icon="terminal" href="/cli/businesses">
+    The same from the terminal.
+  </Card>
+  <Card title="Platform webhooks" icon="webhook" href="/connect/webhooks">
+    `business` on every event, and `account.updated`.
+  </Card>
+  <Card title="API reference" icon="book" href="/api-reference/businesses/list">
+    The raw HTTP endpoints.
+  </Card>
+</CardGroup>

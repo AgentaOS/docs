@@ -1,0 +1,12 @@
+---
+title: "Create a verification link"
+openapi: "POST /gateway/businesses/{id}/verification-link"
+---
+
+<Warning>
+Needs a live key (`sk_live_...`): the identity check is real. A test key gets `403 live_key_required`.
+</Warning>
+
+<Note>
+You send the link; only your client can complete the identity check. `url` is `null` when they are already verified. Another app of your own company has no identity check of its own: `409 identity_from_company`.
+</Note>

@@ -38,7 +38,16 @@
               "payments/subscriptions",
               "payments/invoices",
               "payments/receipts",
-              "payments/customers"
+              "payments/customers",
+              "payments/embedded-checkout"
+            ]
+          },
+          {
+            "group": "Platforms",
+            "pages": [
+              "connect/overview",
+              "connect/fees",
+              "connect/webhooks"
             ]
           },
           {
@@ -85,6 +94,7 @@
               "guides/sell-a-subscription",
               "guides/go-live",
               "guides/handle-webhooks",
+              "guides/build-a-platform",
               "guides/ai-agent"
             ]
           }
@@ -102,6 +112,7 @@
               "sdk/pay-subscriptions",
               "sdk/pay-invoices",
               "sdk/pay-customers",
+              "sdk/pay-businesses",
               "sdk/pay-webhooks",
               "sdk/pay-errors"
             ]
@@ -116,6 +127,7 @@
               "cli/subscriptions",
               "cli/customers",
               "cli/invoices",
+              "cli/businesses",
               "cli/status"
             ]
           },
@@ -175,6 +187,17 @@
                 "group": "Transactions",
                 "pages": [
                   "api-reference/transactions/list"
+                ]
+              },
+              {
+                "group": "Businesses",
+                "pages": [
+                  "api-reference/businesses/list",
+                  "api-reference/businesses/create",
+                  "api-reference/businesses/retrieve",
+                  "api-reference/businesses/resend-invitation",
+                  "api-reference/businesses/revoke-invitation",
+                  "api-reference/businesses/verification-link"
                 ]
               },
               "api-reference/webhooks"
