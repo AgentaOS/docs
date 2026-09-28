@@ -29,6 +29,7 @@
             "pages": [
               "agents/overview",
               "mcp/setup",
+              "mcp/remote-connector",
               "experimental/agent-wallet"
             ]
           },
@@ -126,9 +127,11 @@
             "pages": [
               "cli/install",
               "cli/login",
+              "cli/verify",
               "cli/products",
               "cli/pay",
               "cli/subscriptions",
+              "cli/discounts",
               "cli/customers",
               "cli/invoices",
               "cli/businesses",

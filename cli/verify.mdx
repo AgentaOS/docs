@@ -1,0 +1,193 @@
+---
+title: "Verify"
+description: "Submit your business verification from the terminal, check where it stands, and send it back after changes."
+---
+
+`agenta verify` submits your business verification. A person reviews it, and once your business is verified you can accept live payments. Test payments work before that.
+
+```bash
+agenta verify status
+```
+
+## Commands
+
+| Command | What it does |
+|---|---|
+| `agenta verify declaration` | The five statements you attest to when you submit. |
+| `agenta verify submit …` | Submit business verification. |
+| `agenta verify status` | Where your verification stands. |
+| `agenta verify resubmit` | Send it back for review after the changes we asked for. |
+
+Every command takes `--json` for one JSON object, and `--business <id>` to act for a [business you manage](/cli/businesses).
+
+## Declaration
+
+Read the five statements before you submit. `--accept-declaration` on `verify submit` attests to all five.
+
+```bash
+agenta verify declaration
+```
+
+```bash Output
+  Submitting verification attests that:
+    - My pricing is visible before checkout, not after.
+    - My product name doesn't borrow someone else's brand.
+    - Any reviews or user counts on my site are real.
+    - My site has a public Privacy Policy and Terms.
+    - My product isn't built for spam, fraud or harassment.
+
+  Regulated or restricted activities (declare with --restricted): Adult content, Gambling, Weapons, Drugs & supplements, Financial advice, Counterfeit goods, Data scraping, Engagement farming.
+  If one turns out not to be true, we stop payouts and may close the account. A review rejected for a prohibited product or fraud cannot be resubmitted for three months.
+```
+
+<Warning>
+If an agent runs this for you, it reads the statements to you and you confirm each one. Only you can attest to them.
+</Warning>
+
+## Submit
+
+```bash
+agenta verify submit --legal-name <name> --registration-number <number> --country <code> --street <street> --city <city> --url <url> --accept-declaration [options]
+```
+
+The command checks every required flag before it sends anything. If flags are missing, it names all of them in one message:
+
+```bash Output
+  ✕ Missing required flags: --legal-name, --country, --street, --city, --url, --registration-number, --accept-declaration. Run verify declaration to read what --accept-declaration attests to.
+```
+
+<ParamField query="--entity" type="string" default="business">
+  `business` or `individual`.
+</ParamField>
+<ParamField query="--legal-name" type="string" required>
+  The registered company name, or your full legal name.
+</ParamField>
+<ParamField query="--registration-number" type="string">
+  The company registration number. Required when `--entity` is `business`.
+</ParamField>
+<ParamField query="--display-name" type="string">
+  The name buyers see on their statement. Defaults to `--legal-name`.
+</ParamField>
+<ParamField query="--country" type="string" required>
+  The country of registration, two-letter code, e.g. `EE`.
+</ParamField>
+<ParamField query="--street" type="string" required>
+  The registered address.
+</ParamField>
+<ParamField query="--city" type="string" required>
+  The city.
+</ParamField>
+<ParamField query="--postal" type="string">
+  The postal code.
+</ParamField>
+<ParamField query="--address-country" type="string">
+  The country of the address, two-letter code. Defaults to `--country`.
+</ParamField>
+<ParamField query="--url" type="string" required>
+  Your product's page on your own site, e.g. `https://example.com`.
+</ParamField>
+<ParamField query="--description" type="string">
+  One sentence on what your product does.
+</ParamField>
+<ParamField query="--category" type="string">
+  `saas`, `digital`, `services`, `marketplace`, `physical` or `other`.
+</ParamField>
+<ParamField query="--delivery" type="string">
+  How buyers get what they pay for: `instant_digital`, `email_delivery`, `subscription_access`, `manual`, `scheduled_service`, `physical_shipped` or `other`.
+</ParamField>
+<ParamField query="--volume" type="string">
+  Your sales volume band: `under_1k`, `1k_10k`, `10k_50k` or `over_50k`.
+</ParamField>
+<ParamField query="--customers" type="boolean">
+  You already have paying customers.
+</ParamField>
+<ParamField query="--usage-claims" type="boolean">
+  Your site shows reviews or user counts.
+</ParamField>
+<ParamField query="--restricted" type="boolean">
+  You sell a regulated or restricted activity (the list is in `agenta verify declaration`). The application still goes to review, with extra checks and a higher chance of a decline.
+</ParamField>
+<ParamField query="--accept-declaration" type="boolean" required>
+  Attest to the five statements in `agenta verify declaration`.
+</ParamField>
+
+```bash
+agenta verify submit \
+  --legal-name "Acme OÜ" --registration-number 12345678 \
+  --country EE --street "Sepapaja 6" --city Tallinn --postal 15551 \
+  --url https://example.com --description "Invoicing for freelancers" \
+  --category saas --delivery instant_digital --volume under_1k \
+  --accept-declaration
+```
+
+```bash Output
+  Your business verification is with us; a person reviews it, usually within 24 to 48 hours.
+  Nothing to do until we write back. verify status tells you where it has got to.
+```
+
+```json --json
+{
+  "verification": {
+    "state": "in_review",
+    "label": "In review",
+    "submitted": true,
+    "reviewedBy": "a person, usually within 24 to 48 hours"
+  }
+}
+```
+
+A submitted application cannot be edited. If you run `verify submit` again, nothing is sent:
+
+```bash Output
+  Nothing was sent: your verification is already on file (in review).
+  Nothing to do until we write back.
+```
+
+If you run a platform, `agenta verify submit … --business <id>` files your client's verification for them. AgentaOS records that the platform filed it.
+
+## Status
+
+```bash
+agenta verify status
+```
+
+```bash Output
+  Your business verification is with us; nothing to do until we write back.
+```
+
+The first line depends on where your verification stands:
+
+| State | First line |
+|---|---|
+| Not submitted | You have not submitted business verification yet. Read verify declaration, then verify submit. |
+| In review | Your business verification is with us; nothing to do until we write back. |
+| Changes requested | Your verification is waiting on changes from you. |
+| Verified | Your business is verified. |
+| On hold | Your account is on hold. |
+| Rejected | Your verification was rejected. |
+
+When we ask for changes, the next line lists them and ends with "Send it back with verify resubmit once done." On hold and rejected add the reason, and a rejection can add the date after which you can apply again.
+
+## Resubmit
+
+Make the changes we asked for, then send the application back. You retype nothing: the application on file is reused.
+
+```bash
+agenta verify resubmit
+```
+
+```bash Output
+  Your verification is back with us for review; the application already on file was reused.
+  Nothing to do until we write back.
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Go live" icon="rocket" href="/guides/go-live">
+    The steps to live payments.
+  </Card>
+  <Card title="Status" icon="gauge" href="/cli/status">
+    Your go-live overview and the next command to run.
+  </Card>
+</CardGroup>

@@ -1,55 +1,178 @@
 ---
-title: MCP Server
-description: Connect an AI agent to AgentaOS so it can run your store from chat.
+title: "MCP server"
+description: "Connect Claude, ChatGPT, Cursor or any MCP client to AgentaOS, and every tool your agent can then use."
 ---
 
-The AgentaOS MCP server lets any Model Context Protocol client (Claude Desktop, Cursor, or Windsurf) create checkouts, read your customers and subscriptions, and send receipts on your behalf. Use it when you want your agent to run the store directly, instead of calling the API or CLI by hand.
+The AgentaOS MCP server gives your AI agent the same operations as the `agenta` CLI: products, checkouts, verification, subscriptions, discount codes, customers and invoices. The CLI commands and the MCP tools come from one catalogue, so each tool has a matching command with the same inputs and the same answer.
 
-## Setup
+The dashboard shows the same setup steps for each client: go to **Settings → Developers** and click **Connect an AI agent**.
 
-Add the server to your client's config with a gateway key from [app.agentaos.ai](https://app.agentaos.ai) → **Settings → Developers → API Keys**:
+## Connect your agent
 
-```json
-{
-  "mcpServers": {
-    "agenta": {
-      "command": "npx",
-      "args": ["-y", "agentaos"],
-      "env": {
-        "AGENTAOS_GATEWAY_KEY": "sk_test_your-gateway-key"
+Every client that can open a browser uses the hosted server at `https://mcp.agentaos.ai/mcp`. You approve the connection once, on an AgentaOS page, and you pick **Test mode** or **Live mode** there. You paste no key.
+
+<Tabs>
+  <Tab title="Claude Code">
+    Install the AgentaOS plugin. It adds the hosted server and a skill that teaches your agent the tools.
+
+    ```bash
+    claude plugin marketplace add AgentaOS/agentaos
+    claude plugin install agentaos@agentaos
+    ```
+
+    In Claude Code, type `/mcp`, choose `agentaos`, then **Authenticate**. An AgentaOS page opens in your browser: pick Test or Live and press **Approve**.
+
+    To check the connection, run:
+
+    ```bash
+    claude mcp list
+    ```
+
+    The list shows `agentaos: https://mcp.agentaos.ai/mcp (HTTP) - Connected`.
+  </Tab>
+  <Tab title="Cursor">
+    In Cursor, open **Settings → MCP → Add server** and paste this config:
+
+    ```json
+    {
+      "mcpServers": {
+        "agentaos": {
+          "url": "https://mcp.agentaos.ai/mcp"
+        }
       }
     }
-  }
-}
-```
+    ```
 
-Test keys (`sk_test_`) only ever see test data, so your agent can build and break things safely. The same config works for Cursor and Windsurf.
+    An AgentaOS page opens in your browser: pick Test or Live and press **Approve**.
+  </Tab>
+  <Tab title="Claude.ai and ChatGPT">
+    Add `https://mcp.agentaos.ai/mcp` as a custom connector, then approve it on the AgentaOS page that opens. [Connect Claude.ai or ChatGPT](/mcp/remote-connector) has the steps for each assistant.
+  </Tab>
+</Tabs>
+
+[Connect Claude.ai or ChatGPT](/mcp/remote-connector) also covers the approval page, how to switch from Test to Live, and how to disconnect. Those steps are the same for every client on the hosted server.
+
+### Agents that cannot open a browser
+
+A headless agent or a CI job runs the server on its own machine instead, with an API key. The server needs Node.js 20 or later.
+
+<Steps>
+  <Step title="Create a test key">
+    With the dashboard in test mode, go to **Settings → Developers**, click **Connect an AI agent** and choose **Other**. Click **Generate one named Other agent**, then **Create key**. Copy the key: the dashboard shows it only once. It stays under **API Keys** with the name "Other agent".
+  </Step>
+  <Step title="Add the server">
+    Add an MCP server named `agentaos` that runs `npx -y agentaos`, with the key in `AGENTAOS_GATEWAY_KEY`:
+
+    ```json
+    {
+      "mcpServers": {
+        "agentaos": {
+          "command": "npx",
+          "args": ["-y", "agentaos"],
+          "env": {
+            "AGENTAOS_GATEWAY_KEY": "sk_test_your-key"
+          }
+        }
+      }
+    }
+    ```
+
+    In Claude Code, one command does the same:
+
+    ```bash
+    claude mcp add agentaos-local -e AGENTAOS_GATEWAY_KEY=sk_test_your-key -- npx -y agentaos
+    ```
+  </Step>
+  <Step title="Give your agent the guide">
+    Point your agent at `https://agentaos.ai/SKILL.md`. It teaches the agent the tools and when to use each one.
+  </Step>
+</Steps>
+
+A test key (`sk_test_`) sees test data only, so the agent cannot move real money.
+
+## How tools answer
+
+Every tool answers twice: a plain sentence written for you, and the same result as JSON for code. The sentence is the one the CLI prints. The JSON is what the CLI prints with `--json`.
 
 ## Tools
 
-| Tool | What it does |
-|------|-------------|
-| `agenta_pay_create_checkout` | Create a checkout and get a shareable `checkoutUrl`. |
-| `agenta_pay_get_checkout` | Check whether a payment completed. |
-| `agenta_pay_list_checkouts` | List checkouts by status (`open`, `completed`, `expired`, `cancelled`). |
-| `agenta_pay_list_subscriptions` | List subscriptions: status, amount, interval, and subscriber. |
-| `agenta_pay_cancel_subscription` | Cancel a subscription, at period end or immediately. |
-| `agenta_pay_list_customers` | Everyone who paid you: email, name, and country. |
-| `agenta_pay_send_receipt` | Re-send the receipt email for a paid invoice. |
+The server has 31 tools. The CLI column is the same operation in the terminal.
+
+### Account and going live
+
+| Tool | CLI | What it does |
+|---|---|---|
+| `agenta_status_get` | `agenta status` | Your account and go-live overview, with the next step to take. |
+| `agenta_audit_request` | `agenta audit request` | Ask for the free Revenue & Pricing Audit. |
+| `agenta_audit_show` | `agenta audit show` | Where the audit stands, and the report once it exists. |
+| `agenta_verify_declaration` | `agenta verify declaration` | The five statements you attest to when you submit verification. |
+| `agenta_verify_submit` | `agenta verify submit` | Submit business verification, so you can accept live payments. |
+| `agenta_verify_status` | `agenta verify status` | Where your verification stands. |
+| `agenta_verify_resubmit` | `agenta verify resubmit` | Send your verification back for review after the changes we asked for. |
+
+### Products and checkouts
+
+| Tool | CLI | What it does |
+|---|---|---|
+| `agenta_products_create` | `agenta products create` | Create a product (one-time) or a subscription plan. |
+| `agenta_products_list` | `agenta products list` | List your products and plans. |
+| `agenta_pay_checkout` | `agenta pay checkout` | Create a checkout and get the link to share. |
+| `agenta_pay_get` | `agenta pay get <sessionId>` | Whether a checkout is paid, still open, expired or cancelled. |
+| `agenta_pay_list` | `agenta pay list` | List your checkouts, optionally by status. |
+
+### Subscriptions and discount codes
+
+| Tool | CLI | What it does |
+|---|---|---|
+| `agenta_subscriptions_list` | `agenta subscriptions list` | List your subscriptions. |
+| `agenta_subscriptions_cancel` | `agenta subscriptions cancel <id>` | Cancel a subscription, at the end of the current period by default. |
+| `agenta_subscriptions_change_plan` | `agenta subscriptions change-plan <id>` | Move a subscription to another plan. An upgrade charges now; a downgrade starts at the end of the period. |
+| `agenta_subscriptions_credit` | `agenta subscriptions credit <id>` | Put credit on a subscriber's account. It comes off their next invoice. |
+| `agenta_subscriptions_credits` | `agenta subscriptions credits <id>` | The credits given on a subscription, and what is still unspent. |
+| `agenta_discounts_create` | `agenta discounts create` | Create a discount code buyers type at checkout. |
+| `agenta_discounts_list` | `agenta discounts list` | List your discount codes. |
+| `agenta_discounts_show` | `agenta discounts show <id>` | One discount code: what it takes off and how many people used it. |
+| `agenta_discounts_archive` | `agenta discounts archive <id>` | Stop a discount code. Subscribers who already used it keep their discount. |
+
+### Customers and invoices
+
+| Tool | CLI | What it does |
+|---|---|---|
+| `agenta_customers_list` | `agenta customers list` | List your customers. |
+| `agenta_invoices_list` | `agenta invoices list` | List your invoices. |
+| `agenta_invoices_receipt` | `agenta invoices receipt <id>` | The receipt PDF for a paid invoice. The CLI saves it as a file. |
+| `agenta_invoices_send_receipt` | `agenta invoices send-receipt <id>` | Send the receipt email again to the buyer on file. |
+
+### Businesses you manage
+
+For [platforms](/connect/overview) only.
+
+| Tool | CLI | What it does |
+|---|---|---|
+| `agenta_businesses_list` | `agenta businesses list` | List the businesses you manage. |
+| `agenta_businesses_get` | `agenta businesses get <id>` | One business you manage, with its status. |
+| `agenta_businesses_create` | `agenta businesses create` | Add a business you manage: a client's business, or another app of your company. |
+| `agenta_businesses_invite` | `agenta businesses invite <id>` | Send your client's invitation again. The new link replaces the old one. |
+| `agenta_businesses_revoke_invite` | `agenta businesses revoke-invite <id>` | Withdraw your client's open invitation. |
+| `agenta_businesses_id_link` | `agenta businesses id-link <id>` | The identity check link for your client. Only they can complete it. |
+
+## Act for a business you manage
+
+If you run a platform, every tool takes an optional `business` input: the id of a business you manage. The tool then acts for that business instead of for you. Leave `business` out to act as yourself. In the CLI, the same input is `--business <id>`.
 
 ## Next steps
 
 <CardGroup cols={2}>
-  <Card title="Run your store from an agent" icon="wand-magic-sparkles" href="/guides/ai-agent">
-    The full walkthrough: a coding agent with the CLI, or a chat agent with MCP.
+  <Card title="Connect Claude.ai or ChatGPT" icon="plug" href="/mcp/remote-connector">
+    Approve the connector, switch to Live, and disconnect.
   </Card>
-  <Card title="TypeScript SDK" icon="node-js" href="/sdk/pay-overview">
-    The same operations as typed methods in `@agentaos/pay`.
+  <Card title="Run your store from an agent" icon="wand-magic-sparkles" href="/guides/ai-agent">
+    The walkthrough, from the first prompt to a paid checkout.
   </Card>
   <Card title="CLI" icon="terminal" href="/cli/install">
-    Run AgentaOS from your terminal with `agenta`.
+    The same operations from your terminal.
   </Card>
-  <Card title="Quickstart" icon="rocket" href="/getting-started/quickstart">
-    Create a product and take your first payment.
+  <Card title="Platforms" icon="building" href="/connect/overview">
+    Manage your clients' businesses.
   </Card>
 </CardGroup>

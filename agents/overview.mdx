@@ -16,21 +16,7 @@ It reads [`SKILL.md`](https://agentaos.ai/SKILL.md) (the exact commands, flags, 
 
 ## Connect the MCP server
 
-For Claude Desktop, Cursor, or Windsurf chat, connect the MCP server and your agent can run the store: create checkouts, read customers, and manage subscriptions.
-
-```json
-{
-  "mcpServers": {
-    "agenta": {
-      "command": "npx",
-      "args": ["-y", "agentaos"],
-      "env": { "AGENTAOS_GATEWAY_KEY": "sk_test_your-gateway-key" }
-    }
-  }
-}
-```
-
-Test keys only ever see test data, so an agent on a `sk_test_` key can build and break things safely. See [MCP server](/mcp/setup) for Cursor and Windsurf configs and the full tool list.
+In Claude, ChatGPT, Cursor or Claude Code, connect the AgentaOS MCP server instead. You approve it once in the browser and paste no key. Your agent can then create products and checkouts, submit your verification, and manage subscriptions, discount codes, customers and invoices. [MCP server](/mcp/setup) has the setup for each client and the full list of tools.
 
 ## Feed the docs to your model
 
@@ -45,18 +31,6 @@ The whole documentation is available as plain markdown for LLMs. Point your mode
   </Card>
 </CardGroup>
 
-## What your agent can run
-
-| Tool | What it does |
-|---|---|
-| `agenta_pay_create_checkout` | Create a checkout and get a shareable `checkoutUrl`. |
-| `agenta_pay_get_checkout` | Check whether a payment completed. |
-| `agenta_pay_list_checkouts` | List checkouts by status. |
-| `agenta_pay_list_subscriptions` | List subscriptions: status, amount, interval, subscriber. |
-| `agenta_pay_cancel_subscription` | Cancel, at period end or immediately. |
-| `agenta_pay_list_customers` | Everyone who paid you: email, name, country. |
-| `agenta_pay_send_receipt` | Re-send a receipt email. |
-
 ## Next steps
 
 <CardGroup cols={2}>
@@ -64,7 +38,7 @@ The whole documentation is available as plain markdown for LLMs. Point your mode
     The full walkthrough: coding agent with the CLI, or a chat agent with MCP.
   </Card>
   <Card title="MCP server" icon="server" href="/mcp/setup">
-    The payment tools, and Claude / Cursor / Windsurf setup.
+    Setup for each client, and every tool your agent can use.
   </Card>
   <Card title="Take a payment yourself" icon="rocket" href="/guides/accept-your-first-payment">
     Prefer to do it by hand first? Create a product and get paid.

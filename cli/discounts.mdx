@@ -1,0 +1,116 @@
+---
+title: "Discounts"
+description: "Create, list, inspect and stop the discount codes buyers type at checkout on a subscription plan."
+---
+
+`agenta discounts` manages [discount codes](/payments/discount-codes): codes a buyer types at checkout on a subscription plan. A code takes a percentage or a fixed amount off the first invoice. A code with neither changes no price and records who it brought in, which is how a referral code works.
+
+```bash
+agenta discounts list
+```
+
+## Commands
+
+| Command | What it does |
+|---|---|
+| `agenta discounts create --code <code> [options]` | Create a discount code. |
+| `agenta discounts list` | List your discount codes. |
+| `agenta discounts show <id>` | What one code takes off, and how many people used it. |
+| `agenta discounts archive <id>` | Stop a code. |
+
+Every command takes `--json` for one JSON object, and `--business <id>` to act for a [business you manage](/cli/businesses).
+
+## Create
+
+```bash
+agenta discounts create --code <code> [--percent-off <value> | --amount-off <value>] [options]
+```
+
+<ParamField query="--code" type="string" required>
+  The code buyers type at checkout. Letters, numbers, dashes and underscores, up to 64.
+</ParamField>
+<ParamField query="-n, --name" type="string">
+  Your label for the code, shown on the buyer's invoice.
+</ParamField>
+<ParamField query="--percent-off" type="number">
+  The percentage off the first invoice, e.g. `20`.
+</ParamField>
+<ParamField query="--amount-off" type="number">
+  A fixed amount off the first invoice, e.g. `5.00`.
+</ParamField>
+<ParamField query="--max-redemptions" type="number">
+  The code stops working after this many subscribers use it.
+</ParamField>
+<ParamField query="--expires-at" type="string">
+  The date the code stops working, as `YYYY-MM-DD`.
+</ParamField>
+
+{/* TODO: document --plan (limit a code to one plan) once the CLI sends the field the server accepts; today the server rejects it. */}
+
+Use `--percent-off` or `--amount-off`, not both. Leave both out for a tracking-only code.
+
+```bash
+agenta discounts create --code LAUNCH20 --percent-off 20
+```
+
+```bash Output
+  Created LAUNCH20 — discount — active — all plans.
+  Buyers type it on the checkout page and the first invoice drops.
+  Its id is 3f6a7d8c-9b10-4c7b-9e21-5b1f0c2e8a4d (use it to show or archive the code).
+```
+
+A tracking-only code prints "It changes no price; it tells you who it brought in." on the second line.
+
+## List
+
+```bash
+agenta discounts list [--limit <n>]
+```
+
+<ParamField query="--limit" type="number" default="10">
+  Results per page, from 1 to 100.
+</ParamField>
+
+```bash Output
+  2 discount codes:
+    - LAUNCH20 — discount — active — all plans — 3f6a7d8c-9b10-4c7b-9e21-5b1f0c2e8a4d
+    - ALICE — tracking only — active — all plans — 7c2e1d3f-9b5e-4d8c-0f32-4a7b8e9d0c21
+  What each one takes off is on discounts show.
+```
+
+With no codes yet, it prints: "No discount codes yet. Create one with discounts create --code LAUNCH20 --percent-off 20."
+
+## Show
+
+```bash
+agenta discounts show <id>
+```
+
+```bash Output
+  LAUNCH20 — 20% off — used 14 of 100 times — active.
+  It works on every plan you sell.
+```
+
+`show` is the only command that reports what a code takes off and how many people used it.
+
+## Archive
+
+```bash
+agenta discounts archive <id>
+```
+
+```bash Output
+  LAUNCH20 stops working now; nobody new can type it.
+  Subscribers who already used it keep the discount they were given.
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Discount codes" icon="tag" href="/payments/discount-codes">
+    How codes work at checkout and in the dashboard.
+  </Card>
+  <Card title="Subscriptions" icon="repeat" href="/cli/subscriptions">
+    List, cancel and change subscriptions.
+  </Card>
+</CardGroup>
