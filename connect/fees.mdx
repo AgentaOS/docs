@@ -36,6 +36,10 @@ The share is set in the dashboard only. There is no API for it. You can set it b
   </Step>
 </Steps>
 
+<Frame caption="The share editor shows what the client keeps on an example sale.">
+  <img src="/images/connect/set-share.png" alt="Your share of ClientCo's sales: Percent of each sale's price (before VAT) 10, Fixed amount per sale 0.50. On a €100.00 sale with no VAT and no reserve, AgentaOS takes €5.00, you take €10.50 and ClientCo keeps €84.50." />
+</Frame>
+
 You can read the current share on each business as `platformFee` (`{ bps, fixedMinor }`: basis points, where `1000` is 10%, and the fixed part in minor units). With no share set, it is `{ bps: 0, fixedMinor: 0 }`, never `null`. See [Business fields](/sdk/pay-businesses#business-fields).
 
 ## When you are paid
