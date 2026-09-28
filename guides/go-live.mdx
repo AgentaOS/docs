@@ -1,5 +1,5 @@
 ---
-title: "Go Live"
+title: "Go live"
 description: "Move from test mode to real money: verify your business, add a payout account, and swap your test key for a live one."
 ---
 
@@ -26,6 +26,17 @@ By the end of this guide your account is verified, has somewhere to send money, 
   <Step title="Complete business verification (KYB)">
     AgentaOS is the Merchant of Record on every live transaction, we need to know who we're selling on behalf of before real money moves. Submit your business details for review from the **Go live** page.
 
+    You can also file it from the CLI, or let your agent file it. Run `agenta verify declaration` to read the five statements you attest to, then submit:
+
+    ```bash
+    agenta verify submit --legal-name "Acme OÜ" --registration-number 12345678 \
+      --country EE --street "Sepapaja 6" --city Tallinn --postal 15551 \
+      --url https://example.com --description "One sentence on what it does" \
+      --category saas --delivery instant_digital --volume under_1k --accept-declaration
+    ```
+
+    Run `agenta verify status` to see where the review is. An agent connected over MCP files it with the `agenta_verify_submit` tool, which takes the same fields.
+
     <Note>See [Account review](/mor/account-review) for what we check and how to prepare. Reviews are usually completed within a day.</Note>
   </Step>
 
@@ -37,7 +48,7 @@ By the end of this guide your account is verified, has somewhere to send money, 
         Add a bank account to receive payouts in EUR or USD across the supported countries. See [Supported countries](/mor/supported-countries).
       </Tab>
       <Tab title="Wallet">
-        Have a wallet address you control ready to receive stablecoin payouts. No separate institution or verification is required for this path, since you're moving your own balance to your own address.
+        Receive your balance in USDC or EURC at a wallet address you control. Stablecoin payouts are in public preview. See [Stablecoin payouts](/payouts/stablecoin-payouts).
       </Tab>
     </Tabs>
 
@@ -55,7 +66,7 @@ By the end of this guide your account is verified, has somewhere to send money, 
   </Step>
 
   <Step title="Point production URLs at production">
-    Update `successUrl`, `cancelUrl`, and `webhookUrl` on your live checkouts and payment links to your real domain, not `localhost` or a tunnel URL left over from testing. Then check **Developer → Webhooks** while the dashboard is switched to Live, and confirm your production endpoint and signing secret are set. See [Handle webhooks](/guides/handle-webhooks) if you haven't wired this up yet.
+    Update `successUrl`, `cancelUrl`, and `webhookUrl` on your live checkouts and payment links to your real domain, not `localhost` or a tunnel URL left over from testing. Then check **Settings → Developers → Webhooks** while the dashboard is switched to Live, and confirm your production endpoint and signing secret are set. See [Handle webhooks](/guides/handle-webhooks) if you haven't wired this up yet.
   </Step>
 </Steps>
 
@@ -63,8 +74,8 @@ By the end of this guide your account is verified, has somewhere to send money, 
 
 - The **Go live** progress chip in the sidebar shows every step complete.
 - **Settings → Developers → API Keys** shows an active `sk_live_` key, and your server is using it.
-- Your payout destination (bank IBAN or wallet address) appears on the **Payouts** page.
-- Optionally, run one small real checkout end to end: create it with your live key, pay it with a real card, and confirm it lands in **Finance → Payments** with an invoice under **Finance → Invoices**. Unlike test mode, live mode doesn't accept the `4242...` test card, only real payment methods clear.
+- Your payout destination (bank IBAN or wallet address) appears under **Balances → Payout accounts**.
+- Optionally, run one small real checkout end to end: create it with your live key, pay it with a real card, and confirm it lands in **Transactions** with an invoice under **Invoices**. Unlike test mode, live mode doesn't accept the `4242...` test card, only real payment methods clear.
 
 ## Go-live checklist
 
@@ -73,7 +84,7 @@ By the end of this guide your account is verified, has somewhere to send money, 
 - [ ] Payout account added: bank IBAN, wallet address, or both
 - [ ] Live API key (`sk_live_...`) generated and deployed
 - [ ] `successUrl` / `cancelUrl` / `webhookUrl` point at production, not localhost
-- [ ] Live webhook endpoint and signing secret confirmed in **Developer → Webhooks**
+- [ ] Live webhook endpoint and signing secret confirmed in **Settings → Developers → Webhooks**
 
 ## Next steps
 

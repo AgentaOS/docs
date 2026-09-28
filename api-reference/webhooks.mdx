@@ -1,136 +1,9 @@
 ---
 title: "Webhooks"
-description: "Events AgentaOS sends to your server, payload shapes, and HMAC-SHA256 signature verification."
+description: "How AgentaOS signs and delivers webhook events, and how to verify the X-AgentaOS-Signature header."
 ---
 
-AgentaOS pushes events to a URL you configure, rather than making you poll. Configure `webhookUrl` when you [create a checkout](/api-reference/checkouts/create) or a [payment link](/api-reference/payment-links/create), or set one org-wide in the dashboard (**Settings → Developers → Webhooks**). A checkout's own `webhookUrl` wins if set, then its payment link's, then your org default, whichever is found first is the only one that fires, they don't all fire.
-
-<Warning>
-If none of the three is set, nothing is sent. That's not an error, it's silent by design, so double check you've configured a URL somewhere in the chain before relying on webhooks.
-</Warning>
-
-## Events
-
-<AccordionGroup>
-  <Accordion title="checkout.session.completed">
-    Fired when a checkout's payment is confirmed, on any rail (card, wallet, stablecoin). Resolved via the checkout's own webhook, then its payment link's, then your org default.
-  </Accordion>
-  <Accordion title="send.completed">
-    Fired when an outbound on-chain send you initiated is confirmed. Only your org-level webhook URL is checked for this event (there's no per-checkout scope for outbound sends).
-  </Accordion>
-  <Accordion title="send.failed">
-    Fired when an outbound send's broadcast fails. Same org-level-only resolution as `send.completed`.
-  </Accordion>
-</AccordionGroup>
-
-### `checkout.session.completed`
-
-```json
-{
-  "id": "evt_8c7d6e5f-4a3b-2c1d-0e9f-8a7b6c5d4e3f",
-  "type": "checkout.session.completed",
-  "data": {
-    "link_id": "mZrESFyR7RC9RPsJfZCVkg",
-    "session_id": "kR9pQwErTyUiOpAsDfGh",
-    "amount": "49.99",
-    "currency": "EUR",
-    "rail": "card",
-    "tx_hash": null,
-    "vendor_reference": "pi_3P...",
-    "payer": null,
-    "payer_type": "human",
-    "network": "stripe",
-    "livemode": true,
-    "overpaid_by_cents": null,
-    "metadata": { "orderId": "order-123" }
-  }
-}
-```
-
-<ResponseField name="data.link_id" type="string | null">The payment link's `secure_link_id`, `null` for a standalone checkout.</ResponseField>
-<ResponseField name="data.session_id" type="string">The checkout's public `session_id`.</ResponseField>
-<ResponseField name="data.amount" type="string">Currency units, as a **string** (`"49.99"`), not a number. See [Money model](/api-reference/introduction#money-model).</ResponseField>
-<ResponseField name="data.currency" type="string" />
-<ResponseField name="data.rail" type="string">`card`, `sepa`, `bank_transfer`, `bridge`, or `wallet`. How the buyer actually paid.</ResponseField>
-<ResponseField name="data.tx_hash" type="string | null">On-chain hash. `null` for card/bank rails, use `vendor_reference` instead.</ResponseField>
-<ResponseField name="data.vendor_reference" type="string | null">Off-chain audit reference (card-processor payment reference, bank reference). `null` for on-chain rails.</ResponseField>
-<ResponseField name="data.payer" type="string | null">On-chain payer address. `null` for card/bank rails.</ResponseField>
-<ResponseField name="data.payer_type" type="string">`human` or `agent`.</ResponseField>
-<ResponseField name="data.network" type="string">CAIP-2 network ID for on-chain rails, or `stripe` for card/bank.</ResponseField>
-<ResponseField name="data.livemode" type="boolean">`true` in live mode, `false` in test mode.</ResponseField>
-<ResponseField name="data.overpaid_by_cents" type="number | null">Set when a bank-transfer buyer sent more than the amount due (beyond a 1-cent tolerance). `null` otherwise.</ResponseField>
-<ResponseField name="data.metadata" type="object">Whatever you set on the checkout (or its link), unchanged.</ResponseField>
-
-### `send.completed`
-
-```json
-{
-  "id": "evt_9d8e7f6a-5b4c-3d2e-1f0a-9b8c7d6e5f4a",
-  "type": "send.completed",
-  "data": {
-    "transaction_id": "9d8e7f6a-5b4c-3d2e-1f0a-9b8c7d6e5f4a",
-    "tx_hash": "0xabc123...",
-    "from": "0xYourOrgWallet...",
-    "to": "0xRecipient...",
-    "amount": "100.00",
-    "token": "USDC",
-    "chain_id": 8453,
-    "network": "eip155:8453",
-    "livemode": true,
-    "description": null
-  }
-}
-```
-
-### `send.failed`
-
-Identical shape to `send.completed`, with `tx_hash: null`.
-
-```json
-{
-  "id": "evt_1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
-  "type": "send.failed",
-  "data": {
-    "transaction_id": "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
-    "tx_hash": null,
-    "from": "0xYourOrgWallet...",
-    "to": "0xRecipient...",
-    "amount": "100.00",
-    "token": "USDC",
-    "chain_id": 8453,
-    "network": "eip155:8453",
-    "livemode": true,
-    "description": null
-  }
-}
-```
-
-<Note>
-The raw payload above is the literal snake_case JSON body AgentaOS `POST`s to your `webhookUrl`, this is what you'll parse in any language other than the SDK. `agentaos.webhooks.verify()` (Node.js) parses it and returns a camelCased, typed object instead: `linkId`, `sessionId`, `txHash`, `payerType`, `livemode`, etc. `rail`, `vendor_reference`, and `overpaid_by_cents` arrive on the wire but are not yet reflected in the SDK's TypeScript types, they're present regardless of language.
-</Note>
-
-## Delivery
-
-```mermaid
-sequenceDiagram
-    participant A as AgentaOS
-    participant S as Your server
-
-    A->>A: Sign payload with HMAC-SHA256
-    A->>S: POST webhookUrl (X-AgentaOS-Signature header)
-    alt 2xx response
-        S-->>A: 200 OK
-    else non-2xx, timeout, or network error
-        A->>A: Wait, exponential backoff (1s, 2s, ...)
-        A->>S: Retry, up to 3 attempts total
-    end
-```
-
-- Delivered as `POST`, `Content-Type: application/json`, body is the exact JSON shown above.
-- A `10` second timeout per attempt, up to `3` attempts total, exponential backoff between retries.
-- Redirects are not followed (a `3xx` response counts as a failed attempt).
-- URLs resolving to private or internal addresses are rejected before any delivery attempt (SSRF guard).
-- Return `2xx` quickly. Do slow work (emails, fulfillment) asynchronously after responding, a slow handler risks the delivery timing out and retrying.
+AgentaOS signs every webhook it sends to your server. Verify the signature before you act on the body. The events and their payloads are in the [event reference](/webhooks/events).
 
 ## Signature verification
 
@@ -205,30 +78,11 @@ Get your signing secret (`whsec_...`) from **app.agentaos.ai → Settings → De
 Verify against the **raw** request body bytes, before any JSON parsing or re-serialization. Re-stringifying a parsed object can reorder keys or change whitespace and silently break the signature check.
 </Warning>
 
-## Best practices
+## Delivery
 
-<CardGroup cols={2}>
-  <Card title="Don't trust the redirect" icon="arrow-right">
-    A checkout's `successUrl` is best-effort, the buyer's browser might close first. Webhooks are the source of truth for "did this actually get paid."
-  </Card>
-  <Card title="Handle idempotently" icon="repeat">
-    A retried delivery can arrive more than once. Deduplicate on `id` (the event id) or `data.session_id`/`data.transaction_id`.
-  </Card>
-  <Card title="Respond fast" icon="bolt">
-    Return `200` immediately, then do the slow work. A handler that blocks risks a retry and a duplicate delivery.
-  </Card>
-  <Card title="Verify before you trust" icon="shield-check">
-    Never act on the raw body without checking `X-AgentaOS-Signature` first, anyone can `POST` to a public URL.
-  </Card>
-</CardGroup>
+- AgentaOS sends each event as a `POST` with `Content-Type: application/json`.
+- Each attempt times out after `10` seconds. AgentaOS makes up to `3` attempts, with exponential backoff between them.
+- AgentaOS does not follow redirects. A `3xx` response counts as a failed attempt.
+- AgentaOS rejects a URL that resolves to a private or internal address before any attempt.
 
-## Next steps
-
-<CardGroup cols={2}>
-  <Card title="Checkouts" icon="cart-shopping" href="/api-reference/checkouts/create">
-    Set `webhookUrl` when creating a checkout.
-  </Card>
-  <Card title="Payment Links" icon="link" href="/api-reference/payment-links/create">
-    Set a default `webhookUrl` for every checkout created from a link.
-  </Card>
-</CardGroup>
+Return `2xx` quickly and do slow work (emails, fulfillment) after you respond. A slow handler can time out and cause a retry.

@@ -97,46 +97,21 @@ Give this to any AI coding agent (Claude, Cursor, Copilot, Windsurf) and it will
 
 ## Quick start
 
-<Steps>
-  <Step title="Create your account">
-    Sign up at [app.agentaos.ai](https://app.agentaos.ai). No card required. You start in test mode.
-  </Step>
-  <Step title="Get your API key">
-    Grab your test key from Settings. Keys prefixed `sk_test_` use test mode; `sk_live_` goes to production.
-  </Step>
-  <Step title="Install the SDK or CLI">
-    <CodeGroup>
-    ```bash SDK
-    npm install @agentaos/pay
-    ```
-    ```bash CLI
-    curl -fsSL https://agentaos.ai/install | bash
-    agenta login
-    ```
-    </CodeGroup>
-  </Step>
-  <Step title="Create a product and accept payments">
-    <CodeGroup>
-    ```typescript SDK
-    import { AgentaOS } from '@agentaos/pay';
-    const agenta = new AgentaOS('sk_test_...');
+Sign up at [app.agentaos.ai](https://app.agentaos.ai). No card is required, and you start in test mode with test money.
 
-    const link = await agenta.paymentLinks.create({
-      amount: 49.00,          // decimal currency units, not cents
-      currency: 'EUR',
-      description: 'Pro plan',
-    });
-    console.log(link.checkoutUrl); // share this anywhere
-    ```
-    ```bash CLI
-    agenta pay checkout -a 49 -c EUR -d "Pro plan"
-    ```
-    </CodeGroup>
+<Steps>
+  <Step title="Create a product">
+    Open **Products** and click **New product**. Give it a name and a price, choose one-time or subscription, and save.
   </Step>
-  <Step title="Set up webhooks">
-    Listen for `checkout.session.completed` to sync your app. See [Webhooks](/payments/webhooks) for signature verification.
+  <Step title="Share the link">
+    Click **Copy link** and send it anywhere: an email, a chat message, or a QR code. One link can be paid many times.
+  </Step>
+  <Step title="Watch the test payment land">
+    Open the link and pay with the test card `4242 4242 4242 4242`, any future expiry, and any CVC. The payment shows on **Home** and in **Transactions**.
   </Step>
 </Steps>
+
+To integrate with code, follow the [code integration](/getting-started/quickstart#code-integration) steps in the quickstart.
 
 ## FAQ
 

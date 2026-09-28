@@ -48,30 +48,11 @@ Only type a card number into the checkout page (the secure card form). Never sen
 
 ## Testing webhooks
 
-In test mode, events go to the webhook URL you register in **Settings → Developers → Webhooks**. To receive them on your machine, expose your local server with a tunnel like ngrok and register the tunnel URL. This lets you verify signature validation and your event handlers before going live. See [Webhooks](/payments/webhooks).
+In test mode, events go to the webhook URL you register in **Settings → Developers → Webhooks**. To receive them on your machine, expose your local server through a tunnel service and register the tunnel URL. This lets you verify signature validation and your event handlers before going live. See [Webhooks](/payments/webhooks).
 
 ## Going live
 
-<Steps>
-  <Step title="Finish testing in test mode">
-    Run your full flow with the test cards above, including a webhook round-trip, until every path behaves.
-  </Step>
-  <Step title="Verify your business">
-    Complete business verification (KYB) in the dashboard. This is required before you can accept real money as Merchant of Record.
-  </Step>
-  <Step title="Add a payout account">
-    Add a bank account or wallet so your earnings have somewhere to settle. See [Payouts](/payouts/overview).
-  </Step>
-  <Step title="Swap to your live key">
-    Replace `sk_test_` with `sk_live_` in your environment variables. Nothing else changes.
-  </Step>
-  <Step title="Register your live webhook">
-    Add your production webhook URL and copy its live signing secret.
-  </Step>
-  <Step title="Watch your first payments">
-    Keep an eye on your first live transactions to confirm everything behaves as it did in test mode.
-  </Step>
-</Steps>
+Going live takes three things: a verified business, a payout account, and a live `sk_live_` key in place of your test key. The [Go live guide](/guides/go-live) walks through each step, in the dashboard and from the CLI.
 
 <Warning>
 Never use a `sk_test_` key in production. Test-key calls never touch live money and will not settle.

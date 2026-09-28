@@ -342,7 +342,7 @@ Fired when a business's verification changes: its identity check lands (verified
 
 ## `webhook.test`
 
-Sent when you send a test event from the dashboard, so you can check that your endpoint receives and verifies events. It goes to your account's webhook URL, signed like every other event.
+Sent when you click **Send test event** in **Settings → Developers**. Use it to check that your endpoint receives and verifies events. It goes to your account's webhook URL, signed like every other event.
 
 <Expandable title="data fields" defaultOpen>
   <ResponseField name="message" type="string">Always `"Test event from AgentaOS"`.</ResponseField>
