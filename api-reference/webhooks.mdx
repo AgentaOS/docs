@@ -18,7 +18,7 @@ X-AgentaOS-Signature: t=1770379200,v1=5257a869e7ecebeda32affa62cdca3fa51cad7e77a
 | `t` | Unix timestamp (seconds) when the signature was generated. |
 | `v1` | HMAC-SHA256 hex digest of `{t}.{raw request body}`, keyed with your webhook signing secret. |
 
-Get your signing secret (`whsec_...`) from **app.agentaos.ai → Settings → Developers → Webhooks → Reveal signing secret**. It's stable across URL changes; rotate it from the same screen if it's ever exposed.
+Get your signing secret (`whsec_...`) in **Settings → Developers → Webhooks**: click **Reveal signing secret**. The secret stays the same when you change the URL. If it is exposed, click **Rotate secret** on the same screen.
 
 <Tabs>
   <Tab title="SDK (Node.js)">
@@ -27,6 +27,7 @@ Get your signing secret (`whsec_...`) from **app.agentaos.ai → Settings → De
     import express from 'express';
 
     const agentaos = new AgentaOS(process.env.AGENTAOS_API_KEY!);
+    const app = express();
 
     // Use express.raw(): verification needs the exact raw body bytes.
     app.post('/webhooks', express.raw({ type: 'application/json' }), (req, res) => {
@@ -38,17 +39,20 @@ Get your signing secret (`whsec_...`) from **app.agentaos.ai → Settings → De
         );
 
         if (event.type === 'checkout.session.completed') {
-          fulfillOrder(event.data.sessionId);
+          fulfillOrder(event.data.sessionId); // your own code
         }
 
         res.sendStatus(200);
       } catch (err) {
         if (err instanceof WebhookVerificationError) {
-          return res.status(400).send('Invalid signature');
+          res.status(400).send('Invalid signature');
+          return;
         }
         res.status(500).send('Webhook processing failed');
       }
     });
+
+    app.listen(3000);
     ```
   </Tab>
   <Tab title="Manual (any language)">
@@ -59,8 +63,9 @@ Get your signing secret (`whsec_...`) from **app.agentaos.ai → Settings → De
         parts = dict(p.split('=', 1) for p in signature.split(','))
         timestamp = int(parts['t'])
 
-        # Reject signatures older than 5 minutes
-        if abs(time.time() - timestamp) > 300:
+        # Reject a signature older than 5 minutes, or from the future
+        age = int(time.time()) - timestamp
+        if age < 0 or age > 300:
             return False
 
         expected = hmac.new(
@@ -80,9 +85,4 @@ Verify against the **raw** request body bytes, before any JSON parsing or re-ser
 
 ## Delivery
 
-- AgentaOS sends each event as a `POST` with `Content-Type: application/json`.
-- Each attempt times out after `10` seconds. AgentaOS makes up to `3` attempts, with exponential backoff between them.
-- AgentaOS does not follow redirects. A `3xx` response counts as a failed attempt.
-- AgentaOS rejects a URL that resolves to a private or internal address before any attempt.
-
-Return `2xx` quickly and do slow work (emails, fulfillment) after you respond. A slow handler can time out and cause a retry.
+Timeouts, attempts, redirects and refused addresses are in [Delivery and retries](/webhooks/events#delivery-and-retries). Return `2xx` quickly and do slow work (emails, fulfillment) after you respond. A slow handler can time out and cause a retry.

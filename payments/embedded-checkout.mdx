@@ -14,7 +14,7 @@ It runs in the browser only. For server work, such as creating checkouts or read
     In the dashboard, **Settings → Developers → Approved sites**, add each site you'll embed on, e.g. `https://acme.com`. The browser refuses to show your checkout anywhere else. Test products also work on `localhost` without adding it.
   </Step>
   <Step title="Set your look">
-    **Settings → Business → Checkout appearance**: button colour, font, corners, background. It applies to the hosted and the embedded checkout alike.
+    **Settings → Business → Checkout appearance**: button color, font, corners, background. It applies to the hosted and the embedded checkout alike.
   </Step>
   <Step title="Get the product's buyer link">
     The `checkoutUrl` from `agenta products create`, the SDK, or the product page. **Embed on your site** on the product page has a ready snippet.
@@ -71,7 +71,7 @@ const { open } = useAgentaOSCheckout();
   The product's buyer link.
 </ParamField>
 <ParamField body="session" type="string">
-  Instead of `link`: the `sessionId` of a checkout your server created with [`checkouts.create`](/sdk/pay-checkouts). Use it for logged-in users, with your own `metadata`.
+  Instead of `link`: the `sessionId` of a checkout your server created with [`checkouts.create`](/sdk/pay-checkouts). Use it for logged-in users, with your own `metadata`. Create the checkout when the buyer clicks Buy, not on every page view: checkout creation is [rate-limited](/api-reference/introduction#rate-limits) to 60 per minute from your server's IP address, shared by all your buyers.
 </ParamField>
 <ParamField body="target" type="string | HTMLElement">
   Selector or element for inline. Leave it out for the overlay.
@@ -110,7 +110,7 @@ const { open } = useAgentaOSCheckout();
 
 ## Payment methods in a frame
 
-Cards (with 3D Secure) and bank transfer work everywhere. Apple Pay shows on Safari 17+. Google Pay and Link can be limited by the card processor inside another site's frame.
+Cards with 3D Secure work everywhere. On EUR sales the checkout also offers bank transfer. Apple Pay and Google Pay appear on devices that support them.
 
 ## Next steps
 
