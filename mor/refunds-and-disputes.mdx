@@ -1,0 +1,123 @@
+---
+title: "Refunds, disputes and chargebacks"
+description: "How you ask for a refund, what a refund or a chargeback takes from your balance, what the reserve covers, and what you do when a buyer disputes a charge."
+---
+
+AgentaOS is the merchant of record, so AgentaOS sends every refund and answers every dispute. You ask for a refund from the sale page. A refund always returns the whole amount to the buyer, and it takes back only what that sale paid you. A dispute pauses the sale's money until the buyer's bank decides. If you lose the dispute, you also pay a flat dispute fee.
+
+## Refunds
+
+### Ask for a refund
+
+<Steps>
+  <Step title="Open the sale">
+    In the dashboard, click **Transactions**. Click the sale.
+  </Step>
+  <Step title="Request the refund">
+    Below the payment details, the page says: "Need to undo this sale? Ask for a refund — the buyer gets the whole amount back once AgentaOS approves it. Nothing moves until then." Click **Request refund**.
+  </Step>
+</Steps>
+
+<Frame caption="The refund block on a sale, below the VAT, the AgentaOS fee and your net.">
+  <img src="/images/refunds/request-refund.png" alt="A sale page with the Card Statement Descriptor AGENTAOS* CLIENTCO, VAT, AgentaOS fee and Your net rows, and below them the sentence Need to undo this sale? Ask for a refund with a Request refund button" />
+</Frame>
+
+The button changes to a **Refund requested** label. No money moves at this step.
+
+<Frame caption="After you click Request refund, the sale shows Refund requested until AgentaOS decides.">
+  <img src="/images/refunds/refund-requested.png" alt="The same sale page, where the refund block now shows a Refund requested label and no button" />
+</Frame>
+
+### Approval or decline
+
+AgentaOS reviews the request and does one of two things:
+
+- **Refunds the buyer.** The buyer gets the whole amount back on the card they paid with. The sale shows **Refunded**.
+- **Declines the request.** The sale shows **Refund declined**, with AgentaOS's note below it. You can read the note and ask again.
+
+While a request is open, AgentaOS holds that sale out of your payouts. This stops a payout of money that a refund then takes back.
+
+You cannot ask for a refund on a sale that is already refunded or in dispute. A disputed sale follows the dispute steps below.
+
+### Refunds are always in full
+
+A refund returns the whole amount the buyer paid, VAT included. You cannot refund part of a sale.
+
+### Refunds and your balance
+
+A refund takes back only what the sale paid you. The AgentaOS fee on the sale is not charged to you again, and it is not returned to you. A refund has no extra fee.
+
+| When AgentaOS refunds the sale | What happens to your money |
+|---|---|
+| Before its money reached you | The sale leaves your balance. It is never paid out. |
+| After it was paid out | The amount you were paid for the sale, reserve included if it was released, comes out of your next payout. |
+
+The payout statement shows the amount taken back as a **Returned · Refunded sale** line. See [Payout statements](/payouts/statements).
+
+### If a platform manages your account
+
+If a platform takes a share of your sales, the platform returns its share too. The platform pays back what it already received from that sale. A share that was not paid yet is never paid.
+
+### Ask with the API
+
+Send `POST /gateway/transactions/{id}/refund-request` with the sale's id, signed with your secret key. The request follows the same steps as the button.
+
+## Disputes and chargebacks
+
+A dispute starts when a buyer asks their bank to reverse a charge. If the bank decides for the buyer, the reversal is a chargeback. AgentaOS finds new disputes automatically and answers the buyer's bank as the merchant of record.
+
+### Dispute notices
+
+- **An email** with the subject "A buyer wants their €12.40 back. We need a few things.", with the amount of your sale. When the bank sets a date for an answer, the email gives it.
+- **On the sale**, in the transaction list, the status **Disputed**.
+- **On your balance**, a **Paused (disputed)** row: "We dispute these for you. Back if we win." Open the row to see **Sales on hold** and **Dispute fees charged**.
+
+The money from a disputed sale stays out of your payouts until the dispute ends. See [Payouts](/payouts/overview).
+
+### Send your evidence
+
+You do not file anything from the dashboard. Reply to the dispute email with what you have, before the date in the email, or as soon as you can when the email has no date. The email asks for:
+
+- What the buyer bought, and when they got it.
+- Any logs that show they used it.
+- Your messages with them.
+- Your refund and delivery terms as they stood that day.
+
+### If you win
+
+AgentaOS gives back everything the dispute took: the sale's money and the dispute fee. The sale returns to your balance and goes out in a later payout, like any other sale. You get an email: "You won that dispute. The money is back."
+
+### If you lose
+
+The sale shows **Charged back**, and its money does not come back. What you owe depends on whether the sale was already paid to you:
+
+| When the dispute opened | What you owe |
+|---|---|
+| Before the sale was paid to you | The dispute fee only. The sale's money was never paid to you. |
+| After the sale was paid to you | What the sale paid you, plus the dispute fee, minus any reserve AgentaOS still holds on that sale. |
+
+The dispute fee is €35 on a EUR sale and $35 on a USD sale, once per dispute. AgentaOS takes what you owe from your next payouts. The payout statement shows it as a **Returned · Charged back sale** line.
+
+If a platform manages your account and a dispute opens after its share was paid, the platform returns that share. A share that was not paid yet is held, and it is never paid if you lose. The platform does not pay the dispute fee.
+
+### How the reserve covers a chargeback
+
+New accounts have a **Reserve** row on the balance: "Safety hold on new accounts". AgentaOS holds back part of each sale for a period. If a sale is charged back while its reserve is still held, AgentaOS keeps that reserve and takes it off what you owe.
+
+## Costs at a glance
+
+| Event | Cost to you |
+|---|---|
+| Refund | What the sale paid you. No fee. |
+| Dispute you win | Nothing. The sale and the dispute fee come back. |
+| Dispute you lose | What the sale paid you, if it was paid, plus the €35 or $35 dispute fee, minus any reserve still held. |
+
+## How to avoid disputes
+
+A buyer who does not recognize a charge may dispute it. AgentaOS helps the buyer recognize the charge and find you:
+
+- **The card statement names you.** The charge shows as `AGENTAOS*` followed by your business name, for example `AGENTAOS* CLIENTCO`. The sale page shows it as **Card Statement Descriptor**.
+- **The buyer gets a receipt by email.** The receipt is from your business, says how the charge shows on the card statement, and lets the buyer reply to you directly.
+- **Buyers have a help page.** [Why was I charged by AgentaOS?](/for-customers/why-charged) tells a buyer how to find the purchase and to contact you first for a refund.
+
+Answer buyer emails quickly, and refund when a buyer asks. A refund costs less than a lost dispute.

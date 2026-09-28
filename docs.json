@@ -61,7 +61,8 @@
               "mor/supported-countries",
               "mor/tax",
               "mor/pricing",
-              "mor/account-review"
+              "mor/account-review",
+              "mor/refunds-and-disputes"
             ]
           },
           {
@@ -97,6 +98,7 @@
               "guides/introduction",
               "guides/accept-your-first-payment",
               "guides/sell-a-subscription",
+              "guides/paywall-for-logged-in-users",
               "guides/go-live",
               "guides/handle-webhooks",
               "guides/build-a-platform",

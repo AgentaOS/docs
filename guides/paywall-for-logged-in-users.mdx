@@ -1,0 +1,217 @@
+---
+title: "Put a plan behind a paywall"
+sidebarTitle: "Paywall for logged-in users"
+description: "Unlock Pro features when a signed-in user pays. Your server creates the checkout with the user's ID, a webhook unlocks the account, and your app checks the subscription before it shows a Pro feature."
+---
+
+This guide connects a paid plan to the accounts in your app. A signed-in user clicks **Upgrade**, pays on the checkout, and gets Pro features. Your app knows which user paid, keeps access in step with renewals and cancellations, and lets the user cancel or upgrade from your own settings page.
+
+The samples use Next.js route handlers and the `@agentaos/pay` SDK. Functions such as `getCurrentUser` and `grantPro` stand for your own login and database code.
+
+## Before you start
+
+- A test API key (`sk_test_...`) from **Settings → Developers → API Keys**, in `AGENTAOS_API_KEY` on your server. Never send the key to the browser.
+- A webhook endpoint and its signing secret. See [Handle webhooks](/guides/handle-webhooks).
+- `npm install @agentaos/pay`.
+
+```typescript lib/agentaos.ts
+import { AgentaOS } from '@agentaos/pay';
+
+export const agentaos = new AgentaOS(process.env.AGENTAOS_API_KEY!);
+```
+
+## Create the Pro plan
+
+Create the plan once in the dashboard: **Products**, **New product**, **Subscription**, **Monthly**. The steps and screens are in [Sell a subscription](/guides/sell-a-subscription#create-the-plan). On the plan's page, open **Building this into your site?** and click **Copy ID**. Store the ID in `PRO_LINK_ID`. The same plan serves every user; you never create a product per user. Plan settings are on [Subscriptions](/payments/subscriptions).
+
+## Connect a payment to a user
+
+<Steps>
+  <Step title="Create the checkout on the server">
+    When the user clicks **Upgrade**, your server creates a checkout from the plan's link ID. Put your own user ID in `metadata`: it comes back on the webhook and on `checkouts.retrieve`. Do not send signed-in users the plan's shared link, because that link carries no `metadata` and you cannot tell who paid.
+
+    ```typescript app/api/upgrade/route.ts
+    import { agentaos } from '@/lib/agentaos';
+    import { getCurrentUser, savePendingSession } from '@/lib/users'; // your code
+
+    export async function POST() {
+      const user = await getCurrentUser();
+
+      // A second click reuses the open checkout instead of creating another one.
+      if (user.pendingSessionId) {
+        const pending = await agentaos.checkouts.retrieve(user.pendingSessionId);
+        if (pending.status === 'open') return Response.redirect(pending.checkoutUrl, 303);
+      }
+
+      const checkout = await agentaos.checkouts.create({
+        linkId: process.env.PRO_LINK_ID!,
+        buyerEmail: user.email,
+        metadata: { customerId: user.id },
+        successUrl: 'https://yourapp.com/upgrade/success',
+      });
+      await savePendingSession(user.id, checkout.sessionId);
+      return Response.redirect(checkout.checkoutUrl, 303);
+    }
+    ```
+
+    The SDK sends an idempotency key with every create call and reuses it when it retries after a network error or a server error, so one call makes one checkout. The success URL must start with `https://`. After payment, the user comes back to it with `?sessionId=` added.
+  </Step>
+
+  <Step title="Confirm the payment on the success page">
+    The success page asks your server for the checkout's status. Your server reads it with `checkouts.retrieve` and checks that the checkout belongs to the signed-in user.
+
+    ```typescript app/api/upgrade/status/route.ts
+    import { agentaos } from '@/lib/agentaos';
+    import { getCurrentUser, grantPro } from '@/lib/users'; // your code
+
+    export async function GET(req: Request) {
+      const user = await getCurrentUser();
+      const sessionId = new URL(req.url).searchParams.get('sessionId');
+      if (!sessionId) return Response.json({ error: 'sessionId missing' }, { status: 400 });
+
+      const checkout = await agentaos.checkouts.retrieve(sessionId);
+      if (checkout.metadata.customerId !== user.id) {
+        return Response.json({ error: 'not found' }, { status: 404 });
+      }
+      if (checkout.status === 'completed') {
+        const { subscriptionId } = checkout.metadata;
+        await grantPro({
+          userId: user.id,
+          subscriptionId: typeof subscriptionId === 'string' ? subscriptionId : null,
+          sessionId,
+        });
+      }
+      return Response.json({ status: checkout.status });
+    }
+    ```
+
+    Call this route every two seconds while `status` is `open`. Show the Pro features when it is `completed`. Show an error with a new **Upgrade** button when it is `expired` or `cancelled`.
+
+    <Note>
+    Never unlock from the redirect alone. Anyone can open the success URL. Only `status: 'completed'` from `checkouts.retrieve`, or a verified webhook event, proves that the user paid.
+    </Note>
+  </Step>
+
+  <Step title="Unlock the user from the webhook">
+    The webhook unlocks the user even when they close the tab before the success page loads. Verify the signature on the raw body, as in [Handle webhooks](/guides/handle-webhooks).
+
+    ```typescript app/api/webhooks/route.ts
+    import { WebhookVerificationError, type WebhookEvent } from '@agentaos/pay';
+    import { agentaos } from '@/lib/agentaos';
+    import { grantPro, recordRenewal } from '@/lib/users'; // your code
+
+    export async function POST(req: Request) {
+      let event: WebhookEvent;
+      try {
+        event = agentaos.webhooks.verify(
+          await req.text(), // the raw body, never parsed JSON
+          req.headers.get('x-agentaos-signature') ?? '',
+          process.env.AGENTAOS_WEBHOOK_SECRET!,
+        );
+      } catch (err) {
+        if (err instanceof WebhookVerificationError) return new Response('Invalid signature', { status: 400 });
+        throw err;
+      }
+
+      if (event.type === 'checkout.session.completed') {
+        const { sessionId, metadata } = event.data;
+        const subscriptionId = typeof metadata.subscriptionId === 'string' ? metadata.subscriptionId : null;
+
+        if (typeof metadata.customerId === 'string') {
+          // First payment, or the start of a free trial.
+          await grantPro({ userId: metadata.customerId, subscriptionId, sessionId });
+        } else if (subscriptionId) {
+          // A renewal: it carries no customerId. Find the user by the stored subscription ID.
+          await recordRenewal({ subscriptionId, sessionId });
+        }
+      }
+      return new Response(null, { status: 200 });
+    }
+    ```
+
+    `grantPro` stores the `subscriptionId` on the user. Renewals do not carry your `customerId`, so the stored subscription ID is the only way to match them to a user.
+  </Step>
+</Steps>
+
+## Handle each payment once
+
+The same event can arrive more than once, and the success page and the webhook can both report the same payment. Make `grantPro` and `recordRenewal` do nothing when they have already seen the `sessionId`. A unique constraint on `sessionId` in your database does this safely when two requests arrive at the same time.
+
+## Free trials
+
+When the plan has a free trial, the user pays nothing at checkout and the subscription starts as `trialing`. The `checkout.session.completed` event still arrives, with `amount` `"0"` and `metadata.trial` set to `true`. Unlock the user the same way, but treat the event as "trial started", not as money received. The first charge happens when the trial ends. See [Free trials](/payments/subscriptions#free-trials).
+
+## Check access before a Pro feature
+
+Before you show a Pro feature, read the user's subscription by the stored ID. `subscriptions.list()` does not return your `metadata`, so the stored ID is the lookup key.
+
+```typescript lib/pro.ts
+import type { Subscription } from '@agentaos/pay';
+import { agentaos } from '@/lib/agentaos';
+
+export async function findSubscription(id: string): Promise<Subscription | null> {
+  for (let offset = 0; ; offset += 100) {
+    const page = await agentaos.subscriptions.list({ limit: 100, offset });
+    const found = page.items.find((s) => s.id === id);
+    if (found) return found;
+    if (!page.hasMore) return null;
+  }
+}
+
+export async function hasPro(subscriptionId: string | null): Promise<boolean> {
+  if (!subscriptionId) return false;
+  const sub = await findSubscription(subscriptionId);
+  return sub?.status === 'active' || sub?.status === 'trialing';
+}
+```
+
+A canceled subscription keeps its status until the end of the current period, so `hasPro` keeps access until then. The other fields you need:
+
+- `currentPeriodEnd`: the date the current period ends, and the date of the next charge.
+- `cancelAtPeriodEnd`: `true` when the user has canceled and access ends at `currentPeriodEnd`.
+- `planName` and `unitAmountMinor`: the plan and its price per period in integer minor units (`2900` is €29.00).
+
+## Let the user manage the plan
+
+Your "Manage plan" page shows the fields above and offers two actions.
+
+To cancel, call `subscriptions.cancel`. The subscription ends at the end of the current period, and nothing is refunded. The server rejects an immediate cancellation.
+
+```typescript
+const result = await agentaos.subscriptions.cancel(subscriptionId);
+// result.effectiveCancelDate: the date access ends
+```
+
+To upgrade, create the second plan in the same currency and with the same interval. Quote the change first and show the user the amounts. Apply it with the quote's `prorationDate`, so the charge equals the quote.
+
+```typescript
+const quote = await agentaos.subscriptions.previewPlanChange(subscriptionId, process.env.PRO_PLUS_LINK_ID!);
+// Show quote.dueTodayMinor, quote.nextInvoiceMinor and quote.nextInvoiceAt, then after the user confirms:
+await agentaos.subscriptions.changePlan(subscriptionId, {
+  targetLinkId: process.env.PRO_PLUS_LINK_ID!,
+  prorationDate: quote.prorationDate,
+});
+```
+
+An upgrade charges the prorated difference now and applies at once. A downgrade charges nothing and starts at the end of the period. See [Upgrade and downgrade](/payments/subscriptions#upgrade-and-downgrade).
+
+## Show the checkout on your own page
+
+To keep the user on your site, embed the checkout instead of redirecting. Create the checkout on your server as above, then pass `session: checkout.sessionId` to the embedded checkout instead of a `link`. Unlock the user from the webhook or `checkouts.retrieve`, never from the browser event. See [Embedded checkout](/payments/embedded-checkout).
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Handle webhooks" icon="bell" href="/guides/handle-webhooks">
+    Register the endpoint and verify every event.
+  </Card>
+  <Card title="Webhook events" icon="list" href="/webhooks/events">
+    Every event and its fields.
+  </Card>
+  <Card title="Subscriptions" icon="rotate" href="/payments/subscriptions">
+    Statuses, trials, plan changes, and cancellation.
+  </Card>
+  <Card title="Go live" icon="rocket" href="/guides/go-live">
+    Verify your business and take real payments.
+  </Card>
+</CardGroup>

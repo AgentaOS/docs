@@ -9,7 +9,7 @@ Audience: founders first, many of them non-technical or working through an AI ag
 - No em dashes or en dashes in prose. Headings in sentence case. No "What X…" or question headings outside a FAQ. No marketing words.
 - Screenshots: real product, neutral data only (no personal emails, no localhost links), 1440px wide, under `images/<area>/` with plain names, always with alt text, inside `<Frame>`.
 - Quote screen text exactly as the product shows it.
-- Never name another payments company or a vendor we use (Stripe, Paddle, Wise, Bridge, Didit, Radar, Link, Creem, and so on), and never compare AgentaOS to one. Write "the card processor", "our banking partner", "the identity check". API field names and values the product returns (`stripeCustomerId`, `"network": "stripe"`) stay as they are; no prose sentence names the vendor. Check before a commit: `grep -rniE "stripe|paddle|creem|\bwise\b|\bbridge\b|didit" --include='*.mdx' .`
+- Never name another payments company or a vendor we use (Stripe, Paddle, Wise, Bridge, Didit, Radar, Link, Creem, and so on), and never compare AgentaOS to one. Write "the card processor", "our banking partner", "the identity check". API field names and values the product returns (`stripeCustomerId`, `"network": "stripe"`) stay as they are; no prose sentence names the vendor. Check before a commit, pages and the OpenAPI file: `grep -rniE "stripe|paddle|creem|\bwise\b|\bbridge\b|didit" --include='*.mdx' --include='openapi.json' . | grep -viE "stripeCustomerId|stripeSubscriptionId|\"stripe\""`
 
 ## Checks before a commit
 
