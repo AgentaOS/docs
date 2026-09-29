@@ -2,3 +2,7 @@
 title: "Give a subscriber credit"
 openapi: "POST /gateway/subscriptions/{id}/credits"
 ---
+
+<Note>
+**Webhook:** none. The credit changes no subscription state. A renewal that the credit pays sends `checkout.session.completed` and `subscription.renewed`. See [Which action fires which event](/webhooks/events#which-action-fires-which-event).
+</Note>

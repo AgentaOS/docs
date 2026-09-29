@@ -3,6 +3,10 @@ title: "Create a checkout"
 openapi: "POST /gateway/sessions"
 ---
 
+<Note>
+**Webhook:** none. `checkout.session.completed` fires later, when AgentaOS confirms the buyer's payment. See [Which action fires which event](/webhooks/events#which-action-fires-which-event).
+</Note>
+
 The REST path is `/gateway/sessions` (the underlying resource is called a "session"); the TypeScript SDK and the CLI both call it a **checkout** (`agentaos.checkouts`, `agenta pay checkout`).
 
 ```mermaid

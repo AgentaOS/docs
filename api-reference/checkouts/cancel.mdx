@@ -6,3 +6,7 @@ openapi: "POST /gateway/sessions/{sessionId}/cancel"
 <Note>
 Cancelling only works while the checkout is `open` (`400` otherwise). A `409` means it was modified concurrently.
 </Note>
+
+<Note>
+**Webhook:** none. An unpaid checkout has no payment to report. See [Which action fires which event](/webhooks/events#which-action-fires-which-event).
+</Note>

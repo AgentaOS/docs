@@ -3,6 +3,10 @@ title: "Create a payment link"
 openapi: "POST /gateway/payment-links"
 ---
 
+<Note>
+**Webhook:** none. Creating a link moves no money. The buyer's payment on it sends `checkout.session.completed`. See [Which action fires which event](/webhooks/events#which-action-fires-which-event).
+</Note>
+
 <Info>
 You do not pass a settlement mode. The server sets it from your account and returns it on the response. Buyers pay by card, and on EUR sales also by bank transfer.
 </Info>

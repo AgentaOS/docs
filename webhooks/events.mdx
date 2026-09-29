@@ -12,6 +12,27 @@ Amounts follow the [money model](/api-reference/introduction#money-model): `amou
 The field names below are the literal snake_case keys AgentaOS `POST`s to your `webhookUrl`: parse these in any language. The SDK's `webhooks.verify()` (Node.js) returns the same fields camelCased: `link_id` becomes `linkId`, `session_id` becomes `sessionId`, `trial_end` becomes `trialEnd`, and so on.
 </Note>
 
+## When each event fires
+
+Each event type below lists every trigger in the platform. [Which action fires which event](#which-action-fires-which-event) gives the same facts in the other direction, per action.
+
+| Event | Fires when | What to do |
+|---|---|---|
+| `checkout.session.completed` | A buyer pays a checkout by card, bank transfer or stablecoin. A free trial starts: `amount` is `"0"` and `trial` is `true`. A trial with a trial price starts: `amount` is the amount charged. A later subscription charge succeeds: a renewal, the first charge after a trial, or an upgrade's prorated charge. A subscriber credit pays a renewal in full: `amount` is `"0"`. | Fulfill the order or unlock access. |
+| `subscription.created` | The subscription becomes `active` or `trialing` for the first time: the buyer pays the first period, or saves a card for a trial. | Store the subscription `id` with your user. |
+| `subscription.renewed` | A charge after the first one succeeds: a renewal, the first charge after a trial, or an upgrade's prorated charge. A renewal that a subscriber credit pays also fires it. | Extend access to `current_period_end`. |
+| `subscription.payment_failed` | The status becomes `past_due` or `unpaid`: a renewal charge fails, including the first charge after a trial. | Ask the subscriber to update their card. |
+| `subscription.updated` | A cancel is scheduled. A scheduled cancel is resumed. An upgrade is applied. A downgrade is scheduled. A scheduled downgrade is reverted. A scheduled downgrade takes over at the period end. | Store the payload as the subscription's latest state. |
+| `subscription.canceled` | The status becomes `canceled`: at the period end after a scheduled cancel, or when the card processor ends the subscription for another reason. | Remove access. |
+| `dispute.created` | AgentaOS finds a new dispute on one of your sales. | Mark the order as disputed and reply to our dispute email with your evidence; AgentaOS answers the buyer's bank. |
+| `dispute.closed` | A dispute closes in your favor. A lost dispute sends no event. | Clear the disputed mark on the order. |
+| `send.completed` | An outbound stablecoin send that you started is confirmed. | Mark the payout as paid. |
+| `send.failed` | An outbound stablecoin send that you started fails: the broadcast fails, for example on a network error or an insufficient balance, or the transaction reverts on-chain. | Retry the send. |
+| `account.updated` | A business's verification changes, in live mode only. Its identity check is verified or declined. Our reviewers approve, reject, hold or resume the business, or ask for a change. Our reviewers verify or withdraw its identity by hand. The event goes to the business and to the platform that manages it. | Show the business its next step from `verification`. |
+| `webhook.test` | You click **Send test event** in **Settings → Developers → Webhooks**. | Check that your endpoint verifies it. |
+
+## Event envelope
+
 <ResponseField name="id" type="string">
   The event ID. A paid checkout's id is `evt_` plus the sale's transaction id, a send's id is `evt_` plus `data.transaction_id`, and every other event gets a random id such as `evt_4e1b9a0c2d3f5a67`. An event keeps its `id` across delivery attempts and a retry from the dashboard. The SDK's `WebhookEvent` type does not declare `id` yet, so deduplicate on the keys in [Deduplication](#deduplication).
 </ResponseField>
@@ -27,6 +48,56 @@ The field names below are the literal snake_case keys AgentaOS `POST`s to your `
 <ResponseField name="data" type="object">
   Event-specific payload. See each event below.
 </ResponseField>
+
+## Which action fires which event
+
+Events describe money and account state, not every API call. An action that changes nothing about a payment, a subscription or a business's verification sends no event. A "check" below is AgentaOS reading the current state from the card processor. While the buyer's checkout page is open, AgentaOS checks within seconds. A background check runs every 5 minutes for subscriptions and every 10 minutes for disputes.
+
+### Your API calls
+
+| Action | Event | When |
+|---|---|---|
+| [Create a payment link](/api-reference/payment-links/create) | None | |
+| [Update a payment link](/api-reference/payment-links/update) | None | |
+| [Cancel a payment link](/api-reference/payment-links/cancel) | None | |
+| [Create a checkout](/api-reference/checkouts/create) | None | The buyer's payment sends `checkout.session.completed` later. |
+| [Cancel a checkout](/api-reference/checkouts/cancel) | None | |
+| [Cancel a subscription](/api-reference/subscriptions/cancel) | `subscription.updated` | Right away, when the call schedules the cancel. A repeat call sends nothing. `subscription.canceled` follows when the period ends. |
+| [Resume a subscription](/api-reference/subscriptions/resume) | `subscription.updated` | Right away. |
+| [Change the plan](/api-reference/subscriptions/plan-change) | `subscription.updated` | Right away, for an upgrade, a scheduled downgrade, and the undo of a scheduled downgrade. |
+| [Preview a plan change](/api-reference/subscriptions/plan-change-preview) | None | The preview changes nothing. |
+| [Give a subscriber credit](/api-reference/subscriptions/credits-create) | None | A renewal that the credit pays sends the usual renewal events. |
+| [Create a discount code](/api-reference/discount-codes/create) | None | |
+| [Stop a discount code](/api-reference/discount-codes/archive) | None | |
+| [Void an invoice](/api-reference/invoices/void) | None | |
+| [Re-send the receipt email](/api-reference/invoices/send-receipt) | None | |
+| [Create a business](/api-reference/businesses/create) | None | `account.updated` fires later, when the business's verification changes. |
+| [Resend the invitation](/api-reference/businesses/resend-invitation) | None | |
+| [Revoke the invitation](/api-reference/businesses/revoke-invitation) | None | |
+| [Create a verification link](/api-reference/businesses/verification-link) | None | `account.updated` fires when your client completes the identity check. |
+| **Send test event** in **Settings → Developers → Webhooks** | `webhook.test` | Right away. |
+
+### Actions outside your API calls
+
+| Action | Event | When |
+|---|---|---|
+| A buyer pays a checkout, by card, bank transfer or stablecoin | `checkout.session.completed` | When AgentaOS confirms the payment. |
+| A buyer subscribes and pays the first period | `subscription.created` and `checkout.session.completed` | On the next check. |
+| A buyer starts a free trial | `subscription.created` and `checkout.session.completed` with `amount: "0"` | On the next check after the card is saved. |
+| A renewal charge succeeds, including the first charge after a trial | `checkout.session.completed` and `subscription.renewed` | On the next check after the charge. |
+| An upgrade's prorated charge succeeds | `checkout.session.completed` and `subscription.renewed` | On the next check after the charge. |
+| A renewal charge fails, including the first charge after a trial | `subscription.payment_failed` | On the next check. |
+| A scheduled cancel takes effect at the period end | `subscription.canceled` | On the next check after the period ends. |
+| A scheduled downgrade takes over at the period end | `subscription.updated` | On the next check after the period ends. |
+| A buyer's bank opens a chargeback | `dispute.created` | On the next dispute check. |
+| A chargeback closes in your favor | `dispute.closed` | On the next dispute check. |
+| A chargeback closes against you | None | |
+| A business's identity check is verified or declined | `account.updated` | When AgentaOS reads the result. |
+| Our reviewers approve, reject, hold or resume a business, or ask for a change | `account.updated` | Right away. |
+| A stablecoin send you started confirms on-chain | `send.completed` | When the transaction confirms. |
+| A stablecoin send you started fails | `send.failed` | When the send fails. |
+
+For the order of the subscription events, see [Event order for subscriptions](#event-order-for-subscriptions).
 
 ## Which URL receives an event
 
@@ -79,7 +150,15 @@ The `checkout.session.completed` for a renewal, or for the first charge after a 
 
 ## `checkout.session.completed`
 
-Fired when a checkout is paid, by card, bank transfer, or stablecoin, and when a buyer starts a free trial. This is the event to listen for to fulfill an order. A subscription also fires it for every paid period: see [Event order for subscriptions](#event-order-for-subscriptions).
+**Fires when:**
+
+- A buyer pays a checkout by card, bank transfer or stablecoin.
+- A free trial starts: `amount` is `"0"` and `trial` is `true`.
+- A trial with a trial price starts: `amount` is the amount charged.
+- A later subscription charge succeeds: a renewal, the first charge after a trial, or an upgrade's prorated charge.
+- A subscriber credit pays a renewal in full: `amount` is `"0"`.
+
+This is the event to listen for to fulfill an order. For the order of subscription events, see [Event order for subscriptions](#event-order-for-subscriptions).
 
 <Expandable title="data fields" defaultOpen>
   <ResponseField name="link_id" type="string | null">
@@ -170,7 +249,7 @@ The SDK's `CheckoutCompletedData` type differs from the wire body in two ways. I
 
 ## `send.completed`
 
-Fired when an outbound stablecoin send you initiated confirms on-chain.
+**Fires when:** an outbound stablecoin send that you started is confirmed.
 
 <Expandable title="data fields" defaultOpen>
   <ResponseField name="transaction_id" type="string">
@@ -227,7 +306,7 @@ Fired when an outbound stablecoin send you initiated confirms on-chain.
 
 ## `send.failed`
 
-Fired when an outbound send fails to broadcast: a network error, an insufficient balance, or a reverted transaction.
+**Fires when:** an outbound stablecoin send that you started fails: the broadcast fails, for example on a network error or an insufficient balance, or the transaction reverts on-chain.
 
 <Expandable title="data fields" defaultOpen>
   <ResponseField name="transaction_id" type="string">
@@ -288,13 +367,15 @@ Fired when an outbound send fails to broadcast: a network error, an insufficient
 
 ## Subscription events
 
-Subscription lifecycle events, delivered to your account's webhook URL. All five share the same `data` shape. For the order they arrive in, see [Event order for subscriptions](#event-order-for-subscriptions).
+**Fires when:**
 
-- **`subscription.created`**: the subscription became `active` or `trialing`.
-- **`subscription.renewed`**: a later period was paid. The first period does not fire it.
-- **`subscription.payment_failed`**: a charge failed and the subscription is now `past_due` or `unpaid`.
-- **`subscription.updated`**: the subscription changed: a cancel scheduled or resumed (`cancel_at_period_end`), a downgrade scheduled (`pending_plan` set), a scheduled downgrade reverted (`pending_plan` null again), an upgrade applied (new `plan_name` / `link_id` / `amount_minor`), or the scheduled plan taking over at the period end.
-- **`subscription.canceled`**: the subscription ended. No further charges.
+- **`subscription.created`**: the subscription becomes `active` or `trialing` for the first time: the buyer pays the first period, or saves a card for a trial.
+- **`subscription.renewed`**: a charge after the first one succeeds: a renewal, the first charge after a trial, or an upgrade's prorated charge. A renewal that a subscriber credit pays also fires it. The first period does not fire it.
+- **`subscription.payment_failed`**: the status becomes `past_due` or `unpaid`: a renewal charge fails, including the first charge after a trial.
+- **`subscription.updated`**: a cancel is scheduled or resumed (`cancel_at_period_end`), an upgrade is applied (new `plan_name`, `link_id` and `amount_minor`), a downgrade is scheduled (`pending_plan` set), a scheduled downgrade is reverted (`pending_plan` null again), or a scheduled downgrade takes over at the period end.
+- **`subscription.canceled`**: the status becomes `canceled`: at the period end after a scheduled cancel, or when the card processor ends the subscription for another reason. No more charges follow.
+
+Subscription lifecycle events, delivered to your account's webhook URL. All five share the same `data` shape. For the order they arrive in, see [Event order for subscriptions](#event-order-for-subscriptions).
 
 <Expandable title="data fields" defaultOpen>
   <ResponseField name="id" type="string">The subscription's id, a UUID. The same value as `metadata.subscriptionId` on the checkout event and `id` in the [subscriptions API](/sdk/pay-subscriptions).</ResponseField>
@@ -341,10 +422,12 @@ Subscription lifecycle events, delivered to your account's webhook URL. All five
 
 ## Dispute events
 
-Fired when a buyer's bank opens a chargeback on a sale, and when it closes. Both share the same `data` shape.
+**Fires when:**
 
-- **`dispute.created`**: a buyer's bank opened a dispute on a sale.
-- **`dispute.closed`**: the dispute closed in your favor (`status` is `won`). A lost dispute sends no event.
+- **`dispute.created`**: AgentaOS finds a new dispute on one of your sales.
+- **`dispute.closed`**: a dispute closes in your favor (`status` is `won`). A lost dispute sends no event.
+
+A dispute starts when a buyer's bank opens a chargeback on a sale. Both events share the same `data` shape.
 
 <Expandable title="data fields" defaultOpen>
   <ResponseField name="dispute_id" type="string">The dispute's id at the card processor.</ResponseField>
@@ -373,7 +456,15 @@ Fired when a buyer's bank opens a chargeback on a sale, and when it closes. Both
 
 ## `account.updated`
 
-Fired when a business's verification changes: its identity check lands (verified, or declined), or our reviewers approve, reject, hold or resume it, or ask for a change. Sent to the business's own endpoint and, for a managed business, to its platform's. The body is the state after the change.
+**Fires when:** a business's verification changes, in live mode only.
+
+- Its identity check is verified or declined.
+- Our reviewers approve, reject, hold or resume the business, or ask for a change.
+- Our reviewers verify or withdraw its identity by hand.
+
+The event goes to the business and to the platform that manages it.
+
+The body is the state after the change.
 
 <Expandable title="data fields" defaultOpen>
   <ResponseField name="verification" type="string">`unverified`, `in_review`, `verified`, `on_hold`, or `rejected`.</ResponseField>
@@ -398,7 +489,9 @@ Fired when a business's verification changes: its identity check lands (verified
 
 ## `webhook.test`
 
-Sent when you click **Send test event** in **Settings → Developers → Webhooks**. Use it to check that your endpoint receives and verifies events. It goes to your account's webhook URL, signed like every other event.
+**Fires when:** you click **Send test event** in **Settings → Developers → Webhooks**.
+
+Use it to check that your endpoint receives and verifies events. It goes to your account's webhook URL, signed like every other event.
 
 <Expandable title="data fields" defaultOpen>
   <ResponseField name="message" type="string">Always `"Test event from AgentaOS"`.</ResponseField>

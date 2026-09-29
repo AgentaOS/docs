@@ -6,3 +6,7 @@ openapi: "POST /gateway/businesses/{id}/invitation"
 <Note>
 Each call makes a new link that expires after 7 days; the previous one stops working. Once your client has joined the business, its invitations are theirs to manage and this returns `409 client_joined`.
 </Note>
+
+<Note>
+**Webhook:** none. An invitation changes no verification state. See [Which action fires which event](/webhooks/events#which-action-fires-which-event).
+</Note>

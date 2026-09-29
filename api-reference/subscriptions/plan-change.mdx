@@ -10,3 +10,7 @@ An **upgrade** charges the prorated difference on the subscriber's saved card **
 <Note>
 Idempotent on (subscription, target plan, `prorationDate`): retrying the same request does not charge twice. Same plan, a subscription that is not `active` or `trialing`, a different currency, or a different billing interval return `400`.
 </Note>
+
+<Note>
+**Webhook:** `subscription.updated` fires right away. An upgrade's prorated charge also sends `checkout.session.completed` and `subscription.renewed` on AgentaOS's next check. A downgrade sends a second `subscription.updated` when the new plan takes over at the period end. See [Which action fires which event](/webhooks/events#which-action-fires-which-event).
+</Note>
