@@ -37,7 +37,8 @@ agenta verify declaration
     - My site has a public Privacy Policy and Terms.
     - My product isn't built for spam, fraud or harassment.
 
-  Regulated or restricted activities (declare with --restricted): Adult content, Gambling, Weapons, Drugs & supplements, Financial advice, Counterfeit goods, Data scraping, Engagement farming.
+  Not supported (we do not sell these): Adult content, Gambling, Weapons, Drugs & supplements, Financial advice, Counterfeit goods, Data scraping, Engagement farming.
+  An application for one of these is refused, not reviewed.
   If one turns out not to be true, we stop payouts and may close the account. A review rejected for a prohibited product or fraud cannot be resubmitted for three months.
 ```
 
@@ -104,9 +105,6 @@ The command checks every required flag before it sends anything. If flags are mi
 </ParamField>
 <ParamField query="--usage-claims" type="boolean">
   Your site shows reviews or user counts.
-</ParamField>
-<ParamField query="--restricted" type="boolean">
-  You sell a regulated or restricted activity (the list is in `agenta verify declaration`). The application still goes to review, with extra checks and a higher chance of a decline.
 </ParamField>
 <ParamField query="--accept-declaration" type="boolean" required>
   Attest to the five statements in `agenta verify declaration`.
