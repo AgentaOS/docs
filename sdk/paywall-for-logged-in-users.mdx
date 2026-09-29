@@ -1,17 +1,18 @@
 ---
-title: "Put a plan behind a paywall"
+title: "Paywall for logged-in users"
 sidebarTitle: "Paywall for logged-in users"
-description: "Unlock Pro features when a signed-in user pays. Your server creates the checkout with the user's ID, a webhook unlocks the account, and your app checks the subscription before it shows a Pro feature."
+description: "Recipe: unlock Pro features when a signed-in user pays. Your server creates the checkout with the user's ID, a webhook unlocks the account, and your app checks the subscription before it shows a Pro feature."
+icon: "lock"
 ---
 
-This guide connects a paid plan to the accounts in your app. A signed-in user clicks **Upgrade**, pays on the checkout, and gets Pro features. Your app knows which user paid, keeps access in step with renewals and cancellations, and lets the user cancel or upgrade from your own settings page.
+This recipe connects a paid plan to the accounts in your app. A signed-in user clicks **Upgrade**, pays on the checkout, and gets Pro features. Your app knows which user paid, keeps access in step with renewals and cancellations, and lets the user cancel or upgrade from your own settings page.
 
 The samples use Next.js route handlers and the `@agentaos/pay` SDK. Functions such as `getCurrentUser` and `grantPro` stand for your own login and database code.
 
 ## Before you start
 
 - A test API key (`sk_test_...`) from **Developers → API keys**, in `AGENTAOS_API_KEY` on your server. Never send the key to the browser.
-- A webhook endpoint and its signing secret. See [Handle webhooks](/guides/handle-webhooks).
+- A webhook endpoint and its signing secret. See [Handle webhooks](/sdk/handle-webhooks).
 - `npm install @agentaos/pay`.
 
 ```typescript lib/agentaos.ts
@@ -93,7 +94,7 @@ Create the plan once in the dashboard: **Products**, **New product**, **Subscrip
   </Step>
 
   <Step title="Unlock the user from the webhook">
-    The webhook unlocks the user even when they close the tab before the success page loads. Verify the signature on the raw body, as in [Handle webhooks](/guides/handle-webhooks).
+    The webhook unlocks the user even when they close the tab before the success page loads. Verify the signature on the raw body, as in [Handle webhooks](/sdk/handle-webhooks).
 
     ```typescript app/api/webhooks/route.ts
     import { WebhookVerificationError, type WebhookEvent } from '@agentaos/pay';
@@ -201,8 +202,8 @@ To keep the user on your site, embed the checkout instead of redirecting. Create
 
 ## Next steps
 
-<CardGroup cols={2}>
-  <Card title="Handle webhooks" icon="bell" href="/guides/handle-webhooks">
+<Columns cols={2}>
+  <Card title="Handle webhooks" icon="bell" href="/sdk/handle-webhooks">
     Register the endpoint and verify every event.
   </Card>
   <Card title="Webhook events" icon="list" href="/webhooks/events">
@@ -214,4 +215,4 @@ To keep the user on your site, embed the checkout instead of redirecting. Create
   <Card title="Go live" icon="rocket" href="/guides/go-live">
     Verify your business and take real payments.
   </Card>
-</CardGroup>
+</Columns>

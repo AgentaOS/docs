@@ -1,6 +1,7 @@
 ---
 title: "Events"
 description: "Every webhook event AgentaOS sends: full payload fields, types, and a JSON example for each."
+icon: "list"
 ---
 
 AgentaOS sends 12 webhook event types, for checkouts, outbound sends, subscriptions, disputes, account verification, and the dashboard's test event. This page is the full list. Every event shares the same envelope: an `id`, a `type`, a `business`, and a `data` object whose shape depends on the type. See [Webhooks](/payments/webhooks) for how to register a URL and verify the signature before you trust any of this.
@@ -418,7 +419,7 @@ Sent when you click **Send test event** in **Settings → Developers → Webhook
 
 ## Next steps
 
-<CardGroup cols={2}>
+<Columns cols={2}>
   <Card title="Verify signatures" icon="shield-check" href="/payments/webhooks">
     How to register a URL and verify the HMAC-SHA256 signature, in TypeScript, Python, Go, and PHP.
   </Card>
@@ -428,4 +429,4 @@ Sent when you click **Send test event** in **Settings → Developers → Webhook
   <Card title="Platform webhooks" icon="building" href="/connect/webhooks">
     One endpoint for all the businesses you manage.
   </Card>
-</CardGroup>
+</Columns>

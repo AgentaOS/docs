@@ -2,6 +2,7 @@
 title: "Platform webhooks"
 description: "One webhook endpoint for all your clients. Every event says which business it happened in, and account.updated tells you when a client's verification changes."
 tag: "Private preview"
+icon: "satellite-dish"
 ---
 
 As a platform you do not set up a webhook for each client. **Your own webhook endpoint also receives every event of every business you manage**, signed with your own signing secret. It works in test mode too. `account.updated` is always a live event (`livemode: true`), because it is about your client's real verification. It still reaches your endpoint while you build in test mode, because an account has one webhook endpoint.
@@ -63,11 +64,11 @@ A typical use: when `identity_verified` turns `true`, stop reminding your client
 
 ## Next steps
 
-<CardGroup cols={2}>
+<Columns cols={2}>
   <Card title="Events" icon="list" href="/webhooks/events">
     Every event and its fields.
   </Card>
   <Card title="Verify signatures" icon="shield-check" href="/payments/webhooks">
     Check each delivery before you trust it.
   </Card>
-</CardGroup>
+</Columns>

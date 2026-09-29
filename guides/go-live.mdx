@@ -1,6 +1,7 @@
 ---
 title: "Go live"
 description: "Take real money: verify your business, add a payout account, switch to live mode, and copy your products to live."
+icon: "toggle-on"
 ---
 
 By the end of this guide your business is verified, has a payout account, and sells for real money. Test mode and live mode are separate: each has its own products, sales, customers, and invoices. Your products do not move to live by themselves. You copy each one with the **Copy to live** button on its product page, and the live copy gets a new buyer link. If you built an integration, only your code carries over, with a live API key in place of the test key.
@@ -95,7 +96,7 @@ This part is for developers. Your code stays the same, and the key decides the m
 const agentaos = new AgentaOS(process.env.AGENTAOS_API_KEY!); // now sk_live_...
 ```
 
-Your webhook endpoint, under **Webhooks** on the same tab, receives both test and live events. Live events carry `livemode: true`, so check that field before you fulfill an order. See [Handle webhooks](/guides/handle-webhooks).
+Your webhook endpoint, under **Webhooks** on the same tab, receives both test and live events. Live events carry `livemode: true`, so check that field before you fulfill an order. See [Handle webhooks](/sdk/handle-webhooks).
 
 `successUrl`, `cancelUrl`, and `webhookUrl` must be `https` URLs on your live site. A product's own `webhookUrl` is not copied to live. Events for the live copy go to your endpoint under **Webhooks**.
 
@@ -111,14 +112,14 @@ To verify your business from the CLI, run `agenta login`, then `agenta verify de
 
 ## Next steps
 
-<CardGroup cols={3}>
+<Columns cols={3}>
   <Card title="Payouts" icon="money-bill-transfer" href="/payouts/overview">
     How your balance moves to your payout account.
   </Card>
   <Card title="Pricing" icon="tag" href="/mor/pricing">
     What each live sale costs.
   </Card>
-  <Card title="Handle webhooks" icon="bell" href="/guides/handle-webhooks">
+  <Card title="Handle webhooks" icon="bell" href="/sdk/handle-webhooks">
     Check signatures and `livemode` on live events.
   </Card>
-</CardGroup>
+</Columns>

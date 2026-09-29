@@ -1,6 +1,7 @@
 ---
 title: "Checkouts"
 description: "The hosted checkout your buyers pay on, step by step, and how to create a checkout from your server."
+icon: "cart-shopping"
 ---
 
 A checkout is one attempt to collect one payment. Each time a buyer opens a product's buyer link, AgentaOS creates a new checkout for that buyer. You can also create a checkout from your server when your app already knows who the buyer is. In both cases the buyer pays on the same hosted page at `https://app.agentaos.ai/…`.
@@ -168,7 +169,7 @@ A plain `amount` is in currency units (`49.99` means €49.99), and a field whos
 
 ## Next steps
 
-<CardGroup cols={2}>
+<Columns cols={2}>
   <Card title="Products" icon="box" href="/payments/payment-links">
     Create the product a checkout sells.
   </Card>
@@ -181,4 +182,4 @@ A plain `amount` is in currency units (`49.99` means €49.99), and a field whos
   <Card title="Webhooks" icon="bell" href="/payments/webhooks">
     Confirm the payment on your server.
   </Card>
-</CardGroup>
+</Columns>

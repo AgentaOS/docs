@@ -1,6 +1,7 @@
 ---
 title: "Payouts"
 description: "How a sale becomes money you can pay out, where the payout goes, when it runs, what it costs, and the documents you get for each payout."
+icon: "money-bill-transfer"
 ---
 
 Your card and bank sales collect in one AgentaOS balance per currency, EUR or USD. Payouts run twice a month, on the 1st and the 15th, and send the available part of that balance to your payout account: a bank account, or a stablecoin wallet if AgentaOS turned that on for you. Each payout comes with a payout statement and a self-billed invoice for your books.
@@ -33,14 +34,14 @@ A new sale clears for 14 days before it moves from **On the way** to **Available
 
 Payouts are same-currency. A EUR balance pays to a EUR account and a USD balance pays to a USD account, so no currency conversion happens inside a payout.
 
-<CardGroup cols={2}>
+<Columns cols={2}>
   <Card title="Bank account" icon="building-columns" href="/payouts/payout-accounts">
     Paid through our banking partner. For each currency, AgentaOS uses your newest bank account that is ready for payouts.
   </Card>
   <Card title="Stablecoin wallet" icon="wallet" href="/payouts/stablecoin-payouts">
     Public preview. EUR pays out in EURC and USD pays out in USDC, to a wallet you choose per currency.
   </Card>
-</CardGroup>
+</Columns>
 
 To see which countries bank payouts reach, go to [Supported countries](/mor/supported-countries).
 
@@ -92,7 +93,7 @@ Give both documents to your accountant. See [Payout statements and self-billed i
 
 ## Next steps
 
-<CardGroup cols={2}>
+<Columns cols={2}>
   <Card title="Add a payout account" icon="building-columns" href="/payouts/payout-accounts">
     Save the bank account AgentaOS pays you to.
   </Card>
@@ -105,4 +106,4 @@ Give both documents to your accountant. See [Payout statements and self-billed i
   <Card title="How merchant of record works" icon="scale-balanced" href="/mor/how-it-works">
     How a payment becomes money in your balance.
   </Card>
-</CardGroup>
+</Columns>

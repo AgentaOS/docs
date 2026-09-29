@@ -1,6 +1,7 @@
 ---
 title: "Sell a subscription"
 description: "Create a monthly plan with a free trial, share it, take your first subscriber, change their plan, and cancel. All from the dashboard, in test mode."
+icon: "repeat"
 ---
 
 This guide takes you from no plan to a running subscription in the dashboard. You create a monthly plan with a 14-day free trial, pay for it yourself as a test buyer, then move the subscriber to another plan and cancel. Everything runs in **Test mode**, so no real money moves.
@@ -149,23 +150,23 @@ const checkout = await agentaos.checkouts.create({
 // Send the user to checkout.checkoutUrl
 ```
 
-When they finish, `checkout.session.completed` carries your `customerId` and the new `subscriptionId` in `data.metadata`. Store the `subscriptionId` on your user. Renewals do not carry your `customerId`, so match them by that `subscriptionId`. See [Handle webhooks](/guides/handle-webhooks) to verify the event.
+When they finish, `checkout.session.completed` carries your `customerId` and the new `subscriptionId` in `data.metadata`. Store the `subscriptionId` on your user. Renewals do not carry your `customerId`, so match them by that `subscriptionId`. See [Handle webhooks](/sdk/handle-webhooks) to verify the event.
 
 Creating plans, listing subscriptions, plan changes, and canceling from code are on the [Subscriptions](/payments/subscriptions#from-code) page.
 
 ## Next steps
 
-<CardGroup cols={2}>
+<Columns cols={2}>
   <Card title="Subscriptions" icon="rotate" href="/payments/subscriptions">
     Trials, plan changes, cancellation, and the code for each.
   </Card>
   <Card title="Discount codes" icon="ticket" href="/payments/discount-codes">
     Give new subscribers money off their first invoice.
   </Card>
-  <Card title="Handle webhooks" icon="bell" href="/guides/handle-webhooks">
+  <Card title="Handle webhooks" icon="bell" href="/sdk/handle-webhooks">
     Unlock access when a subscriber pays.
   </Card>
   <Card title="Go live" icon="rocket" href="/guides/go-live">
     Take real payments.
   </Card>
-</CardGroup>
+</Columns>

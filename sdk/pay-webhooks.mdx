@@ -1,6 +1,7 @@
 ---
 title: "Webhooks"
 description: "Verify signed webhook payloads locally with agentaos.webhooks.verify(). HMAC-SHA256, timing-safe."
+icon: "bell"
 ---
 
 `webhooks.verify()` runs in your process and makes no network call. It checks the payload's HMAC-SHA256 signature against your webhook secret, rejects a stale or malformed signature, and returns the parsed event with camelCase keys. Set the destination URL and copy the signing secret in **Settings → Developers → Webhooks**, or set `webhookUrl` on a [checkout](/sdk/pay-checkouts) or link.
@@ -227,11 +228,11 @@ The sample event the dashboard's **Send test event** button fires at your endpoi
 
 ## Next steps
 
-<CardGroup cols={2}>
+<Columns cols={2}>
   <Card title="Checkouts" icon="credit-card" href="/sdk/pay-checkouts">
     Set `webhookUrl` to receive `checkout.session.completed`.
   </Card>
   <Card title="Errors" icon="triangle-exclamation" href="/sdk/pay-errors">
     `WebhookVerificationError` and the rest of the error hierarchy.
   </Card>
-</CardGroup>
+</Columns>

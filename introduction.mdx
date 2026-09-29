@@ -1,40 +1,62 @@
 ---
 title: "Monetize your product in a day"
 description: "Set up in minutes and start selling the same day. Card, Apple Pay, and Google Pay, with subscriptions, tax, invoices, and payouts all handled for you."
+icon: "house"
+mode: "wide"
+hideFooterPagination: true
 ---
 
-Getting paid shouldn't be harder than building, but for most founders it is: subscriptions, global cards, sales tax, chargebacks, invoices. None of it is your product, and all of it stands between you and revenue. AgentaOS runs billing, tax, invoices, and payouts, so you do not build a billing team to get paid.
+Getting paid shouldn't be harder than building, but for most founders it is: subscriptions, global cards, sales tax, chargebacks, invoices.
+AgentaOS runs billing, tax, invoices, and payouts, so you do not build a billing team to get paid.
 
-<Card title="Building with an agent? Hand it the docs." icon="robot" href="/agents/overview">
-  Paste this into Cursor or Claude Code. The agent sets up billing and returns a buyer link:
-
-  ```text
-  Read https://agentaos.ai/SKILL.md and set up AgentaOS for me.
-  ```
-</Card>
-
-## Start where you are
-
-<CardGroup cols={2}>
-  <Card title="Share a buyer link" icon="link" href="/payments/payment-links">
-    A shareable URL you can charge many times. No code to share it.
+<Columns cols={3}>
+  <Card title="Quickstart" icon="rocket" href="/getting-started/quickstart" cta="Start in test mode" arrow>
+    Create a product, share its link, and watch the test payment land.
   </Card>
-  <Card title="Sell a subscription" icon="rotate" href="/guides/sell-a-subscription">
-    Recurring billing with automatic renewals and tax handled.
+  <Card title="Build with an agent" icon="robot" href="/agents/overview" cta="Hand it the docs" arrow>
+    Paste one line into Cursor or Claude Code. The agent sets up billing and returns a buyer link.
   </Card>
-  <Card title="Bill a client" icon="file-invoice" href="/payments/invoices">
-    Send a tax-correct invoice, paid on the same secure checkout.
+  <Card title="API reference" icon="code" href="/api-reference/introduction" cta="Explore the API" arrow>
+    Payment links, checkouts, subscriptions, invoices, and customers over REST.
   </Card>
-  <Card title="Let your agent run it" icon="wand-magic-sparkles" href="/agents/overview">
-    Point Claude or Cursor at AgentaOS and let it operate the store.
-  </Card>
-</CardGroup>
-
-Fees and plans are on [Pricing](/mor/pricing).
+</Columns>
 
 ## AgentaOS as your merchant of record
 
 AgentaOS is a billing and payments platform for AI founders, and your **merchant of record**: the legal seller of your product. Your buyer pays AgentaOS, and AgentaOS takes the payment, charges the VAT, issues the invoice and pays you out. As the registered seller, AgentaOS carries the payment and tax liability, so you do not register for tax abroad, file a cross-border return, or reconcile three processors. AgentaOS is PCI compliant. See [How it works](/mor/how-it-works).
+
+## Start where you are
+
+<Columns cols={2}>
+  <Card title="Share a buyer link" icon="link" href="/payments/payment-links" horizontal>
+    A shareable URL you can charge many times. No code to share it.
+  </Card>
+  <Card title="Sell a subscription" icon="rotate" href="/guides/sell-a-subscription" horizontal>
+    Recurring billing with automatic renewals and tax handled.
+  </Card>
+  <Card title="Bill a client" icon="file-invoice" href="/payments/invoices" horizontal>
+    Send a tax-correct invoice, paid on the same secure checkout.
+  </Card>
+  <Card title="Run a platform" icon="building" href="/guides/build-a-platform" horizontal>
+    Run your clients' businesses from one AgentaOS account.
+  </Card>
+</Columns>
+
+Fees and plans are on [Pricing](/mor/pricing).
+
+## What AgentaOS handles
+
+<Columns cols={3}>
+  <Card title="Checkout" icon="cart-shopping" href="/payments/checkouts">
+    Card, Apple Pay, and Google Pay. Cards work in 135+ currencies, from buyers worldwide.
+  </Card>
+  <Card title="Tax" icon="calculator" href="/mor/tax">
+    AgentaOS calculates the VAT, collects it, and pays it to the tax office.
+  </Card>
+  <Card title="Payouts" icon="money-bill-transfer" href="/payouts/overview">
+    Your buyer pays AgentaOS, and AgentaOS pays you out.
+  </Card>
+</Columns>
 
 ## Reasons founders switch
 
@@ -52,7 +74,7 @@ AgentaOS is a billing and payments platform for AI founders, and your **merchant
 
 ## Core features
 
-<CardGroup cols={3}>
+<Columns cols={3}>
   <Card title="Products and buyer links" icon="link" href="/payments/payment-links">
     Create a product and share its buyer link. One-time or subscription. No code required.
   </Card>
@@ -71,11 +93,11 @@ AgentaOS is a billing and payments platform for AI founders, and your **merchant
   <Card title="Webhooks" icon="bell" href="/payments/webhooks">
     Get a signed event you can verify when a checkout completes.
   </Card>
-</CardGroup>
+</Columns>
 
 ## Developer tools
 
-<CardGroup cols={3}>
+<Columns cols={3}>
   <Card title="TypeScript SDK" icon="node-js" href="/sdk/pay-overview">
     `@agentaos/pay`. Type-safe, zero runtime dependencies, full API coverage.
   </Card>
@@ -85,7 +107,7 @@ AgentaOS is a billing and payments platform for AI founders, and your **merchant
   <Card title="MCP server" icon="plug" href="/mcp/setup">
     Connect Claude, Cursor, or Windsurf and let your AI agents run your store.
   </Card>
-</CardGroup>
+</Columns>
 
 ## AI agent integration
 

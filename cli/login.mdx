@@ -1,6 +1,7 @@
 ---
 title: "Login"
 description: "Authenticate the CLI with your AgentaOS account using the device-code browser flow."
+icon: "right-to-bracket"
 ---
 
 Every CLI command that touches your data (`pay`, `subscriptions`, `customers`, `invoices`, `status`) runs against the account you're logged into, not an API key. Log in once and the session persists across terminal restarts.
@@ -84,11 +85,11 @@ Clears the local session file and best-effort revokes it on the server. Safe to 
 
 ## Next steps
 
-<CardGroup cols={2}>
+<Columns cols={2}>
   <Card title="Status" icon="gauge-high" href="/cli/status">
     Confirm your account and your go-live progress after logging in.
   </Card>
   <Card title="Pay" icon="credit-card" href="/cli/pay">
     Create your first checkout from the terminal.
   </Card>
-</CardGroup>
+</Columns>

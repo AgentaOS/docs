@@ -1,6 +1,7 @@
 ---
 title: "Webhooks"
 description: "Get notified the moment a payment completes. Register a URL, verify the HMAC-SHA256 signature, and never trust an unverified payload."
+icon: "bell"
 ---
 
 AgentaOS sends a webhook to your server when something happens in your account: a checkout is paid, a subscription renews or changes, a dispute opens, and more. [Events](/webhooks/events) lists every event and its payload. Webhooks tell your backend about a payment without polling. Build on them, not on the browser redirect after checkout.
@@ -218,7 +219,7 @@ Return `200` as soon as you have verified the signature and stored the event (a 
 
 ## Best practices
 
-<CardGroup cols={2}>
+<Columns cols={2}>
   <Card title="Don't trust the redirect" icon="arrow-right">
     The customer can close the browser before the `successUrl` redirect fires. Treat the webhook, not the redirect, as the proof that a payment happened.
   </Card>
@@ -231,11 +232,11 @@ Return `200` as soon as you have verified the signature and stored the event (a 
   <Card title="Verify every time" icon="shield-check">
     Never branch on `event.data` before `webhooks.verify()` (or the manual equivalent) has returned successfully.
   </Card>
-</CardGroup>
+</Columns>
 
 ## Next steps
 
-<CardGroup cols={2}>
+<Columns cols={2}>
   <Card title="Event reference" icon="bell" href="/webhooks/events">
     Every event type, its full payload, and a JSON example.
   </Card>
@@ -248,4 +249,4 @@ Return `200` as soon as you have verified the signature and stored the event (a 
   <Card title="Payouts" icon="money-bill-transfer" href="/payouts/overview">
     What happens to your balance after a payment lands.
   </Card>
-</CardGroup>
+</Columns>

@@ -1,6 +1,7 @@
 ---
 title: "Invoices"
 description: "Every sale gets a VAT-correct invoice automatically. Create and send invoices by hand, download the PDF, a statement, or a CSV for your accountant."
+icon: "file-invoice"
 ---
 
 Every sale gets an invoice. You do not create it or send it; AgentaOS issues it when the payment clears. For a card or bank sale, AgentaOS is the merchant of record, so the invoice names AgentaOS (Aristokrates OÜ, Estonia) as the seller, "Merchant of Record for" your business. The invoice carries the buyer's details and the tax breakdown for the buyer's country.
@@ -131,7 +132,7 @@ The `status` filter takes `all`, `issued`, `paid`, or `voided`. An invoice's `st
 
 ## Next steps
 
-<CardGroup cols={2}>
+<Columns cols={2}>
   <Card title="Receipts" icon="receipt" href="/payments/receipts">
     The receipt a buyer gets for every paid invoice.
   </Card>
@@ -144,4 +145,4 @@ The `status` filter takes `all`, `issued`, `paid`, or `voided`. An invoice's `st
   <Card title="Statements" icon="file-lines" href="/payouts/statements">
     The documents that come with each payout.
   </Card>
-</CardGroup>
+</Columns>

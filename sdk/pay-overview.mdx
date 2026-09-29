@@ -1,6 +1,7 @@
 ---
 title: "Overview"
 description: "@agentaos/pay is the server-side TypeScript SDK for AgentaOS. Install, authenticate, and call any resource in a few lines."
+icon: "cube"
 ---
 
 `@agentaos/pay` is a server-side TypeScript SDK for the AgentaOS Payment API. AgentaOS is a Merchant of Record: create a checkout or a payment link, and AgentaOS collects the payment (card or wallet), calculates and remits tax, issues the invoice, and settles to your balance. The SDK is a thin, typed wrapper over the REST API, one class per resource, camelCase in, camelCase out.
@@ -191,7 +192,7 @@ See [Errors](/sdk/pay-errors) for the full hierarchy and the exact retry/backoff
 
 ## Next steps
 
-<CardGroup cols={2}>
+<Columns cols={2}>
   <Card title="Checkouts" icon="credit-card" href="/sdk/pay-checkouts">
     Create, list, retrieve, and cancel single payment sessions.
   </Card>
@@ -204,4 +205,4 @@ See [Errors](/sdk/pay-errors) for the full hierarchy and the exact retry/backoff
   <Card title="Errors" icon="triangle-exclamation" href="/sdk/pay-errors">
     The full error hierarchy and retry/timeout behavior.
   </Card>
-</CardGroup>
+</Columns>

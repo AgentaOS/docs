@@ -1,6 +1,9 @@
 ---
 title: "Guides"
 description: "Task-based, end-to-end walkthroughs. Pick the outcome you want and follow the steps to get there."
+icon: "map"
+mode: "wide"
+hideFooterPagination: true
 ---
 
 Each guide starts from nothing and ends with a working result: one goal, one path. The Documentation tab is the reference to keep open in a second tab: it explains concepts and lists every parameter on every resource. Follow a guide from top to bottom. Where a concept needs more depth, the guide links to its Documentation page; read it, then return to the step you left.
@@ -17,7 +20,7 @@ If you're brand new to AgentaOS, start with the [Quickstart](/getting-started/qu
 
 ## Pick a guide
 
-<CardGroup cols={2}>
+<Columns cols={2}>
   <Card title="Accept your first payment" icon="credit-card" href="/guides/accept-your-first-payment">
     Create a product, share its buyer link, and confirm the money landed.
   </Card>
@@ -27,7 +30,7 @@ If you're brand new to AgentaOS, start with the [Quickstart](/getting-started/qu
   <Card title="Go live" icon="rocket" href="/guides/go-live">
     Move from test mode to real money: business verification, a payout account, and a live API key.
   </Card>
-  <Card title="Handle webhooks" icon="bell" href="/guides/handle-webhooks">
+  <Card title="Handle webhooks" icon="bell" href="/sdk/handle-webhooks">
     Register a URL, verify every signature, and fulfill an order when a checkout completes.
   </Card>
   <Card title="Let an AI agent run your store" icon="robot" href="/guides/ai-agent">
@@ -36,15 +39,15 @@ If you're brand new to AgentaOS, start with the [Quickstart](/getting-started/qu
   <Card title="Build a platform" icon="building" href="/guides/build-a-platform">
     Run your clients' businesses from one account.
   </Card>
-</CardGroup>
+</Columns>
 
 ## Next steps
 
-<CardGroup cols={2}>
+<Columns cols={2}>
   <Card title="Quickstart" icon="bolt" href="/getting-started/quickstart">
     New to AgentaOS? Start here before the guides above.
   </Card>
   <Card title="Payment SDK" icon="code" href="/sdk/pay-overview">
     Full reference for every resource and method in `@agentaos/pay`.
   </Card>
-</CardGroup>
+</Columns>

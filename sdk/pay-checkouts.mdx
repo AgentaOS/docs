@@ -1,6 +1,7 @@
 ---
 title: "Checkouts"
 description: "Create a single payment session with agentaos.checkouts. Standalone or from a payment link template."
+icon: "cart-shopping"
 ---
 
 A checkout is a single payment attempt: one amount, one buyer, one `checkoutUrl`. Create one from your backend when you know the amount at request time (an e-commerce order, an invoice you're collecting on). For a reusable, shareable URL, use a [payment link](/sdk/pay-payment-links) instead: each visitor to the link gets their own checkout.
@@ -213,7 +214,7 @@ Canceling prevents the customer from paying through that session. A payment alre
 
 ## Next steps
 
-<CardGroup cols={2}>
+<Columns cols={2}>
   <Card title="Payment links" icon="link" href="/sdk/pay-payment-links">
     Reusable templates. Each visitor gets their own checkout.
   </Card>
@@ -226,4 +227,4 @@ Canceling prevents the customer from paying through that session. A payment alre
   <Card title="Errors" icon="triangle-exclamation" href="/sdk/pay-errors">
     What `create()` throws on bad params, and how retries work.
   </Card>
-</CardGroup>
+</Columns>

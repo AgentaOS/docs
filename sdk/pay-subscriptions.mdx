@@ -1,6 +1,7 @@
 ---
 title: "Subscriptions"
 description: "Read and manage recurring billing with agentaos.subscriptions: list, invoices, free trials, plan changes, cancel, credits. No create, by design."
+icon: "rotate"
 ---
 
 `agentaos.subscriptions` reads and manages subscriptions; it has no `create()`. A subscription starts when a buyer pays a [payment link](/sdk/pay-payment-links) created with `type: 'subscription'`. From then on AgentaOS, as merchant of record, bills the buyer every `billingInterval` by card or bank.
@@ -59,7 +60,7 @@ async function findSubscription(subscriptionId: string): Promise<Subscription | 
 }
 ```
 
-[Paywall for logged-in users](/guides/paywall-for-logged-in-users) shows the full pattern: store the id on your user, then read the subscription before a paid feature.
+[Paywall for logged-in users](/sdk/paywall-for-logged-in-users) shows the full pattern: store the id on your user, then read the subscription before a paid feature.
 
 ### Subscription fields
 
@@ -274,7 +275,7 @@ const { items, balanceMinor } = await agentaos.subscriptions.credits(sub.id);
 
 ## Next steps
 
-<CardGroup cols={2}>
+<Columns cols={2}>
   <Card title="Sell a subscription" icon="rotate" href="/guides/sell-a-subscription">
     Create a product, share the link or check out a logged-in user.
   </Card>
@@ -290,4 +291,4 @@ const { items, balanceMinor } = await agentaos.subscriptions.credits(sub.id);
   <Card title="Errors" icon="triangle-exclamation" href="/sdk/pay-errors">
     What `cancel()` throws on an unknown subscription ID.
   </Card>
-</CardGroup>
+</Columns>

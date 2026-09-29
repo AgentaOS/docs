@@ -1,6 +1,7 @@
 ---
 title: "Customers"
 description: "Everyone who paid you or whom you billed, with their revenue and payments. Built for you from checkouts and invoices."
+icon: "users"
 ---
 
 The Customers page lists the people who paid you and the people you billed. AgentaOS adds a customer when someone pays you for the first time. It also adds one when you bill someone by email, on an invoice or on a checkout your server creates. You do not add or import customers yourself.
@@ -78,11 +79,11 @@ The list is newest first, and each call returns `{ items, total, hasMore }`.
 
 ## Next steps
 
-<CardGroup cols={2}>
+<Columns cols={2}>
   <Card title="Invoices" icon="file-invoice" href="/payments/invoices">
     Every invoice a customer has.
   </Card>
   <Card title="Subscriptions" icon="rotate" href="/payments/subscriptions">
     Customers with a running subscription.
   </Card>
-</CardGroup>
+</Columns>

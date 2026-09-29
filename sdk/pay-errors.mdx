@@ -1,6 +1,7 @@
 ---
 title: "Errors"
 description: "The AgentaOSError hierarchy, what triggers each subclass, and exactly how retries and timeouts work."
+icon: "triangle-exclamation"
 ---
 
 Every failure from `@agentaos/pay`, a bad request, an auth problem, a network blip, throws a subclass of `AgentaOSError`. Retries for transient failures (`5xx`, network errors, some `429`s) happen automatically inside the SDK before anything is thrown, so if you see an error, it's already survived the retry budget.
@@ -110,11 +111,11 @@ Debug logs are sanitized: they never include your API key or request/response bo
 
 ## Next steps
 
-<CardGroup cols={2}>
+<Columns cols={2}>
   <Card title="Overview" icon="code" href="/sdk/pay-overview">
     Client options, auth, and the resource map.
   </Card>
   <Card title="Webhooks" icon="tower-broadcast" href="/sdk/pay-webhooks">
     `WebhookVerificationError` and signature verification in detail.
   </Card>
-</CardGroup>
+</Columns>

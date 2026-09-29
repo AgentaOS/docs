@@ -1,6 +1,7 @@
 ---
 title: "Test mode and testing"
 description: "Try every part of AgentaOS with test money: switch modes, pay with test cards, check test invoices and webhooks, then go live."
+icon: "flask"
 ---
 
 Test mode is a full copy of AgentaOS that uses test money. You create products, pay your own checkout with a test card, and get invoices, receipts, emails and webhooks, and no real money moves. Every new account starts in test mode, and you do not need to verify your business to use it.
@@ -87,11 +88,11 @@ A test product's [embedded checkout](/payments/embedded-checkout) loads on any p
 
 When your tests pass, verify your business, add a payout account, and replace your `sk_test_` key with an `sk_live_` key. The [Go live guide](/guides/go-live) lists each step.
 
-<CardGroup cols={2}>
+<Columns cols={2}>
   <Card title="Go live" icon="rocket" href="/guides/go-live">
     Verify your business and take real payments.
   </Card>
   <Card title="Webhooks" icon="bell" href="/payments/webhooks">
     Receive and verify events.
   </Card>
-</CardGroup>
+</Columns>

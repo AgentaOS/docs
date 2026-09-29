@@ -1,6 +1,7 @@
 ---
 title: "Payment Links"
 description: "Reusable, shareable payment URLs with agentaos.paymentLinks. One-time or recurring subscriptions."
+icon: "link"
 ---
 
 A payment link is a reusable template: create it once, share the `checkoutUrl`, and every visitor gets their own [checkout](/sdk/pay-checkouts) session at that link's amount and settings. Use a link for anything you'd otherwise re-create per customer, a pricing page button, an emailed invoice, a subscription plan.
@@ -194,7 +195,7 @@ This is a soft cancel, the link's `status` becomes `'cancelled'` and it stops ac
 
 ## Next steps
 
-<CardGroup cols={2}>
+<Columns cols={2}>
   <Card title="Checkouts" icon="credit-card" href="/sdk/pay-checkouts">
     How `checkouts.create({ linkId })` inherits a link's settings.
   </Card>
@@ -207,4 +208,4 @@ This is a soft cancel, the link's `status` becomes `'cancelled'` and it stops ac
   <Card title="Webhooks" icon="tower-broadcast" href="/sdk/pay-webhooks">
     `checkout.session.completed` fires for every paid link visit.
   </Card>
-</CardGroup>
+</Columns>

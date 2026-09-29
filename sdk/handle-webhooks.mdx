@@ -1,9 +1,10 @@
 ---
-title: "Handle webhooks"
+title: "Receive webhooks in Express"
 description: "Register a webhook URL, verify the signature, and fulfill an order the moment checkout.session.completed fires. A complete, runnable Express example."
+icon: "code-branch"
 ---
 
-By the end of this guide you'll have an Express endpoint that verifies AgentaOS's signature and marks an order paid when a checkout completes. It fulfills each order once, even if the same event arrives twice.
+By the end of this page you have an Express endpoint that verifies AgentaOS's signature and marks an order paid when a checkout completes. It fulfills each order once, even if the same event arrives twice.
 
 ## Before you start
 
@@ -173,7 +174,7 @@ Not using Node? The signing algorithm is HMAC-SHA256 over `{timestamp}.{raw_body
 
 ## Next steps
 
-<CardGroup cols={2}>
+<Columns cols={2}>
   <Card title="Event reference" icon="bell" href="/webhooks/events">
     Every event type, its full payload, and a JSON example.
   </Card>
@@ -186,4 +187,4 @@ Not using Node? The signing algorithm is HMAC-SHA256 over `{timestamp}.{raw_body
   <Card title="Payouts" icon="money-bill-transfer" href="/payouts/overview">
     What happens to your balance after the payment lands.
   </Card>
-</CardGroup>
+</Columns>

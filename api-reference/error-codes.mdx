@@ -1,6 +1,7 @@
 ---
 title: "Error codes"
 description: "How the API reports errors, the status codes you will see, and how to handle them."
+icon: "triangle-exclamation"
 ---
 
 When a request fails, the API returns the matching HTTP status code and a JSON body describing what went wrong. Every response also carries an `x-request-id` header, which error bodies repeat as `requestId`. Include it when you contact support. The [TypeScript SDK](/sdk/pay-errors) turns each response into a typed error for you, so most integrations never parse this body by hand.
