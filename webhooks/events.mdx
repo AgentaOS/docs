@@ -24,7 +24,7 @@ Each event type below lists every trigger in the platform. [Which action fires w
 | `subscription.payment_failed` | The status becomes `past_due` or `unpaid`: a renewal charge fails, including the first charge after a trial. | Ask the subscriber to update their card. |
 | `subscription.updated` | A cancel is scheduled. A scheduled cancel is resumed. An upgrade is applied. A downgrade is scheduled. A scheduled downgrade is reverted. A scheduled downgrade takes over at the period end. | Store the payload as the subscription's latest state. |
 | `subscription.canceled` | The status becomes `canceled`: at the period end after a scheduled cancel, or when the card processor ends the subscription for another reason. | Remove access. |
-| `dispute.created` | AgentaOS finds a new dispute on one of your sales. | Mark the order as disputed (AgentaOS answers the buyer's bank). |
+| `dispute.created` | AgentaOS finds a new dispute on one of your sales. | Mark the order as disputed and reply to our dispute email with your evidence; AgentaOS answers the buyer's bank. |
 | `dispute.closed` | A dispute closes in your favor. A lost dispute sends no event. | Clear the disputed mark on the order. |
 | `send.completed` | An outbound stablecoin send that you started is confirmed. | Mark the payout as paid. |
 | `send.failed` | An outbound stablecoin send that you started fails: the broadcast fails, for example on a network error or an insufficient balance, or the transaction reverts on-chain. | Retry the send. |
