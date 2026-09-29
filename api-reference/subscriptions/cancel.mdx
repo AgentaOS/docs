@@ -6,3 +6,7 @@ openapi: "POST /gateway/subscriptions/{id}/cancel"
 <Note>
 Calling cancel again on an already-`canceled` subscription is a no-op. It returns the same result without hitting the card processor a second time. If the subscription never completed a first successful charge (`stripeSubscriptionId` is `null`), cancel returns `400`.
 </Note>
+
+<Note>
+**Webhook:** `subscription.updated` fires right away, when the call schedules the cancel. `subscription.canceled` fires when the period ends, on AgentaOS's next check. A repeat call sends nothing. See [Which action fires which event](/webhooks/events#which-action-fires-which-event).
+</Note>

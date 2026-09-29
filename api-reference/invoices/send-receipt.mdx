@@ -6,3 +6,7 @@ openapi: "POST /gateway/invoices/{invoiceId}/send-receipt"
 <Note>
 Returns `400` if the invoice isn't `paid` yet, or has no buyer email on file.
 </Note>
+
+<Note>
+**Webhook:** none. The call sends an email only. See [Which action fires which event](/webhooks/events#which-action-fires-which-event).
+</Note>

@@ -3,6 +3,10 @@ title: "Cancel a payment link"
 openapi: "DELETE /gateway/payment-links/{id}"
 ---
 
+<Note>
+**Webhook:** none. Cancelling a link moves no money. See [Which action fires which event](/webhooks/events#which-action-fires-which-event).
+</Note>
+
 <Warning>
 Cancelling is a state change, not a delete. The link and its payment history stay readable. A `409` means the link changed concurrently (retry the read, then the cancel).
 </Warning>

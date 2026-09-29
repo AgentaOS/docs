@@ -6,3 +6,7 @@ openapi: "GET /gateway/subscriptions/{id}/plan-change/preview"
 <Note>
 Read-only. Nothing is charged or scheduled until you call [Change the plan](/api-reference/subscriptions/plan-change) with the `prorationDate` from this response. The target must be a different subscription product in the same currency and billing interval; the subscription must be `active` or `trialing`. Anything else returns `400`.
 </Note>
+
+<Note>
+**Webhook:** none. The preview changes nothing. See [Which action fires which event](/webhooks/events#which-action-fires-which-event).
+</Note>

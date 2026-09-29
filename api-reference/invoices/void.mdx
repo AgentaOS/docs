@@ -3,6 +3,10 @@ title: "Void an invoice"
 openapi: "POST /gateway/invoices/{invoiceId}/void"
 ---
 
+<Note>
+**Webhook:** none. Voiding changes the invoice document, not a payment. See [Which action fires which event](/webhooks/events#which-action-fires-which-event).
+</Note>
+
 <Warning>
 Voiding is irreversible. There's no "un-void." An already-voided invoice returns `400` on a repeat call.
 </Warning>
