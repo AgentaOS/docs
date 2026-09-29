@@ -128,13 +128,18 @@
               "sdk/pay-checkouts",
               "sdk/pay-payment-links",
               "sdk/pay-subscriptions",
-              "sdk/paywall-for-logged-in-users",
               "sdk/pay-invoices",
               "sdk/pay-customers",
               "sdk/pay-businesses",
               "sdk/pay-webhooks",
-              "sdk/handle-webhooks",
-              "sdk/pay-errors"
+              "sdk/pay-errors",
+              {
+                "group": "Recipes",
+                "pages": [
+                  "sdk/paywall-for-logged-in-users",
+                  "sdk/handle-webhooks"
+                ]
+              }
             ]
           },
           {
@@ -188,7 +193,21 @@
                   "api-reference/subscriptions/list",
                   "api-reference/subscriptions/plan-change-preview",
                   "api-reference/subscriptions/plan-change",
-                  "api-reference/subscriptions/cancel"
+                  "api-reference/subscriptions/cancel",
+                  "api-reference/subscriptions/invoices",
+                  "api-reference/subscriptions/credits-list",
+                  "api-reference/subscriptions/credits-create",
+                  "api-reference/subscriptions/resume"
+                ]
+              },
+              {
+                "group": "Discount Codes",
+                "expanded": false,
+                "pages": [
+                  "api-reference/discount-codes/create",
+                  "api-reference/discount-codes/list",
+                  "api-reference/discount-codes/retrieve",
+                  "api-reference/discount-codes/archive"
                 ]
               },
               {
