@@ -27,6 +27,13 @@
             ]
           },
           {
+            "group": "Grow",
+            "icon": "chart-line",
+            "pages": [
+              "grow/pricing-audit"
+            ]
+          },
+          {
             "group": "Build with AI agents",
             "icon": "robot",
             "pages": [
