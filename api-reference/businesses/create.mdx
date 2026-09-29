@@ -7,6 +7,10 @@ openapi: "POST /gateway/businesses"
 The business starts in test mode and goes live after its own verification. With `clientEmail`, we email your client an invitation. The invitation expires after 7 days. With `sendInvitationEmail: false` we send nothing: send `inviteUrl` yourself, under your own brand.
 </Note>
 
+<Note>
+**Webhook:** none. `account.updated` fires later, when the business's verification changes. See [Which action fires which event](/webhooks/events#which-action-fires-which-event).
+</Note>
+
 <Tip>
 Store the returned `business.id` on your side, next to your record of the client. There is no metadata on a business: the id is the link between the two.
 </Tip>

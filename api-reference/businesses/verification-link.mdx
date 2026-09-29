@@ -10,3 +10,7 @@ Needs a live key (`sk_live_...`): the identity check is real. A test key gets `4
 <Note>
 You send the link; only your client can complete the identity check. `url` is `null` when they are already verified. Another app of your own company has no identity check of its own: `409 identity_from_company`.
 </Note>
+
+<Note>
+**Webhook:** none. `account.updated` fires when your client completes the identity check and AgentaOS reads the result. See [Which action fires which event](/webhooks/events#which-action-fires-which-event).
+</Note>

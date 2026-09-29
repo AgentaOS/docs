@@ -2,3 +2,7 @@
 title: "Resume a subscription"
 openapi: "POST /gateway/subscriptions/{id}/resume"
 ---
+
+<Note>
+**Webhook:** `subscription.updated` fires right away, with `cancel_at_period_end: false`. See [Which action fires which event](/webhooks/events#which-action-fires-which-event).
+</Note>
