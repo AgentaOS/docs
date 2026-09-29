@@ -1,5 +1,5 @@
 ---
-title: "Payment Links"
+title: "Payment links"
 description: "Reusable, shareable payment URLs with agentaos.paymentLinks. One-time or recurring subscriptions."
 icon: "link"
 ---
@@ -114,7 +114,7 @@ const link = await agentaos.paymentLinks.create({
       billingInterval: 'month', // 'month' | 'year', required
     });
     ```
-    A buyer paying this link creates a [`Subscription`](/sdk/pay-subscriptions) that bills every `billingInterval` going forward. Subscriptions bill through Merchant of Record (card and bank), so this requires a verified account; wallet-only, on-chain accounts can't create subscription links.
+    A buyer paying this link creates a [`Subscription`](/sdk/pay-subscriptions) that bills every `billingInterval` going forward. Subscriptions bill through the merchant of record (card and bank), so this requires a verified account; wallet-only, on-chain accounts can't create subscription links.
   </Tab>
 </Tabs>
 

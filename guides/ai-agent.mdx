@@ -25,7 +25,7 @@ You do not need an account up front. When you approve the connection or run `age
 
 <Steps>
   <Step title="Open the setup dialog">
-    In the dashboard, go to **Settings → Developers** and click **Connect an AI agent**. The **Set up your AI agent** dialog asks "Where does your agent run?" Pick your client: **Claude Code**, **Cursor**, **ChatGPT**, **Claude.ai**, or **Other**. The dialog shows the steps for that client.
+    In the dashboard, open **Developers → API keys** in the sidebar and click **Connect an AI agent**. The **Set up your AI agent** dialog asks "Where does your agent run?" Pick your client: **Claude Code**, **Cursor**, **ChatGPT**, **Claude.ai**, or **Other**. The dialog shows the steps for that client.
 
     <Frame caption="The Set up your AI agent dialog with Claude Code picked: install the plugin, then approve it in AgentaOS.">
       <img src="/images/agents/set-up-your-ai-agent.png" alt="The Set up your AI agent dialog in Settings. The Claude Code tab is selected next to Cursor, ChatGPT, Claude.ai and Other. Step 1, Install the plugin, shows two claude plugins commands with copy buttons. Step 2, Approve it here, says to type /mcp, choose agentaos, then Authenticate, and pick Test or Live on the AgentaOS page." />
@@ -45,11 +45,7 @@ You do not need an account up front. When you approve the connection or run `age
 
     > Create a checkout for 50 EUR for my consulting invoice.
 
-    The agent calls `agenta_pay_checkout` and answers with the link to share, in a sentence like this one:
-
-    ```text
-    Checkout for €50.00 created. Share https://… with your customer.
-    ```
+    The agent calls `agenta_pay_checkout` and answers with the link to share, in a sentence like this one: "Checkout for €50.00 created. Share https://… with your customer."
   </Step>
 
   <Step title="Manage what you sold">
@@ -69,19 +65,17 @@ You do not need an account up front. When you approve the connection or run `age
 
 <Steps>
   <Step title="Install the CLI and log in">
-    ```bash
-    curl -fsSL https://agentaos.ai/install | bash
-    agenta login
-    ```
+    Install the `agenta` CLI with the command on [Install the CLI](/cli/install), then sign in with `agenta login`. See [Login](/cli/login).
+
     `agenta login` is the one step that needs you: it opens a browser for sign-in. Every command an agent runs after that is non-interactive.
   </Step>
 
   <Step title="Give your agent the skill">
     Tell your coding agent to fetch and follow the skill prompt:
 
-    ```bash
-    curl -fsSL https://agentaos.ai/SKILL.md
-    ```
+    > Read https://agentaos.ai/SKILL.md and set up AgentaOS for me
+
+    In Claude Code, you can install the plugin instead. See [AI agent setup](/cli/install#ai-agent-setup).
 
     It teaches the agent the `agenta` commands and their flags. It also tells the agent to run `agenta status --json` first and to pass `--json` to every command, so the output is JSON the agent can read.
   </Step>
@@ -116,7 +110,7 @@ On the MCP path, the agent calls `agenta_status_get`. Before you go live, the an
   <Card title="CLI install" icon="terminal" href="/cli/install">
     The full `agenta` CLI reference, for scripts outside an AI agent too.
   </Card>
-  <Card title="Handle webhooks" icon="bell" href="/sdk/handle-webhooks">
+  <Card title="Receive webhooks in Express" icon="bell" href="/sdk/handle-webhooks">
     Checkouts an agent creates still need your server to fulfill them on completion.
   </Card>
 </Columns>

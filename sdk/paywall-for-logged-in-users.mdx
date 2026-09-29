@@ -150,7 +150,7 @@ Anyone can open the success URL, so the page never unlocks from the redirect alo
 
 ### The webhook unlocks Pro and matches renewals
 
-The webhook unlocks the user even when they close the tab before the success page loads. It verifies the signature over the raw body, so the route is mounted with `express.raw()` before any body parser. See [Handle webhooks](/sdk/handle-webhooks).
+The webhook unlocks the user even when they close the tab before the success page loads. It verifies the signature over the raw body, so the route is mounted with `express.raw()` before any body parser. See [Receive webhooks in Express](/sdk/handle-webhooks).
 
 ```typescript src/webhooks.ts
 	switch (event.type) {
@@ -318,7 +318,7 @@ To keep the user on your site, you can embed the checkout instead of redirecting
 ## Next steps
 
 <Columns cols={2}>
-  <Card title="Handle webhooks" icon="bell" href="/sdk/handle-webhooks">
+  <Card title="Receive webhooks in Express" icon="bell" href="/sdk/handle-webhooks">
     Register the endpoint and verify every event.
   </Card>
   <Card title="Webhook events" icon="list" href="/webhooks/events">

@@ -89,14 +89,10 @@ In live mode, your buyers pay real money:
 This part is for developers. Your code stays the same, and the key decides the mode.
 
 1. Switch the dashboard to **Live**.
-2. Open **Settings**, then the **Developers** tab. Under **API Keys**, click **Generate Live Key**. Live keys start with `sk_live_`.
-3. Put the live key in your deploy in place of the `sk_test_` key. Every call with that key reads and writes live data.
+2. In the sidebar, open **Developers → API keys**. Under **API Keys**, click **Generate Live Key**. Live keys start with `sk_live_`.
+3. Put the live key in your deploy in place of the `sk_test_` key. Every call with that key reads and writes live data. See [Code integration](/getting-started/quickstart#code-integration) for where the key goes.
 
-```typescript
-const agentaos = new AgentaOS(process.env.AGENTAOS_API_KEY!); // now sk_live_...
-```
-
-Your webhook endpoint, under **Webhooks** on the same tab, receives both test and live events. Live events carry `livemode: true`, so check that field before you fulfill an order. See [Handle webhooks](/sdk/handle-webhooks).
+Your webhook endpoint, under **Webhooks** on the same page, receives both test and live events. Live events carry `livemode: true`, so check that field before you fulfill an order. See [Receive webhooks in Express](/sdk/handle-webhooks).
 
 `successUrl`, `cancelUrl`, and `webhookUrl` must be `https` URLs on your live site. A product's own `webhookUrl` is not copied to live. Events for the live copy go to your endpoint under **Webhooks**.
 
@@ -119,7 +115,7 @@ To verify your business from the CLI, run `agenta login`, then `agenta verify de
   <Card title="Pricing" icon="tag" href="/mor/pricing">
     What each live sale costs.
   </Card>
-  <Card title="Handle webhooks" icon="bell" href="/sdk/handle-webhooks">
+  <Card title="Receive webhooks in Express" icon="bell" href="/sdk/handle-webhooks">
     Check signatures and `livemode` on live events.
   </Card>
 </Columns>

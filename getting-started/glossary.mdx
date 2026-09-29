@@ -7,8 +7,8 @@ icon: "book"
 New to payments? These are the terms that show up across the docs, in one place.
 
 <AccordionGroup>
-  <Accordion title="Merchant of Record (MoR)">
-    The legal seller of your product. Your buyer pays AgentaOS, not you, so AgentaOS collects the money, charges and remits the tax, issues the invoice, and pays you out. You carry none of the tax or payment liability.
+  <Accordion title="Merchant of record (MoR)">
+    The legal seller of your product. Your buyer pays AgentaOS, not you, so AgentaOS collects the money, charges and remits the tax, issues the invoice, and pays you out. AgentaOS carries the tax liability as the legal seller. A lost dispute costs you the sale plus the dispute fee: see [Refunds and disputes](/mor/refunds-and-disputes).
   </Accordion>
   <Accordion title="Destination VAT">
     VAT charged at the rate of the **buyer's** country, not yours. While AgentaOS sells under the EU distance-selling threshold, the checkout charges EU consumers the Estonian rate instead. See [How tax works](/mor/tax#the-rate-on-eu-sales-today).
@@ -40,17 +40,17 @@ New to payments? These are the terms that show up across the docs, in one place.
   <Accordion title="Settlement">
     The behind-the-scenes step where a completed payment becomes money in your balance, after the card or bank network clears it.
   </Accordion>
-  <Accordion title="Balance states: Available, Incoming, In reserve">
-    **Available** is money that pays out on your next payout date. **Incoming** is money still clearing (about 14 days for new accounts). **In reserve** is a small hold on newer accounts to cover refunds and chargebacks; it releases on a set date.
+  <Accordion title="Balance states: Available now, On the way, Reserve">
+    **Available now** is cleared money that the next payout sends. **On the way** is sales that are still clearing, for 14 days after each sale, with the date each amount becomes available. **Reserve** is a safety hold on new accounts to cover refunds and chargebacks; the row shows the date it frees up. See [Payouts](/payouts/overview).
   </Accordion>
   <Accordion title="Reserve">
     A portion of your balance held temporarily on newer accounts to cover potential refunds or chargebacks. It releases automatically.
   </Accordion>
   <Accordion title="Payout">
-    Money moving from your Available balance to your bank account. Payouts run automatically twice a month.
+    Money moving from your **Available now** balance to your bank account. Payouts go out in two windows each month, the 1st and the 15th. A new account starts on **You ask**: click **Request payout** and the next window pays it. Choose **Automatic** to be paid every window. See [Payouts](/payouts/overview).
   </Accordion>
   <Accordion title="Chargeback (dispute)">
-    When a buyer's bank reverses a card payment. The disputed amount is deducted from your balance rather than paid out.
+    When a buyer's bank reverses a card payment. While the dispute is open, the sale's money shows in **Paused (disputed)** on your balance and is not paid out. See [Refunds and disputes](/mor/refunds-and-disputes).
   </Accordion>
   <Accordion title="Test mode vs. live mode">
     **Test mode** uses fake money and test cards, safe to explore, no verification needed. **Live mode** takes real money and unlocks after business verification.

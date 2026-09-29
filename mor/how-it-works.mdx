@@ -4,13 +4,13 @@ description: "The role of a merchant of record when you sell software across bor
 icon: "scale-balanced"
 ---
 
-When you sell digital products across borders, you don't just owe tax at home. You typically owe VAT or sales tax in your buyer's country too, and you're responsible for registering, collecting, and filing it correctly in every one of those countries. AgentaOS removes that problem by becoming the legal seller of record on every sale you make through AgentaOS. If you're new to AgentaOS, start with the [introduction](/introduction).
+When you sell digital products across borders, you don't just owe tax at home. You also owe VAT or sales tax in your buyer's country, and you're responsible for registering, collecting, and filing it correctly in every one of those countries. AgentaOS removes that problem by becoming the merchant of record, the legal seller, on every sale you make through AgentaOS. If you're new to AgentaOS, start with the [introduction](/introduction).
 
 ## The merchant of record role
 
-A merchant of record (MoR) is the company that is legally responsible for a sale. It appears on the receipt, it collects the payment, and it owes the tax authority for that transaction. Most payment processors don't do this: they move money for you, but you stay the seller of record and you stay responsible for the tax.
+A merchant of record (MoR) is the company that is legally responsible for a sale. It appears on the receipt, it collects the payment, and it owes the tax authority for that transaction. Most payment processors don't do this: they move money for you, but you stay the merchant of record and you stay responsible for the tax.
 
-AgentaOS is the seller of record on every payment. The legal seller your buyer pays is AgentaOS's Estonian entity, not you. Because AgentaOS is the seller, AgentaOS calculates, collects, and pays the tax on your behalf.
+AgentaOS is the merchant of record on every payment. The legal seller your buyer pays is AgentaOS's Estonian entity, not you. Because AgentaOS is the seller, AgentaOS calculates, collects, and pays the tax on your behalf.
 
 ## The cost of doing it yourself
 
@@ -22,7 +22,7 @@ A merchant of record takes that job from you: you sell, and AgentaOS handles the
 
 ```mermaid
 flowchart LR
-    A[Buyer pays<br/>card or digital wallet] --> B[AgentaOS is seller of record<br/>Estonia]
+    A[Buyer pays<br/>card or bank transfer] --> B[AgentaOS is merchant of record<br/>Estonia]
     B --> C[Tax calculated<br/>and collected]
     B --> D[Your balance<br/>EUR or USD]
     D --> E[You pay out<br/>bank or wallet]
@@ -30,10 +30,10 @@ flowchart LR
 
 <Steps>
   <Step title="Buyer pays">
-    Your customer checks out by card or digital wallet (Apple Pay, Google Pay). They see AgentaOS as the seller on the payment page and the receipt.
+    Your customer checks out by card, with Apple Pay and Google Pay on devices that support them, or by bank transfer on EUR sales. They see AgentaOS as the seller on the payment page and the receipt.
   </Step>
-  <Step title="AgentaOS is the seller of record">
-    AgentaOS calculates the tax due based on what's being sold and where the buyer is, and collect it as part of the payment.
+  <Step title="AgentaOS is the merchant of record">
+    AgentaOS calculates the tax due based on what's being sold and where the buyer is, and collects it as part of the payment.
   </Step>
   <Step title="Money lands on your balance">
     What you earn from the payment, after fees, settles into your AgentaOS balance in EUR or USD. Tax is already accounted for: you do not set it aside yourself.
@@ -54,7 +54,7 @@ flowchart LR
 | What you integrate | Payments only | Payments, tax, invoicing, and payouts, in one |
 
 <Note>
-A payment processor and a merchant of record are different things, and one can use the other. AgentaOS uses a card processor to move the money. AgentaOS is the legal seller in front of it, so AgentaOS carries the tax, compliance, and chargeback liability that you would carry if you used the processor directly.
+A payment processor and a merchant of record are different things, and one can use the other. AgentaOS uses a card processor to move the money. AgentaOS is the legal seller in front of it, so AgentaOS carries the tax liability that you would carry if you used the processor directly. A lost dispute costs you the sale plus the dispute fee: see [Refunds and disputes](/mor/refunds-and-disputes).
 </Note>
 
 ## Your responsibilities
@@ -65,19 +65,19 @@ A payment processor and a merchant of record are different things, and one can u
 
 ## Refunds and chargebacks
 
-Disputes are part of selling online. As your merchant of record, AgentaOS also handles refunds and chargebacks on your behalf: when a buyer disputes a charge with their card issuer or bank, AgentaOS responds to it as the seller of record, so you are not the one fielding the dispute or wiring money back yourself.
+Disputes are part of selling online. As your merchant of record, AgentaOS also handles refunds and chargebacks on your behalf: when a buyer disputes a charge with their card issuer or bank, AgentaOS responds to it as the merchant of record, so you are not the one fielding the dispute or wiring money back yourself.
 
 ## FAQ
 
 <AccordionGroup>
   <Accordion title="Is AgentaOS just a payment processor?">
-    No. A payment processor used directly leaves you as the seller of record, responsible for tax. AgentaOS is a merchant of record: AgentaOS is the seller of record and handles VAT and invoicing for every sale.
+    No. A payment processor used directly leaves you as the merchant of record, responsible for tax. AgentaOS is a merchant of record: AgentaOS is the legal seller and handles VAT and invoicing for every sale.
   </Accordion>
   <Accordion title="Whose name does my buyer see?">
-    AgentaOS's Estonian entity appears as the seller of record on the payment page, the receipt, and the invoice. See [Invoices](/payments/invoices).
+    AgentaOS's Estonian entity appears as the seller on the payment page, the receipt, and the invoice. See [Invoices](/payments/invoices).
   </Accordion>
   <Accordion title="Do I still need an accountant?">
-    Probably, for your own company's books and income tax. What you won't need to do is register for or file VAT on the sales you make through AgentaOS. AgentaOS handles that as the seller of record.
+    Yes, for your own company's books and income tax. What you won't need to do is register for or file VAT on the sales you make through AgentaOS. AgentaOS handles that as the merchant of record.
   </Accordion>
   <Accordion title="Where does my money go after a sale?">
     It settles into your AgentaOS balance in EUR or USD. From there you pay out to your bank account or your wallet. See [Payouts](/payouts/overview).
