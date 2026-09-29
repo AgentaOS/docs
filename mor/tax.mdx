@@ -1,17 +1,28 @@
 ---
-title: "How Tax Works"
-description: "How AgentaOS calculates, collects, and remits VAT and sales tax as your Merchant of Record."
+title: "How tax works"
+description: "How AgentaOS calculates, collects, and remits VAT as your merchant of record."
+icon: "calculator"
 ---
 
-Tax on a sale is normally owed based on where your buyer is, not where you are. As your Merchant of Record, AgentaOS calculates that tax at checkout, collects it as part of the payment, and remits it to the right authority. You don't register, file, or send a payment to a tax office yourself.
+Tax on a sale is normally owed based on where your buyer is, not where you are. As your merchant of record, AgentaOS calculates that tax at checkout, collects it as part of the payment, and remits it to the right authority. You don't register, file, or send a payment to a tax office yourself.
 
 <Note>
-This page explains how tax works on sales made through AgentaOS. It isn't advice on your own company's corporate or income tax, talk to your accountant for that.
+This page explains how tax works on sales made through AgentaOS. It isn't advice on your own company's corporate or income tax: talk to your accountant for that.
 </Note>
 
 ## Destination tax, in short
 
-Most consumption taxes (VAT in the EU, sales tax or GST elsewhere) are charged based on the buyer's location and what's being sold, not the seller's. Sell a subscription to a buyer in Germany, and German VAT rules apply, even if your company has never set foot there. This is why cross-border software sales create a tax obligation in every country you have customers, not just your own.
+VAT in the EU is charged based on the buyer's location and what's being sold, not the seller's. Once a seller passes the EU threshold, a sale to a consumer in Germany follows German VAT rules, even if the seller has never set foot there. This is why cross-border software sales create a tax obligation in every country you have customers, not just your own.
+
+## The rate on EU sales today
+
+AgentaOS is VAT-registered in Estonia and sells under the EU distance-selling threshold of €10,000. Under that threshold, the checkout charges every EU consumer the Estonian VAT rate of 24%, whichever EU country they buy from. A German consumer therefore pays 24% on the checkout, not the German rate.
+
+- **EU consumer**: the Estonian rate, 24%.
+- **EU business in another EU country, with a valid VAT number**: no VAT (reverse charge). The buyer accounts for the VAT.
+- **Buyer outside the EU**: no VAT.
+
+Once AgentaOS's EU sales pass the €10,000 threshold, the buyer's country rate applies.
 
 ## How AgentaOS handles it
 
@@ -23,46 +34,43 @@ Most consumption taxes (VAT in the EU, sales tax or GST elsewhere) are charged b
     Your buyer pays one total price, tax included, in a single transaction.
   </Step>
   <Step title="AgentaOS remits it">
-    We register with tax authorities, file returns, and remit what's owed in the jurisdictions we cover. You never file anything yourself.
+    AgentaOS files the returns and remits what is owed where it is registered. You never file anything yourself.
   </Step>
   <Step title="Your invoice shows the breakdown">
-    Every payment gets a tax-correct invoice with our Estonian entity as the seller of record, and tax broken out as its own line. See [Invoices](/payments/invoices).
+    Every payment gets a tax-correct invoice with AgentaOS's Estonian entity as the seller, and the VAT on its own line with the rate applied, for example "VAT 24% of €29.00". On a reverse-charge sale, the invoice says "Reverse charge applies per Article 196 of EU VAT Directive 2006/112/EC." See [Invoices](/payments/invoices).
   </Step>
 </Steps>
 
-## Where we're registered today
+## Where AgentaOS is registered today
 
-<CardGroup cols={1}>
+<Columns cols={1}>
   <Card title="European Union" icon="earth-europe">
-    Destination VAT via Estonia's OSS (One-Stop Shop) scheme. Our Estonian entity is the registered seller.
+    VAT-registered in Estonia. AgentaOS's Estonian entity is the registered seller. See [The rate on EU sales today](#the-rate-on-eu-sales-today).
   </Card>
-</CardGroup>
+</Columns>
 
 <Note>
-We calculate VAT for the jurisdictions where we are registered today, the EU (via Estonia OSS), and add more as we grow.
+AgentaOS charges VAT only in the EU today, from its registration in Estonia. Buyers outside the EU are charged no tax.
 </Note>
 
 ## Selling to businesses (B2B)
 
-When your buyer is a business rather than a consumer, VAT treatment can differ. In some jurisdictions, the reverse-charge mechanism applies, where the buyer accounts for the VAT instead of AgentaOS collecting it. Business buyers can typically provide a VAT or tax number at checkout, which the invoice then reflects.
+A business buyer can enter its VAT number at checkout. AgentaOS checks an EU number against the EU VAT register. A business in another EU country with a valid VAT number pays no VAT: the invoice shows the reverse charge, and the buyer accounts for the VAT itself. A business in Estonia pays the Estonian rate. A buyer outside the EU pays no VAT, with or without a tax number.
 
 ## FAQ
 
 <AccordionGroup>
   <Accordion title="Do I need to register for VAT myself?">
-    No. AgentaOS is the seller of record, so we register, collect, and remit VAT and sales tax on the sales you make through us.
+    No. AgentaOS is the merchant of record, so AgentaOS registers, collects, and remits VAT on the sales you make through AgentaOS.
   </Accordion>
   <Accordion title="What tax rate will my buyer be charged?">
-    It depends on the buyer's country and what's being sold, and is calculated automatically at checkout. Exact rates and thresholds by country are being finalized before we publish a full table here.
+    Today an EU consumer pays the Estonian rate of 24%, and a buyer outside the EU pays no VAT. See [The rate on EU sales today](#the-rate-on-eu-sales-today).
   </Accordion>
   <Accordion title="What if my buyer is a business, not a consumer?">
-    B2B sales can be treated differently for VAT purposes, including reverse charge in some jurisdictions. We're finalizing the exact rules to publish here, see the note above.
+    B2B sales can be treated differently for VAT purposes, including reverse charge. A business in another EU country with a valid VAT number pays no VAT, and accounts for the VAT itself.
   </Accordion>
   <Accordion title="Whose name is on the tax invoice?">
-    Our Estonian entity, your Merchant of Record, appears as the seller of record. See [Invoices](/payments/invoices).
-  </Accordion>
-  <Accordion title="What happens when you add a new country?">
-    We register there and start collecting and remitting automatically. You don't need to do anything on your side.
+    AgentaOS's Estonian entity, your merchant of record, appears as the seller. See [Invoices](/payments/invoices).
   </Accordion>
   <Accordion title="Does this cover my own company's taxes?">
     No. This covers tax on the sales made through AgentaOS. Your own company's income tax and bookkeeping are still yours to handle.
@@ -71,12 +79,12 @@ When your buyer is a business rather than a consumer, VAT treatment can differ. 
 
 ## Next steps
 
-<CardGroup cols={3}>
+<Columns cols={3}>
   <Card title="Getting started" icon="rocket" href="/introduction">
     The AgentaOS overview, if you're just getting started.
   </Card>
   <Card title="How it works" icon="handshake" href="/mor/how-it-works">
-    What a Merchant of Record is and why it matters.
+    What a merchant of record is and what it does for you.
   </Card>
   <Card title="Supported countries" icon="earth-europe" href="/mor/supported-countries">
     Where you can sell and where you can get paid.
@@ -90,4 +98,4 @@ When your buyer is a business rather than a consumer, VAT treatment can differ. 
   <Card title="Payouts" icon="money-bill-transfer" href="/payouts/overview">
     Move your balance to your bank or wallet.
   </Card>
-</CardGroup>
+</Columns>

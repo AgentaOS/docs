@@ -1,0 +1,100 @@
+---
+title: "Payout statements and self-billed invoices"
+description: "The two documents you get with each payout: what the payout statement shows, why AgentaOS issues a self-billed invoice in your name, and how to use both in your books."
+icon: "file-lines"
+---
+
+Each payout comes with two PDF documents. The **payout statement** shows what the payout paid and what it cost. The **self-billed invoice** is the invoice for the products you supplied to AgentaOS, which AgentaOS issues in your name. Give both to your accountant.
+
+## Find your documents
+
+1. In the dashboard sidebar, click **Balances**.
+2. Click the **Payouts** tab.
+3. Scroll to **Payout runs**. Each row is one payout, with its date, its status (**Paid**, **In progress** or **Failed**), its amount, its **Fees**, and what was sent.
+4. Click **Statement** to download the payout statement. Click **Self-bill** to download the self-billed invoice.
+
+Each document gets its number the first time you download it. Until then, the row shows **Not yet issued**. Payout statement numbers start with `PS-` and self-billed invoice numbers start with `SBI-`.
+
+{/* TODO: add screenshots of the Payout runs list and the first page of a payout statement. No local account with a paid payout and neutral data exists yet. */}
+
+## The payout statement
+
+The statement opens with the payout date, the date it was paid, and the **Bank reference**: the text that appears on your bank statement for this payout. For a stablecoin payout, it shows **Paid to** with the network and the end of the wallet address instead.
+
+Three figures follow:
+
+- **Sales included (net)**: what your sales added to this payout. A payout of released reserve shows **Reserve released**. For a platform, a payout of fees from the businesses you manage shows **Platform fees collected**.
+- **Payout**: the amount taken from your balance.
+- **Sent to your bank**: what the payout sent after fees. A stablecoin payout says **Sent to your wallet**. A payout still on its way says **You receive (est.)**.
+
+### Lines
+
+One line for each sale that the payout covers, with the columns **Date**, **Description**, **Gross**, **Fee**, **Net** and **Paid out**. The description is the sale's receipt reference and the product. **Fee** is our commission on that sale.
+
+Some lines are not sales:
+
+- **Reserve release**: money held back on earlier sales, now paid out.
+- **Platform fee from** a business you manage: your share of that business's sale.
+- **Retained for** a platform: the share of this sale that went to the platform that manages your business, under the share that platform set.
+
+These two lines appear only when a platform is involved. A business that no platform manages never sees them.
+
+### Totals
+
+- **Returned · Refunded sale** or **Returned · Charged back sale**: part of the payout paid back money owed on an earlier sale that was refunded or charged back. Each line names the sale. When there are returned lines, **Lines total** shows the sum of the sale lines above them.
+- **Payout fee**: our fee on the payout. See [Payouts](/payouts/overview#fees).
+- **Bank transfer fee**: the cost of the bank transfer, passed through at cost. It shows **Pending** until the transfer cost is known. A stablecoin payout shows **Wallet corridor fee** instead.
+- **Sent to your bank**: the amount after both fees. A stablecoin payout also shows **Delivered**: the amount in USDC or EURC.
+
+Notes at the end explain anything unusual, for example a transfer that came back. When a payout does not go through, the statement says so and the money goes back to your balance to be paid out again.
+
+## The self-billed invoice
+
+AgentaOS is the merchant of record: it buys your product and resells it to your buyer. The self-billed invoice documents your side of that: your sale of the products to AgentaOS. AgentaOS issues it in your name, so you do not have to write an invoice for every payout.
+
+The invoice states what the money is:
+
+> "Consideration for the Products resold by Aristokrates OÜ as merchant of record under the Master Services Terms. The supplier retains all intellectual property; no copyright is transferred."
+
+Aristokrates OÜ is the company that operates AgentaOS. It is the legal seller on every sale, so its name is on the invoice.
+
+The payout is the purchase price of the products that AgentaOS resold. The invoice never calls it a royalty or a licence fee.
+
+The invoice shows:
+
+- **Supplier (you)**: your legal name, your address, and your VAT number if you have one.
+- **Buyer**: the AgentaOS legal entity, with its registration number and VAT number.
+- One line per sale that the payout covers, at the amount the payout paid for it. Released reserve shows as **Reserve release**.
+- **Subtotal**, then the deductions:
+  - **Payout and transfer fees**: the payout fee and the bank transfer fee as one figure. A stablecoin payout shows **Payout fee** and **Wallet corridor fee** as two lines.
+  - **Platform share retained for** a platform, when a platform manages your business.
+- **Total**: what reached your account.
+
+The invoice is "accepted unless you notify us of a good-faith objection within five business days".
+
+A payout gets no self-billed invoice when it contains none of your own sales:
+
+- A payout that is only platform fees from businesses you manage.
+- A payout that did not reach you.
+- A payout that paid nothing out.
+
+For a platform, the **Platform fees collected** section of the payout statement is the record of your fee income. Platform fees ride in the same payout as your own sales, one payout per currency, and the 1% payout fee applies to the whole payout, fees included. See [Platform fees](/connect/fees).
+
+## Use them in your books
+
+- Match each payout on your bank statement to its payout statement with the **Bank reference**.
+- Record the self-billed invoice as your invoice to AgentaOS for the payout. Its total is the amount that reached your account.
+- Use the payout statement for the detail behind the total: each sale, our commission, the fees, and anything returned.
+
+AgentaOS charges and pays the VAT on the sales to your buyers; that VAT is never yours. The self-billed invoice carries no VAT line: it records the value of your supply to AgentaOS (Aristokrates OÜ, Estonia), a company in Estonia. Your accountant books it as a sale to a customer in Estonia under your own country's rules.
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Payouts" icon="money-bill-transfer" href="/payouts/overview">
+    Your balance, the schedule, and the fees.
+  </Card>
+  <Card title="How Merchant of Record works" icon="scale-balanced" href="/mor/how-it-works">
+    Why AgentaOS is the seller to your buyers.
+  </Card>
+</Columns>

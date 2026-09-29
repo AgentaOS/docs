@@ -1,0 +1,310 @@
+---
+title: "Build a platform"
+description: "Run your clients' businesses from one AgentaOS account. Add a business, invite the client, get it verified, set your share, and let it sell. Dashboard first, code second."
+icon: "sitemap"
+---
+
+import PrivatePreview from "/snippets/private-preview.mdx";
+
+<PrivatePreview />
+
+A platform is an AgentaOS account that manages other businesses. An agency that launches products for clients is a platform. So is a studio with three apps of its own.
+
+Each business you manage gets its own name on the checkout, its own invoices, and its own bank account and payouts. You run all of them from your account, and you can take a share of every sale a client makes. AgentaOS is the merchant of record for every sale, yours and theirs.
+
+Nothing needs switching on in the dashboard.
+
+<Info>
+New to platforms? [Platforms](/connect/overview) explains the two kinds of business and who does what.
+</Info>
+
+## In the dashboard
+
+You need an AgentaOS account. Every step below works in test mode, including the **ID check link** button.
+
+<Steps>
+  <Step title="Add the business">
+    Open **Settings → Business**, scroll to **Businesses you manage**, and click **Add a business**.
+
+    Enter the brand name buyers will see and the country where the business is registered. Then answer **Who is it?**
+
+    <Frame caption="Who is it? decides how the business gets verified. You cannot change it later.">
+      <img src="/images/connect/who-is-it.png" alt="The Add a business dialog asking Who is it?, with two choices: A client's business, or Another app of your own company" />
+    </Frame>
+
+    - **A client's business** is another company. It verifies on its own, and you can take a share of its sales.
+    - **Another app of your own company** is the same company. It uses your verification and your plan, so only its product gets reviewed. It has its own bank account, balance and payouts. It carries no share, because a company does not pay itself.
+  </Step>
+
+  <Step title="Invite the client, or run it yourself">
+    The dialog asks **Who runs it?**
+
+    Leave the email empty to run the business yourself. Most clients never log in.
+
+    Enter your client's email to give them their own login. They become an admin of this business and see only this business. We email them the invitation. The dialog also shows you the link, so you can send it yourself. The link signs them in and stays valid for 7 days.
+
+    <Frame caption="The list shows every business you manage, its status, and any open invitation.">
+      <img src="/images/connect/businesses-you-manage.png" alt="Businesses you manage: four businesses with their status pills, share, ID check link, and one open invitation with Email it again, New link and Revoke" />
+    </Frame>
+
+    Until the client joins, the business's row shows **Invitation open for** their email, with **Email it again**, **New link** and **Revoke**.
+  </Step>
+
+  <Step title="The client's side">
+    The invitation link opens a page that names you and the business:
+
+    <Frame caption="The invitation page. The client signs in with their email; a new account is created on the spot.">
+      <img src="/images/connect/client-invite.png" alt="Invitation page: AgencyOne invited you to a business. You'll run it as an admin. AgencyOne can also manage it; payouts go to the business's own bank account. Sign in to accept." />
+    </Frame>
+
+    After they accept, they land inside their business. Every page of theirs carries the line **Managed by AgencyOne. They can manage products and settings; payouts always go to ClientCo's own bank account.**
+
+    <Frame caption="The client's first screen: their own dashboard, with the managed line at the top.">
+      <img src="/images/connect/client-dashboard.png" alt="The client's dashboard right after accepting, with the line Managed by AgencyOne at the top and the setup guide at zero" />
+    </Frame>
+
+    From here the client works like any AgentaOS merchant: products, sales, invoices, and their own bank account.
+  </Step>
+
+  <Step title="Get the business verified">
+    A business sells in test mode until its verification is approved and it has a payout account. After that, real money flows.
+
+    Verification has two parts:
+
+    - Your client files the business details, the product and the declarations from **Go live** in their dashboard. You can also file them for the client, from what the client confirmed to you, and our reviewers see that you filed them.
+    - Only the client can complete the identity check. Click **ID check link** on the business's row and send the link to the client.
+
+    Another app of your own company skips both parts. It is verified with you, and only its product is reviewed.
+
+    The row shows the status: **Test only**, **In review**, **Changes needed**, **On hold**, **Rejected** or **Live**. If you use webhooks, an `account.updated` event tells you when the status changes. See [Business status](/sdk/pay-businesses#business-status) for how the three sets of names match.
+  </Step>
+
+  <Step title="Set your share">
+    On a client's row, click **Set share**. The share is a percentage of each sale's price before VAT, plus a fixed amount per sale. The screen shows the outcome as you type.
+
+    <Frame caption="The share editor. The sentence under the fields comes from the server, for a €100 sale.">
+      <img src="/images/connect/set-share.png" alt="Set share for ClientCo: Percent of each sale's price (before VAT) 10, Fixed amount per sale 0.50, and the sentence On a €100.00 sale with no VAT and no reserve, AgentaOS takes €5.00, you take €10.50 and ClientCo keeps €84.50." />
+    </Frame>
+
+    The share is fixed on each sale at the moment of the sale. A change applies to future sales only. Your client sees the share on every sale as **Platform fee**, before their net.
+
+    <Frame caption="What the client sees on a sale: VAT, the AgentaOS fee, your share, and their net. The AgentaOS fee of €1.24 on €12.40 includes the 1.5% surcharge for a card issued outside the EEA; the test card counts as one.">
+      <img src="/images/connect/client-sale.png" alt="A client's sale page: Paid €12.40, VAT (24%) €2.40, AgentaOS fee €1.24, Platform fee (AgencyOne) −€1.50, Your net €7.26, and a sentence explaining when the share leaves" />
+    </Frame>
+
+    See [Platform fees](/connect/fees) for the rules.
+  </Step>
+
+  <Step title="Work as the business">
+    Click **Open** on a row. Your dashboard switches into that business, and the banner reads **You're working in ClientCo · managed by AgencyOne**. Everything you create there belongs to the client: products, checkouts, invoices, customers. Click **Back** to return to your own account.
+  </Step>
+
+  <Step title="Watch your fees">
+    Your fees appear on your own **Balances** page, in the **Overview** tab, in the **Platform fees** card. The card shows the total not yet paid to you, then **When you get it**: one line per day for the next five days, soonest first, then one **Later** line.
+
+    <Frame caption="Platform fees on your Balances page. A client that is not verified yet holds its fees.">
+      <img src="/images/connect/platform-fees.png" alt="Platform fees card: €4.74, When you get it, Jan 26 2027, ClientCo, 3 sales, Paid once ClientCo is verified, and the note that fees ride your own payout" />
+    </Frame>
+
+    We pay the fees with your own payout, on or after the date shown. They are never part of **Available now**, because they are not your own sales money.
+  </Step>
+</Steps>
+
+## From code
+
+Every step above is also an API call or a CLI command, made with your own key. Use this when you add clients from your own product.
+
+Any call can act as a business you manage. Name the business with `{ business }` in the SDK, `--business <id>` in the CLI, or the `AgentaOS-Account` header.
+
+You need an API key from **Developers → API keys**. A test key (`sk_test_...`) works for every step except the identity check link: from the API, that call needs a live key. For the CLI, run `agenta login` first. The CLI signed in this way can create the identity check link too. See [Install the CLI](/cli/install).
+
+<Steps>
+  <Step title="Create the business">
+    <Tabs>
+      <Tab title="SDK">
+        ```typescript
+        import { AgentaOS } from '@agentaos/pay';
+
+        const agentaos = new AgentaOS(process.env.AGENTAOS_API_KEY!);
+
+        const { business: biz, inviteUrl } = await agentaos.businesses.create({
+          name: 'ClientCo',
+          country: 'DE',
+          clientEmail: 'founder@example.com', // optional
+          sendInvitationEmail: false,          // optional: we send no email, you send inviteUrl
+        });
+
+        console.log(biz.id, biz.status); // '…', 'test_only'
+        console.log(inviteUrl);          // send this to your client yourself
+        ```
+      </Tab>
+      <Tab title="CLI">
+        ```bash
+        agenta businesses create --name ClientCo --country DE \
+          --client-email founder@example.com --no-invite-email
+        ```
+
+        ```bash Output
+          Added ClientCo. It starts in test mode and goes live after its own verification.
+          Business id: 5b1f0c2e-… — add --business 5b1f0c2e-… to any command to act as it.
+          Send ClientCo this link to accept: https://app.agentaos.ai/invite/…
+        ```
+      </Tab>
+    </Tabs>
+
+    Store `biz.id` next to your own record of the client. For another app of your own company, pass `sameLegalEntity: true` (CLI: `--same-company`).
+  </Step>
+
+  <Step title="File the verification">
+    This is the same verification any account submits, sent as the business.
+
+    <Warning>
+    We record it as filed by the platform, and our reviewers see that. File only what your client confirmed to you.
+    </Warning>
+
+    <Tabs>
+      <Tab title="SDK">
+        ```typescript
+        await agentaos.accountReview.submit(
+          {
+            entityType: 'business',
+            legalName: 'ClientCo GmbH',
+            registrationNumber: 'HRB 123456',
+            taxCountry: 'DE',
+            address: { street: 'Hauptstrasse 1', city: 'Berlin', postal: '10115', country: 'DE' },
+            productUrl: 'https://clientco.com',
+            productDescription: 'Scheduling software for clinics',
+            checklist: {
+              prohibited_ok: true,
+              checklist_ack: true,
+              cooldown_ack: true,
+              privacy_ok: true,
+              tos_ok: true,
+            },
+          },
+          { business: biz.id },
+        );
+        ```
+      </Tab>
+      <Tab title="CLI">
+        ```bash
+        agenta verify submit --entity business --legal-name "ClientCo GmbH" \
+          --registration-number "HRB 123456" --country DE \
+          --street "Hauptstrasse 1" --city Berlin --postal 10115 \
+          --url https://clientco.com --description "Scheduling software for clinics" \
+          --accept-declaration --business <id>
+        ```
+
+        Run `agenta verify declaration` first to read what `--accept-declaration` attests to.
+      </Tab>
+    </Tabs>
+
+    See [Account review](/mor/account-review) for what we check.
+  </Step>
+
+  <Step title="Send the identity check link">
+    You create the link and send it. Only the client can complete the check. This call needs a live key; a test key gets `403 live_key_required`.
+
+    <Tabs>
+      <Tab title="SDK">
+        ```typescript
+        const { url, status } = await agentaos.businesses.createVerificationLink(biz.id);
+
+        if (url) {
+          // send url to your client
+        } else {
+          // url is null: already verified, nothing to send
+        }
+        ```
+      </Tab>
+      <Tab title="CLI">
+        ```bash
+        agenta businesses id-link <id>
+        ```
+
+        ```bash Output
+          Send your client this link — only they can complete the identity check: https://…
+        ```
+      </Tab>
+    </Tabs>
+
+    A second call while a check is open returns the same check. Another app of your own company has no identity check of its own, and the call returns `409 identity_from_company`.
+  </Step>
+
+  <Step title="Sell as the client">
+    The checkout, the invoice and the payout are the client's, under the client's name.
+
+    <Tabs>
+      <Tab title="SDK">
+        ```typescript
+        // One call
+        const checkout = await agentaos.checkouts.create(
+          { amount: 49, currency: 'EUR', description: 'Pro plan' },
+          { business: biz.id },
+        );
+
+        // Or a client that always acts as the business
+        const clientco = new AgentaOS(process.env.AGENTAOS_API_KEY!, { business: biz.id });
+        const product = await clientco.paymentLinks.create({
+          amount: 49,
+          currency: 'EUR',
+          name: 'Pro plan',
+        });
+
+        console.log(checkout.checkoutUrl);
+        ```
+      </Tab>
+      <Tab title="CLI">
+        ```bash
+        agenta pay checkout -a 49 -c EUR -d "Pro plan" --business <id>
+        ```
+
+        `--business <id>` works on every command, for example `agenta products create … --business <id>`.
+      </Tab>
+    </Tabs>
+
+    If you set a share in the dashboard, we take it from each sale's price before VAT.
+  </Step>
+
+  <Step title="Listen on one webhook">
+    You need no webhook per client. Your own endpoint receives every event of every business you manage, signed with your own secret. Each event carries `business`, the id of the client it happened in.
+
+    ```typescript
+    const event = agentaos.webhooks.verify(
+      req.body, // raw body
+      req.headers['x-agentaos-signature'] as string,
+      process.env.AGENTAOS_WEBHOOK_SECRET!, // your own secret, for every client
+    );
+
+    switch (event.type) {
+      case 'checkout.session.completed':
+        await fulfil(event.business, event.data.sessionId); // event.business = the client's id
+        break;
+      case 'account.updated': {
+        const client = await agentaos.businesses.retrieve(event.business);
+        await saveVerification(client.id, client.status, client.identityVerified);
+        break;
+      }
+    }
+    ```
+
+    `account.updated` fires when the client's verification changes. Set your endpoint in **Settings → Developers → Webhooks**. See [Platform webhooks](/connect/webhooks).
+  </Step>
+</Steps>
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Platform fees" icon="percent" href="/connect/fees">
+    Your share and when we pay it.
+  </Card>
+  <Card title="Embedded checkout" icon="window-maximize" href="/payments/embedded-checkout">
+    Put the checkout on your client's own page.
+  </Card>
+  <Card title="Businesses (SDK)" icon="code" href="/sdk/pay-businesses">
+    Every method and field.
+  </Card>
+  <Card title="Businesses (CLI)" icon="terminal" href="/cli/businesses">
+    The six commands and `--business`.
+  </Card>
+</Columns>

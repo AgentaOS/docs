@@ -1,9 +1,10 @@
 ---
 title: "Webhooks"
 description: "Get notified the moment a payment completes. Register a URL, verify the HMAC-SHA256 signature, and never trust an unverified payload."
+icon: "bell"
 ---
 
-AgentaOS sends a webhook to your server for every payment event: a checkout completing, an outbound send confirming or failing. Webhooks are how your backend finds out about a payment without polling, and they're the only source of truth you should build on, not the browser redirect after checkout.
+AgentaOS sends a webhook to your server when something happens in your account: a checkout is paid, a subscription renews or changes, a dispute opens, and more. [Events](/webhooks/events) lists every event and its payload. Webhooks tell your backend about a payment without polling. Build on them, not on the browser redirect after checkout.
 
 <Warning>
 **Always verify the signature before you act on a webhook body.** Anyone who knows your webhook URL can POST a fake payload to it. Verification is what proves the request actually came from AgentaOS.
@@ -12,11 +13,11 @@ AgentaOS sends a webhook to your server for every payment event: a checkout comp
 ## Register a webhook URL
 
 <Steps>
-  <Step title="Open Developer settings">
-    Go to [app.agentaos.ai](https://app.agentaos.ai) → **Developer** → **Webhooks**.
+  <Step title="Open the webhook settings">
+    In [app.agentaos.ai](https://app.agentaos.ai), open **Settings → Developers → Webhooks**.
   </Step>
   <Step title="Set your endpoint">
-    Enter the HTTPS URL you want events sent to, for example `https://myshop.com/webhooks`.
+    Enter the HTTPS URL you want events sent to, for example `https://myshop.com/webhooks`, and click **Save**. AgentaOS does not deliver to `localhost` or a private address: for local development, use a public HTTPS tunnel.
   </Step>
   <Step title="Reveal the signing secret">
     Click **Reveal signing secret** and copy the `whsec_...` value.
@@ -27,11 +28,11 @@ AgentaOS sends a webhook to your server for every payment event: a checkout comp
 </Steps>
 
 <Warning>
-The signing secret is stable, it doesn't change when you update the URL. If you suspect it's been exposed, click **Rotate** to issue a new one. Rotating invalidates the old secret immediately, so deploy the new value before you rotate if you can't afford downtime.
+The signing secret stays the same when you change the URL. If you suspect it has been exposed, click **Rotate secret** to issue a new one. Rotating invalidates the old secret immediately, so deploy the new value first if you cannot afford failed deliveries.
 </Warning>
 
 <Tip>
-You can also pass a one-off `webhookUrl` when creating a [checkout](/payments/checkouts) or [payment link](/payments/payment-links) to route that specific payment's event to a different endpoint, useful for per-integration or per-customer routing without touching your account-wide URL.
+You can also pass a `webhookUrl` when you create a [checkout](/payments/checkouts) or [payment link](/payments/payment-links). That payment's `checkout.session.completed` then goes to that URL instead of your account's URL, signed with the same account secret. Every other event goes to the account's URL.
 </Tip>
 
 ## Verify the signature
@@ -59,15 +60,17 @@ app.post('/webhooks', express.raw({ type: 'application/json' }), (req, res) => {
     );
   } catch (err) {
     if (err instanceof WebhookVerificationError) {
-      return res.status(400).send('Invalid signature');
+      res.status(400).send('Invalid signature');
+      return;
     }
-    return res.status(500).send('Webhook processing failed');
+    res.status(500).send('Webhook processing failed');
+    return;
   }
 
   // Signature is valid: safe to act on event.data now.
   switch (event.type) {
     case 'checkout.session.completed':
-      fulfillOrder(event.data.sessionId, event.data.amount);
+      fulfillOrder(event.data.sessionId, event.data.amount); // your own code
       break;
     case 'send.completed':
       console.log('Send confirmed:', event.data.txHash);
@@ -79,14 +82,16 @@ app.post('/webhooks', express.raw({ type: 'application/json' }), (req, res) => {
 
   res.sendStatus(200);
 });
+
+app.listen(3000);
 ```
 </CodeGroup>
 
-`webhooks.verify()` does four things, in order: parses the `t=...,v1=...` header, rejects it if the timestamp is older than 5 minutes (replay protection), recomputes the HMAC-SHA256 digest and compares it in constant time, then parses and returns a typed `WebhookEvent`. Any failure throws `WebhookVerificationError` rather than returning a falsy value, so you can't accidentally skip the check.
+`webhooks.verify()` does four things, in order. It parses the `t=...,v1=...` header, and rejects a timestamp older than 5 minutes or in the future (replay protection). It recomputes the HMAC-SHA256 digest and compares it in constant time. Then it parses and returns a typed `WebhookEvent`. Any failure throws `WebhookVerificationError` instead of returning a falsy value, so your code cannot skip the check by accident.
 
 ### Manual verification (no SDK)
 
-The algorithm is plain HMAC-SHA256 over `{timestamp}.{raw_body}`, so it's straightforward to reimplement in any language that can do an HMAC and a constant-time compare.
+The algorithm is HMAC-SHA256 over `{timestamp}.{raw_body}`, so any language with an HMAC and a constant-time compare can check it. The samples below apply the SDK's time rule: they reject a timestamp older than the tolerance, and a timestamp in the future by any amount. Keep your server's clock synced (NTP), or a clock that runs behind rejects every event.
 
 <CodeGroup>
 ```python Python
@@ -96,8 +101,9 @@ def verify_webhook(body: str, signature: str, secret: str, tolerance_sec: int = 
     parts = dict(p.split("=", 1) for p in signature.split(","))
     timestamp = int(parts["t"])
 
-    # Reject old signatures (replay protection)
-    if abs(time.time() - timestamp) > tolerance_sec:
+    # Reject old and future signatures (replay protection)
+    age = int(time.time()) - timestamp
+    if age < 0 or age > tolerance_sec:
         return False
 
     expected = hmac.new(
@@ -157,8 +163,9 @@ function verify_webhook(string $body, string $signature, string $secret, int $to
     if (!$timestamp || empty($parts['v1'])) {
         return false;
     }
-    if (abs(time() - $timestamp) > $toleranceSec) {
-        return false; // expired
+    $age = time() - $timestamp;
+    if ($age < 0 || $age > $toleranceSec) {
+        return false; // expired or in the future
     }
 
     $expected = hash_hmac('sha256', "{$timestamp}.{$body}", $secret);
@@ -182,7 +189,7 @@ X-AgentaOS-Signature: t=1710791400,v1=5257a869e7ecebeda32affa62cdca3fa51cad7e77a
 | `t` | Unix timestamp (seconds) when AgentaOS signed the payload |
 | `v1` | HMAC-SHA256 hex digest of `{t}.{raw_body}`, keyed with your webhook signing secret |
 
-The `t` prefix exists so the same payload signed twice never produces the same signature, and so a captured request can't be replayed indefinitely, verification rejects anything older than 5 minutes by default.
+The timestamp `t` is part of the signed content, so a captured request cannot be replayed later: verification rejects anything older than 5 minutes by default, or dated in the future.
 
 ## Delivery and retries
 
@@ -204,40 +211,20 @@ sequenceDiagram
     end
 ```
 
-Each delivery attempt gets a 10-second response timeout. If your endpoint doesn't return a `2xx` status in time, AgentaOS retries with exponential backoff, up to 3 attempts total. After the last attempt fails, the event is marked failed and isn't retried further.
+When your endpoint does not answer `2xx` in time, AgentaOS tries again, up to 3 attempts in all, and then marks the event `failed`. You can send a failed event again from **Settings → Developers → Webhooks**. The exact timeouts, waits and refused addresses are in [Delivery and retries](/webhooks/events#delivery-and-retries).
 
 <Tip>
-Return `200` as soon as you've verified the signature and durably queued the event (a job, a database row). Do the actual work, fulfillment emails, external API calls, asynchronously. A slow handler is the most common reason webhooks fail and retry unnecessarily.
+Return `200` as soon as you have verified the signature and stored the event (a job, a database row). Do the actual work, such as fulfillment emails and external API calls, after you respond. A slow handler is the most common reason a delivery fails and repeats.
 </Tip>
-
-## Events
-
-<CardGroup cols={3}>
-  <Card title="checkout.session.completed" icon="link">
-    A checkout was paid, by card, bank transfer, or stablecoin.
-  </Card>
-  <Card title="send.completed" icon="arrow-right">
-    An outbound send confirmed on-chain.
-  </Card>
-  <Card title="send.failed" icon="triangle-exclamation">
-    An outbound send failed to broadcast.
-  </Card>
-</CardGroup>
-
-See the [event reference](/webhooks/events) for the full payload shape of each one.
-
-<Note>
-Every webhook payload's `amount` field is a **string** (e.g. `"49.99"`), not a number. This is different from `amount` on SDK create calls, which is a plain number. Parse it before doing arithmetic.
-</Note>
 
 ## Best practices
 
-<CardGroup cols={2}>
+<Columns cols={2}>
   <Card title="Don't trust the redirect" icon="arrow-right">
-    The `successUrl` redirect is best-effort. The customer might close their browser before it fires. Always treat the webhook, not the redirect, as the source of truth that a payment happened.
+    The customer can close the browser before the `successUrl` redirect fires. Treat the webhook, not the redirect, as the proof that a payment happened.
   </Card>
   <Card title="Handle idempotently" icon="repeat">
-    Retries mean the same event can arrive more than once. Key your fulfillment logic off `event.data.sessionId` or `event.data.transactionId` and make it safe to process twice.
+    Retries mean the same event can arrive more than once. Record a key per event and make your handler safe to run twice. The key for each event type is in [Deduplication](/webhooks/events#deduplication).
   </Card>
   <Card title="Respond quickly" icon="bolt">
     Verify, queue, return `200`. Do the slow work outside the request.
@@ -245,11 +232,11 @@ Every webhook payload's `amount` field is a **string** (e.g. `"49.99"`), not a n
   <Card title="Verify every time" icon="shield-check">
     Never branch on `event.data` before `webhooks.verify()` (or the manual equivalent) has returned successfully.
   </Card>
-</CardGroup>
+</Columns>
 
 ## Next steps
 
-<CardGroup cols={2}>
+<Columns cols={2}>
   <Card title="Event reference" icon="bell" href="/webhooks/events">
     Every event type, its full payload, and a JSON example.
   </Card>
@@ -262,4 +249,4 @@ Every webhook payload's `amount` field is a **string** (e.g. `"49.99"`), not a n
   <Card title="Payouts" icon="money-bill-transfer" href="/payouts/overview">
     What happens to your balance after a payment lands.
   </Card>
-</CardGroup>
+</Columns>

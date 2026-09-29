@@ -1,95 +1,98 @@
 ---
-title: "Test mode and live mode"
-description: "Build and test your integration safely in test mode, with test money, before you go live."
+title: "Test mode and testing"
+description: "Try every part of AgentaOS with test money: switch modes, pay with test cards, check test invoices and webhooks, then go live."
+icon: "flask"
 ---
 
-Test mode lets you build and test your AgentaOS integration in a completely isolated environment. Payments, webhooks, customers, and invoices are kept separate from live, so you can develop with confidence and never risk a real charge.
+Test mode is a full copy of AgentaOS that uses test money. You create products, pay your own checkout with a test card, and get invoices, receipts, emails and webhooks, and no real money moves. Every new account starts in test mode, and you do not need to verify your business to use it.
 
-<Note>
-Always build and test in test mode first. Every new account starts there, so there is nothing to switch on.
-</Note>
+Test data and live data are separate. A product, checkout, customer or invoice that you create in test mode is not visible in live mode, and the reverse is also true.
 
-## Test and live are chosen by your key
+## Switch between test and live
 
-AgentaOS has one base URL. The **key prefix** decides which environment you hit, so you never point at the wrong host.
+The **Test** / **Live** switch is at the bottom of the sidebar. It sets which data every page of the dashboard shows.
 
-| Key prefix | Environment | Data |
+While you are in test mode, a strip across the top of the dashboard says **Test mode · No real payments are processed**. When you switch to test, the dashboard confirms with **Switched to Test mode**: "You are now viewing test data. Payments use test funds."
+
+If your business is not verified yet, **Live** takes you to the go-live page instead of an empty live view. See [Go live](/guides/go-live).
+
+## Pay a test checkout
+
+Open any test product's checkout link. A banner at the top of the checkout shows the test card:
+
+**Test payment · 4242 4242 4242 4242 · any expiry · any CVC**
+
+Click the number to copy it, then paste it into the card field on the checkout. Use any future expiry date and any three-digit CVC. The payment succeeds, and the checkout shows its success page.
+
+<Warning>
+Type or paste a card number only into the card field on the checkout page. Never send a card number to the API, in a script, or in a support message, in test mode or in live mode.
+</Warning>
+
+## Test a failed payment
+
+Use these cards on a test checkout to see what a buyer sees when a payment fails. Each one takes any future expiry date and any CVC. Every row below was run on the AgentaOS checkout.
+
+| Card number | What the buyer sees |
+|---|---|
+| `4242 4242 4242 4242` | The payment succeeds. |
+| `4000 0000 0000 0002` | "Your card has been declined." |
+| `4000 0000 0000 9995` | The card is declined for insufficient funds. |
+| `4000 0025 0000 3155` | The bank asks the buyer to confirm the payment (3D Secure): a test confirmation window opens on the checkout. Complete it and the payment succeeds. Fail it and the checkout shows "Your bank couldn't confirm it's you. Try again, or use a different card." |
+| `4000 0000 0000 0259` | The payment succeeds, and the buyer's bank disputes it later. Use it to see a dispute on the sale. |
+
+## Test invoices, receipts and emails
+
+AgentaOS issues invoices and receipts for test payments, and marks each one so that nobody mistakes it for a real document:
+
+- The checkout success page says "Test payment: no money was paid. This invoice and receipt are not valid."
+- A test invoice PDF has a **TEST** badge next to its title and the line "TEST MODE: not a tax invoice. No money was paid."
+- A test receipt PDF has the same badge and the line "TEST MODE: not a valid receipt. No money was paid."
+- Emails about a test payment have `[TEST]` at the start of the subject line.
+
+## Money, payouts and verification
+
+Test cards are not charged, so test payments bring no real money into your balance and nothing is paid out to your bank account. You do not need to verify your business to sell in test mode; verification applies to live mode only.
+
+## For developers
+
+### Test keys and live keys
+
+An API key belongs to one mode. The key's prefix tells you which one:
+
+| Prefix | Mode | Data it reads and writes |
 |---|---|---|
-| `sk_test_` | Test mode | Test money, isolated |
-| `sk_live_` | Production | Real money |
+| `sk_test_` | Test | Test data only |
+| `sk_live_` | Live | Live data and real money |
+
+To create a test key, switch to **Test**, open **Developers → API keys** in the sidebar, and click **Generate Test Key**. The same button reads **Generate Live Key** in live mode. There is one base URL for both modes; the key decides the mode, so you do not set a mode anywhere else. Keep keys in environment variables and never commit them.
 
 ```typescript
 import { AgentaOS } from '@agentaos/pay';
 
-const test = new AgentaOS('sk_test_...'); // test mode
-const live = new AgentaOS('sk_live_...');  // production
+const agentaos = new AgentaOS(process.env.AGENTAOS_API_KEY!); // sk_test_... while you build
 ```
 
-Find both keys under **Settings → Developers → API Keys**. Store them as environment variables and never commit them.
+The API reference explains how the key and the mode work on each request: see [Authentication](/api-reference/introduction#authentication) and [Test and live keys](/api-reference/introduction#test-and-live-keys).
 
-```bash .env
-AGENTAOS_API_KEY=sk_test_your_key
-```
+### Webhooks in test mode
 
-## Testing payments
+Test payments send webhooks, the same as live payments. Test events and live events go to the same webhook endpoint. Each event has a `livemode` field: `false` for a test event and `true` for a live event. Check `livemode` in your handler so that a test event never triggers a real fulfillment.
 
-Test-mode checkouts render the secure card form. Use these test cards with any future expiry and any CVC:
+To receive test events on your own machine, expose your local server with a tunnel and register the tunnel URL as your webhook endpoint. See [Webhooks](/payments/webhooks).
 
-| Card number | Behavior |
-|---|---|
-| `4242 4242 4242 4242` | Successful payment |
-| `4000 0000 0000 0002` | Card declined |
-| `4000 0000 0000 9995` | Insufficient funds |
-| `4000 0025 0000 3155` | Requires 3D Secure authentication |
+### Embed a test product on localhost
 
-<Warning>
-Only type a card number into the checkout page (the secure card form). Never send a card number to any API, in test mode or live.
-</Warning>
+A test product's [embedded checkout](/payments/embedded-checkout) loads on any page served from `localhost` or `127.0.0.1`, on any port and over `http` or `https`. You do not need to add these to your approved sites. A live product loads only on the approved sites you add.
 
-## Testing webhooks
+## Go live
 
-In test mode, events go to the webhook URL you register in **Settings → Developers → Webhooks**. To receive them on your machine, expose your local server with a tunnel like ngrok and register the tunnel URL. This lets you verify signature validation and your event handlers before going live. See [Webhooks](/payments/webhooks).
+When your tests pass, verify your business, add a payout account, and replace your `sk_test_` key with an `sk_live_` key. The [Go live guide](/guides/go-live) lists each step.
 
-## Going live
-
-<Steps>
-  <Step title="Finish testing in test mode">
-    Run your full flow with the test cards above, including a webhook round-trip, until every path behaves.
-  </Step>
-  <Step title="Verify your business">
-    Complete business verification (KYB) in the dashboard. This is required before you can accept real money as Merchant of Record.
-  </Step>
-  <Step title="Add a payout account">
-    Add a bank account or wallet so your earnings have somewhere to settle. See [Payouts](/payouts/overview).
-  </Step>
-  <Step title="Swap to your live key">
-    Replace `sk_test_` with `sk_live_` in your environment variables. Nothing else changes.
-  </Step>
-  <Step title="Register your live webhook">
-    Add your production webhook URL and copy its live signing secret.
-  </Step>
-  <Step title="Watch your first payments">
-    Keep an eye on your first live transactions to confirm everything behaves as it did in test mode.
-  </Step>
-</Steps>
-
-<Warning>
-Never use a `sk_test_` key in production. Test-key calls never touch live money and will not settle.
-</Warning>
-
-## Next steps
-
-<CardGroup cols={2}>
-  <Card title="Checkouts" icon="basket-shopping" href="/payments/checkouts">
-    Create checkout sessions and payment links.
-  </Card>
-  <Card title="Go live guide" icon="rocket" href="/guides/go-live">
-    The full test-to-production checklist.
-  </Card>
-  <Card title="Subscriptions" icon="rotate" href="/payments/subscriptions">
-    Recurring billing and cancellation.
+<Columns cols={2}>
+  <Card title="Go live" icon="rocket" href="/guides/go-live">
+    Verify your business and take real payments.
   </Card>
   <Card title="Webhooks" icon="bell" href="/payments/webhooks">
-    Receive and verify real-time events.
+    Receive and verify events.
   </Card>
-</CardGroup>
+</Columns>

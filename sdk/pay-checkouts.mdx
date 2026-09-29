@@ -1,12 +1,13 @@
 ---
 title: "Checkouts"
 description: "Create a single payment session with agentaos.checkouts. Standalone or from a payment link template."
+icon: "cart-shopping"
 ---
 
-A checkout is a single payment attempt: one amount, one buyer, one `checkoutUrl`. Create one from your backend when you know the amount at request time (an e-commerce order, an invoice you're collecting on). For a reusable, shareable URL, use a [payment link](/sdk/pay-payment-links) instead, its `checkouts.create({ linkId })` call is how each visitor gets their own session.
+A checkout is a single payment attempt: one amount, one buyer, one `checkoutUrl`. Create one from your backend when you know the amount at request time (an e-commerce order, an invoice you're collecting on). For a reusable, shareable URL, use a [payment link](/sdk/pay-payment-links) instead: each visitor to the link gets their own checkout.
 
 <Note>
-A standalone (linkless) checkout is always a **one-time** payment, there's no `type` field on `checkouts.create()`. To sell a subscription, create a subscription payment link (`type: 'subscription'`) and the buyer subscribes at the hosted checkout, or open a session from that link with `checkouts.create({ linkId })`.
+A standalone (linkless) checkout is always a **one-time** payment: `checkouts.create()` has no `type` field. To sell a subscription, create a subscription payment link (`type: 'subscription'`) and the buyer subscribes at the hosted checkout, or open a session from that link with `checkouts.create({ linkId })`.
 </Note>
 
 ```mermaid
@@ -47,7 +48,7 @@ res.redirect(checkout.checkoutUrl);
 </ParamField>
 
 <ParamField body="linkId" type="string">
-  `paymentLinks.id`. On the product page this is **Copy link ID**. The session inherits the link's amount, currency, and description. Omit for a standalone checkout.
+  The payment link's `id`, a UUID. On the product page this is **Copy link ID**. It is not the token in the link's `checkoutUrl`. The session inherits the link's amount, currency, and description. Omit for a standalone checkout.
 </ParamField>
 
 <ParamField body="amountOverride" type="number">
@@ -71,11 +72,11 @@ res.redirect(checkout.checkoutUrl);
 </ParamField>
 
 <ParamField body="webhookUrl" type="string">
-  Where AgentaOS POSTs the `checkout.session.completed` event. **HTTPS only**, max 2048 characters. See [Webhooks](/sdk/pay-webhooks).
+  Where AgentaOS POSTs this checkout's `checkout.session.completed` event, instead of your account's webhook URL. AgentaOS signs it with your account's signing secret. **HTTPS only**, max 2048 characters. See [Webhooks](/sdk/pay-webhooks).
 </ParamField>
 
 <ParamField body="expiresIn" type="number" default="1800">
-  Seconds until the session expires. Range `300`–`86400`.
+  Seconds until the session expires. Range `300` to `86400`.
 </ParamField>
 
 <ParamField body="dueDate" type="string">
@@ -87,7 +88,7 @@ res.redirect(checkout.checkoutUrl);
 </ParamField>
 
 <ParamField body="metadata" type="object">
-  Arbitrary key-value data, round-tripped onto the session and onto the webhook payload. Max 8KB serialized.
+  Arbitrary key-value data, returned on the session and on the `checkout.session.completed` event. Max 8KB serialized. Use camelCase keys: `webhooks.verify()` camelCases them, so `user_id` comes back as `userId`. A subscription's renewal events do not carry it: see [Event order for subscriptions](/webhooks/events#event-order-for-subscriptions).
 </ParamField>
 
 ### Pre-populate buyer info
@@ -127,7 +128,7 @@ const checkout = await agentaos.checkouts.create({
 </ParamField>
 
 <Tip>
-Company, VAT, and address are optional but recommended, they land directly on the invoice AgentaOS issues for EU VAT compliance. If you skip buyer fields entirely, the checkout page collects name and email itself before payment.
+Company, VAT, and address are optional but recommended: they appear on the invoice AgentaOS issues for EU VAT compliance. If you skip buyer fields entirely, the checkout page collects name and email itself before payment.
 </Tip>
 
 ### Response
@@ -208,14 +209,14 @@ await agentaos.checkouts.cancel('mZrESFyR7RC9RPsJfZCVkg');
 ```
 
 <Note>
-Cancelling prevents the customer from paying through that session. If a payment was already in flight (card authorized, on-chain broadcast) when you cancel, it may still complete, cancel is a status change, not a mid-transaction abort.
+Canceling prevents the customer from paying through that session. A payment already in flight when you cancel (card authorized, on-chain broadcast) can still complete: cancel changes the status and does not stop a running transaction.
 </Note>
 
 ## Next steps
 
-<CardGroup cols={2}>
+<Columns cols={2}>
   <Card title="Payment links" icon="link" href="/sdk/pay-payment-links">
-    Reusable templates. Each visit calls `checkouts.create({ linkId })` under the hood.
+    Reusable templates. Each visitor gets their own checkout.
   </Card>
   <Card title="Webhooks" icon="tower-broadcast" href="/sdk/pay-webhooks">
     Get notified server-side the moment a checkout completes.
@@ -226,4 +227,4 @@ Cancelling prevents the customer from paying through that session. If a payment 
   <Card title="Errors" icon="triangle-exclamation" href="/sdk/pay-errors">
     What `create()` throws on bad params, and how retries work.
   </Card>
-</CardGroup>
+</Columns>

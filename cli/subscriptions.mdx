@@ -1,23 +1,28 @@
 ---
 title: "Subscriptions"
 description: "List and cancel recurring subscribers from the terminal with agenta subscriptions."
+icon: "rotate"
 ---
 
-`agenta subscriptions` is a read-and-cancel view onto everyone paying you on a recurring plan (created from a subscription payment link). It's the fast path for support work: look up a subscriber, check their status, cancel on request.
+`agenta subscriptions` is a read-and-cancel view onto everyone paying you on a recurring plan (created from a subscription product). Use it for support work: look up a subscriber, check their status, cancel on request.
 
 ```bash
 agenta subscriptions list
 agenta subscriptions cancel <id>
+agenta subscriptions credit <id> -a <amount> --reason <text>
 ```
 
 ## List subscriptions
 
 ```bash
-agenta subscriptions list [--limit <n>] [--json]
+agenta subscriptions list [--limit <n>] [--code <code>] [--json]
 ```
 
 <ParamField query="--limit" type="number" default="10">
   Results per page, 1 to 100.
+</ParamField>
+<ParamField query="--code" type="string">
+  Only subscribers who typed this [discount code](/payments/discount-codes).
 </ParamField>
 <ParamField query="--json" type="boolean">
   Output a single JSON object instead of a table.
@@ -57,7 +62,7 @@ agenta subscriptions list [--limit <n>] [--json]
 ```
 
 <Note>
-The human table formats the amount for you (`€19.99/month`). In JSON, `unitAmountMinor` is an **integer of the smallest currency unit** (`1999` = €19.99), the one exception to plain decimal amounts elsewhere in the API. Every other money field you'll see (checkouts, invoices, payment links) is a plain decimal number.
+The human table formats the amount for you (`€19.99/month`). In JSON, fields whose name ends in `Minor` are integers in minor units (`1999` = €19.99). Plain `amount` fields are decimals. See the [money model](/api-reference/introduction#money-model).
 </Note>
 
 ### Status values
@@ -67,7 +72,7 @@ The human table formats the amount for you (`€19.99/month`). In JSON, `unitAmo
 | `trialing` | In a free trial period. |
 | `active` | Paying, current. |
 | `past_due` | Latest charge failed, retrying. |
-| `unpaid` | Retries exhausted, not yet cancelled. |
+| `unpaid` | Retries exhausted, not yet canceled. |
 | `paused` | Billing paused. |
 | `canceled` | Ended. |
 | `incomplete` | First payment hasn't completed yet. |
@@ -76,14 +81,13 @@ The human table formats the amount for you (`€19.99/month`). In JSON, `unitAmo
 ## Cancel a subscription
 
 ```bash
-agenta subscriptions cancel <id> [--now] [--json]
+agenta subscriptions cancel <id> [--json]
 ```
+
+The cancellation takes effect at the end of the current period: the subscriber keeps access until their paid period ends, and nothing is refunded.
 
 <ParamField path="id" type="string" required>
   Subscription ID, e.g. `253dbe6a-6b4d-4c40-a16f-aae31cfea271`.
-</ParamField>
-<ParamField query="--now" type="boolean" default="false">
-  Cancel immediately instead of at the end of the current billing period. Without this flag, the subscriber keeps access until their paid period ends and nothing is refunded.
 </ParamField>
 <ParamField query="--json" type="boolean">
   Output a single JSON object instead of the human-readable summary.
@@ -102,25 +106,6 @@ agenta subscriptions cancel 253dbe6a-6b4d-4c40-a16f-aae31cfea271
 }
 ```
 
-Cancel immediately:
-
-```bash
-agenta subscriptions cancel 253dbe6a-6b4d-4c40-a16f-aae31cfea271 --now
-```
-
-```json --json
-{
-  "status": "canceled",
-  "cancelAtPeriodEnd": false,
-  "effectiveCancelDate": "2026-08-06",
-  "currentPeriodEnd": "2026-09-06T00:00:00.000Z"
-}
-```
-
-<Tip>
-Default to the no-flag form. `--now` skips the grace period the subscriber already paid for, so reach for it only when that's actually the ask (fraud, duplicate signup, an explicit "cancel me right now").
-</Tip>
-
 ## Change the plan (upgrade or downgrade)
 
 ```bash
@@ -131,7 +116,7 @@ agenta subscriptions change-plan <id> --to <linkId> [--dry-run] [--json]
   Subscription ID.
 </ParamField>
 <ParamField query="--to" type="string" required>
-  The target product's id (`agenta products list`). It must be a subscription product in the same currency and billing interval as the current plan, and a different one.
+  The ID of the target subscription product (`agenta products list`). It must be a subscription product in the same currency and billing interval as the current plan, and a different one.
 </ParamField>
 <ParamField query="--dry-run" type="boolean" default="false">
   Print the quote and apply nothing.
@@ -180,9 +165,47 @@ agenta subscriptions change-plan 9811c905-1f61-459d-af03-18fb5aad47d8 --to 3f0c2
 - **Cancel a scheduled downgrade**: run the command again with `--to` set to the current plan's id. The result says `direction: "revert"`, nothing is charged, and `pendingPlanChange` is null again.
 - Money fields are integer minor units (`4900` = €49.00). The subscription must be `active` or `trialing`.
 
+## Give a credit
+
+```bash
+agenta subscriptions credit <id> -a <amount> --reason <text> [--json]
+```
+
+A credit takes money off the subscriber's next invoice. The rules on when you can give one are on [Subscriptions](/payments/subscriptions#credits). You must be signed in (`agenta login`) as an owner or admin.
+
+<ParamField path="id" type="string" required>
+  Subscription ID.
+</ParamField>
+<ParamField query="-a, --amount" type="number" required>
+  The credit in the plan's currency, as a decimal (`5.00`).
+</ParamField>
+<ParamField query="--reason" type="string" required>
+  Why you give it. The subscriber never sees it.
+</ParamField>
+
+```bash
+agenta subscriptions credit 9811c905-1f61-459d-af03-18fb5aad47d8 -a 10 --reason "Two days of downtime"
+```
+
+```bash Output
+€10.00 credited.
+It comes off their next invoice on Oct 12, 2026, leaving €50.76 to pay.
+They now hold €10.00 in unspent credit with you.
+```
+
+With `--json`, the result has `amountMinor`, `currency`, `reason`, `creditBalanceMinor`, `nextInvoiceMinor`, `nextInvoiceDueAfterCreditMinor`, `nextInvoiceAt`, `createdBy`, `createdAt`, and the `idempotencyKey` the command used. Each run is a new credit: running the command twice gives two credits.
+
+## List credits
+
+```bash
+agenta subscriptions credits <id> [--json]
+```
+
+Prints each credit given on the subscription (amount, reason, date) and the buyer's unspent balance. With `--json`, the result is `{ items: [{ id, amountMinor, reason, createdBy, createdAt }], balanceMinor }`.
+
 ## Next steps
 
-<CardGroup cols={2}>
+<Columns cols={2}>
   <Card title="Customers" icon="users" href="/cli/customers">
     Look up who's behind a subscription.
   </Card>
@@ -193,6 +216,6 @@ agenta subscriptions change-plan 9811c905-1f61-459d-af03-18fb5aad47d8 --to 3f0c2
     Manage subscriptions from your own backend.
   </Card>
   <Card title="Subscriptions (concept)" icon="book" href="/payments/subscriptions">
-    How subscription payment links and billing cycles work.
+    How subscription products and billing cycles work.
   </Card>
-</CardGroup>
+</Columns>

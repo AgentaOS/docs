@@ -1,66 +1,125 @@
 ---
 title: "Events"
 description: "Every webhook event AgentaOS sends: full payload fields, types, and a JSON example for each."
+icon: "list"
 ---
 
-AgentaOS sends webhook events for checkouts, outbound sends, and subscriptions. Every event shares the same envelope, an `id`, a `type`, and a `data` object whose shape depends on the type. See [Webhooks](/payments/webhooks) for how to register a URL and verify the signature before trusting any of this.
+AgentaOS sends 12 webhook event types, for checkouts, outbound sends, subscriptions, disputes, account verification, and the dashboard's test event. This page is the full list. Every event shares the same envelope: an `id`, a `type`, a `business`, and a `data` object whose shape depends on the type. See [Webhooks](/payments/webhooks) for how to register a URL and verify the signature before you trust any of this.
+
+Amounts follow the [money model](/api-reference/introduction#money-model): `amount` is a string in currency units, and `amount_minor` is an integer in the smallest currency unit.
 
 <Note>
-Every `amount` field below is a **string** (e.g. `"49.99"`), not a number. This differs from `amount` on SDK create calls (checkouts, payment links), which is a plain number in currency units. Parse it before doing arithmetic.
-</Note>
-
-<Note>
-The field names below are the literal snake_case keys AgentaOS `POST`s to your `webhookUrl`, what you parse in any language. As returned by the SDK `webhooks.verify()` (Node.js) the same fields come back camelCased and typed: `link_id` becomes `linkId`, `session_id` becomes `sessionId`, `tx_hash` becomes `txHash`, `payer_type` becomes `payerType`, `chain_id` becomes `chainId`, `transaction_id` becomes `transactionId`, and so on. This page mirrors the raw body documented in [Webhooks](/api-reference/webhooks).
+The field names below are the literal snake_case keys AgentaOS `POST`s to your `webhookUrl`: parse these in any language. The SDK's `webhooks.verify()` (Node.js) returns the same fields camelCased: `link_id` becomes `linkId`, `session_id` becomes `sessionId`, `trial_end` becomes `trialEnd`, and so on.
 </Note>
 
 <ResponseField name="id" type="string">
-  Unique event ID, e.g. `evt_550e8400-e29b-41d4-a716-446655440000`. Always present. For `checkout.session.completed` it is independent of `data.session_id`. For `send.completed` and `send.failed` it is derived as `evt_${data.transaction_id}`, so a redelivered send always carries the same event id. Either way, use `id` to deduplicate the *delivery*, and the data-level ID (`session_id` or `transaction_id`) to deduplicate the *underlying payment or send*.
+  The event ID. A paid checkout's id is `evt_` plus the sale's transaction id, a send's id is `evt_` plus `data.transaction_id`, and every other event gets a random id such as `evt_4e1b9a0c2d3f5a67`. An event keeps its `id` across delivery attempts and a retry from the dashboard. The SDK's `WebhookEvent` type does not declare `id` yet, so deduplicate on the keys in [Deduplication](#deduplication).
 </ResponseField>
 
 <ResponseField name="type" type="string">
-  One of `checkout.session.completed`, `send.completed`, `send.failed`, or a `subscription.*` event. Switch on this to decide how to parse `data`.
+  One of `checkout.session.completed`, `send.completed`, `send.failed`, `subscription.created`, `subscription.renewed`, `subscription.payment_failed`, `subscription.updated`, `subscription.canceled`, `dispute.created`, `dispute.closed`, `account.updated`, or `webhook.test`. Switch on this to decide how to parse `data`.
+</ResponseField>
+
+<ResponseField name="business" type="string">
+  The id of the business the event happened in. On your own events it is your own id. If you are a [platform](/connect/overview), your webhook also receives the events of every business you manage, and there `business` is your client's id. See [Platform webhooks](/connect/webhooks).
 </ResponseField>
 
 <ResponseField name="data" type="object">
   Event-specific payload. See each event below.
 </ResponseField>
 
+## Which URL receives an event
+
+A `checkout.session.completed` event goes to one URL: the checkout's own `webhookUrl` if it has one, else its payment link's, else your account's webhook URL. The first one found is the only one that receives it. Every other event goes to your account's webhook URL. If no URL applies, AgentaOS sends nothing and shows no error.
+
+## Delivery and retries
+
+AgentaOS sends each event as a `POST` with `Content-Type: application/json` and an `X-AgentaOS-Signature` header. A delivery follows these rules:
+
+- Each attempt times out after 10 seconds. A response outside `2xx`, a timeout, or a network error counts as a failed attempt.
+- AgentaOS makes up to 3 attempts. It waits 1 second before the second attempt and 2 seconds before the third.
+- The 3 attempts carry the same signature, with the same `t`.
+- AgentaOS does not follow redirects. A `3xx` response is a failed attempt.
+- AgentaOS refuses a URL that resolves to a private or internal address, such as `localhost`, `10.0.0.0/8` or `192.168.0.0/16`, and marks the event failed without an attempt. For local development, expose your server through a public HTTPS tunnel.
+
+After the third failed attempt, AgentaOS marks the event `failed` in **Settings → Developers → Webhooks** and sends it no more by itself. An owner or admin can send a failed event again with the retry button on its row (labeled "Retry webhook"). The retry sends the same body, signed again with a new `t`.
+
+Events are delivered independently of each other. Two events about the same subscription can arrive in either order.
+
+## Deduplication
+
+The same event can arrive more than once: after a retry, or when your server stored the event but answered too slowly. Record a key per event and skip one you have already handled.
+
+| Event | Key |
+|---|---|
+| `checkout.session.completed` | `data.session_id` |
+| `send.completed`, `send.failed` | `data.transaction_id` |
+| `subscription.created`, `subscription.renewed`, `subscription.payment_failed`, `subscription.canceled` | The event `type`, `data.id` and `data.current_period_end` |
+| `subscription.updated` | None. Two updates in the same period, such as a cancel scheduled and then resumed, share the same `type`, `data.id` and `data.current_period_end`. Apply the event as the subscription's latest state instead of skipping it. |
+| `dispute.created`, `dispute.closed` | The event `type` and `data.dispute_id` |
+
+## Event order for subscriptions
+
+AgentaOS checks each subscription with the card processor on a schedule and sends the events for what changed. The events below are what your endpoint receives. Unlock access on `checkout.session.completed`: it carries the `metadata` of the checkout, with your own ids.
+
+| What happens | Events |
+|---|---|
+| A buyer subscribes and pays the first period | `subscription.created` and `checkout.session.completed`, in either order |
+| A buyer starts a free trial | `subscription.created` with `status: "trialing"`, and `checkout.session.completed` with `amount: "0"` and `trial: true` |
+| A buyer starts a trial with a trial price | `subscription.created`, and `checkout.session.completed` with the amount charged for the trial. There is no `trial` field. |
+| The trial ends and the first full charge succeeds | `checkout.session.completed` and `subscription.renewed` |
+| A later period is paid | `checkout.session.completed` and `subscription.renewed` |
+| A renewal charge fails | `subscription.payment_failed` |
+| A cancel is scheduled or resumed, or a plan changes | `subscription.updated` |
+| The subscription ends | `subscription.canceled` |
+
+The `checkout.session.completed` for a renewal, or for the first charge after a trial, has its own `session_id`. Its `metadata` is AgentaOS's own, not the metadata you set on the checkout, so your `metadata.customerId` is not on it. Match it to your user through `metadata.subscriptionId`, the subscription's `id`, which is also on the first checkout event. A renewal's `metadata` also has `subscriptionCycle: true`.
+
 ---
 
 ## `checkout.session.completed`
 
-Fired when a checkout is paid, by card, wallet, or stablecoin. This is the event to listen for to fulfill an order.
+Fired when a checkout is paid, by card, bank transfer, or stablecoin, and when a buyer starts a free trial. This is the event to listen for to fulfill an order. A subscription also fires it for every paid period: see [Event order for subscriptions](#event-order-for-subscriptions).
 
 <Expandable title="data fields" defaultOpen>
   <ResponseField name="link_id" type="string | null">
-    The payment link's `secure_link_id`. `null` for a standalone checkout created without a link.
+    The payment link's public token: the last part of its `checkoutUrl` (`https://app.agentaos.ai/pay/<token>`). It is not the link's `id`, which `checkouts.create({ linkId })` and the subscription events use. `null` for a checkout created without a link.
   </ResponseField>
   <ResponseField name="session_id" type="string">
-    The checkout's public session ID. The stable identifier to key your fulfillment and idempotency logic off.
+    The checkout's public session ID. Key your fulfillment and deduplication on it.
   </ResponseField>
   <ResponseField name="amount" type="string">
-    Amount paid, in currency units, as a string. e.g. `"49.99"`.
+    Amount paid, in currency units, as a string, e.g. `"49.99"`. `"0"` for a free trial start.
   </ResponseField>
   <ResponseField name="currency" type="string">
     Settlement currency, e.g. `"EUR"`.
   </ResponseField>
   <ResponseField name="rail" type="string">
-    How the buyer actually paid: `card`, `sepa`, `bank_transfer`, `bridge`, or `wallet`.
+    How the buyer paid: `card`, `sepa` (a bank transfer), or `crypto`.
   </ResponseField>
   <ResponseField name="tx_hash" type="string | null">
-    On-chain transaction hash for stablecoin checkouts. `null` for card/bank rails, use `vendor_reference` instead.
+    On-chain transaction hash for a stablecoin payment. `null` for a card or bank sale: use `vendor_reference` there.
   </ResponseField>
   <ResponseField name="vendor_reference" type="string | null">
-    Off-chain audit reference (card-processor payment reference, bank reference). `null` for on-chain rails.
+    The payment's reference at the card processor or the bank. `null` for a stablecoin payment.
   </ResponseField>
   <ResponseField name="payer" type="string | null">
-    The paying wallet address for stablecoin checkouts. `null` for card/bank rails.
+    The paying wallet address for a stablecoin payment. `null` for a card or bank sale.
   </ResponseField>
   <ResponseField name="payer_type" type="string">
-    `human` or `agent`, whether a person or an autonomous agent initiated the payment.
+    `human` or `agent`: whether a person or an autonomous agent made the payment.
+  </ResponseField>
+  <ResponseField name="customer_id" type="string | null">
+    AgentaOS's own id for the buyer, the `id` the [Customers API](/sdk/pay-customers) returns. It is not your user id: put your own id in `metadata`, for example `metadata.customerId`.
+  </ResponseField>
+  <ResponseField name="buyer_email" type="string | null">
+    The buyer's email, when the checkout collected one.
+  </ResponseField>
+  <ResponseField name="buyer_name" type="string | null">
+    The buyer's name, when the checkout collected one.
   </ResponseField>
   <ResponseField name="network" type="string">
-    CAIP-2 network ID for on-chain rails, e.g. `"eip155:8453"` for Base, or `stripe` for card/bank.
+    `card` for a card payment, `bank_transfer` for a bank transfer, or a CAIP-2 network ID such as `"eip155:8453"` (Base) for a stablecoin payment.
   </ResponseField>
   <ResponseField name="livemode" type="boolean">
     `true` in live mode, `false` in test mode.
@@ -68,19 +127,26 @@ Fired when a checkout is paid, by card, wallet, or stablecoin. This is the event
   <ResponseField name="overpaid_by_cents" type="number | null">
     Set when a bank-transfer buyer sent more than the amount due (beyond a 1-cent tolerance). `null` otherwise.
   </ResponseField>
+  <ResponseField name="trial" type="boolean">
+    Present only when the checkout started a free trial, and then always `true`. `metadata.trial` is also `true` on that event.
+  </ResponseField>
+  <ResponseField name="trial_end" type="string | null">
+    Present only with `trial`: the ISO 8601 time the trial ends and the first charge is due.
+  </ResponseField>
   <ResponseField name="metadata" type="object">
-    The custom key-value data you attached when creating the checkout or payment link.
+    The key-value data you attached when you created the checkout or payment link. On a renewal it is AgentaOS's own: see [Event order for subscriptions](#event-order-for-subscriptions).
   </ResponseField>
 </Expandable>
 
 <Note>
-`tx_hash`, `payer`, and `network` describe on-chain settlement. For checkouts paid by card, these fields are empty, use `vendor_reference` for the off-chain reference and don't assume the on-chain fields are always populated. Key fulfillment off `session_id` and `amount`/`currency`, which are present for every payment method.
+The SDK's `CheckoutCompletedData` type differs from the wire body in two ways. It types `txHash`, `payer` and `linkId` as `string`, but they are `null` in the cases above, so check for `null`. It does not declare `rail`, `vendorReference`, `customerId`, `buyerEmail`, `buyerName`, `overpaidByCents`, `trial` or `trialEnd` yet, although `verify()` returns them: read them with a cast, as shown in [Payment SDK: Webhooks](/sdk/pay-webhooks#fields-the-type-does-not-declare-yet).
 </Note>
 
 ```json Example
 {
   "id": "evt_8c7d6e5f-4a3b-2c1d-0e9f-8a7b6c5d4e3f",
   "type": "checkout.session.completed",
+  "business": "9a8b7c6d-5e4f-3a2b-1c0d-9e8f7a6b5c4d",
   "data": {
     "link_id": "mZrESFyR7RC9RPsJfZCVkg",
     "session_id": "kR9pQwErTyUiOpAsDfGh",
@@ -91,7 +157,10 @@ Fired when a checkout is paid, by card, wallet, or stablecoin. This is the event
     "vendor_reference": "pi_3P...",
     "payer": null,
     "payer_type": "human",
-    "network": "stripe",
+    "customer_id": "3c9d2e1f-7a6b-4c5d-8e9f-0a1b2c3d4e5f",
+    "buyer_email": "customer@example.com",
+    "buyer_name": "Alex Rivera",
+    "network": "card",
     "livemode": true,
     "overpaid_by_cents": null,
     "metadata": { "orderId": "order-123" }
@@ -140,6 +209,7 @@ Fired when an outbound stablecoin send you initiated confirms on-chain.
 {
   "id": "evt_9d8e7f6a-5b4c-3d2e-1f0a-9b8c7d6e5f4a",
   "type": "send.completed",
+  "business": "9a8b7c6d-5e4f-3a2b-1c0d-9e8f7a6b5c4d",
   "data": {
     "transaction_id": "9d8e7f6a-5b4c-3d2e-1f0a-9b8c7d6e5f4a",
     "tx_hash": "0xabc123...",
@@ -157,7 +227,7 @@ Fired when an outbound stablecoin send you initiated confirms on-chain.
 
 ## `send.failed`
 
-Fired when an outbound send fails to broadcast, network error, insufficient balance, or the transaction reverted.
+Fired when an outbound send fails to broadcast: a network error, an insufficient balance, or a reverted transaction.
 
 <Expandable title="data fields" defaultOpen>
   <ResponseField name="transaction_id" type="string">
@@ -196,6 +266,7 @@ Fired when an outbound send fails to broadcast, network error, insufficient bala
 {
   "id": "evt_8fae0d2b-7d54-4b3e-9a41-2b3f9c1e0aa2",
   "type": "send.failed",
+  "business": "9a8b7c6d-5e4f-3a2b-1c0d-9e8f7a6b5c4d",
   "data": {
     "transaction_id": "8fae0d2b-7d54-4b3e-9a41-2b3f9c1e0aa2",
     "tx_hash": null,
@@ -212,30 +283,33 @@ Fired when an outbound send fails to broadcast, network error, insufficient bala
 ```
 
 <Warning>
-`send.failed` means the transaction never landed on-chain. It's distinct from a payment dispute or a card decline, those don't go through this event, they affect your balance directly. See [Payouts](/payouts/overview).
+`send.failed` means the transaction never landed on-chain. A payment dispute or a card decline does not fire this event: those affect your balance directly. See [Payouts](/payouts/overview).
 </Warning>
 
 ## Subscription events
 
-Subscription lifecycle events, delivered to your **organization** webhook endpoint. All five share the same `data` shape.
+Subscription lifecycle events, delivered to your account's webhook URL. All five share the same `data` shape. For the order they arrive in, see [Event order for subscriptions](#event-order-for-subscriptions).
 
-- **`subscription.created`** first payment succeeded; now active (or trialing).
-- **`subscription.renewed`** a cycle was paid and renewed for another period.
-- **`subscription.payment_failed`** a renewal payment failed; now past due.
-- **`subscription.updated`** the subscription changed: a cancel scheduled or resumed (`cancel_at_period_end`), a downgrade scheduled (`pending_plan` set), a scheduled downgrade reverted (`pending_plan` null again), an upgrade applied (new `plan_name` / `link_id` / `amount_minor`), or the scheduled plan taking over at the period end.
-- **`subscription.canceled`** terminal; no further charges.
+- **`subscription.created`**: the subscription became `active` or `trialing`.
+- **`subscription.renewed`**: a later period was paid. The first period does not fire it.
+- **`subscription.payment_failed`**: a charge failed and the subscription is now `past_due` or `unpaid`.
+- **`subscription.updated`**: the subscription changed: a cancel scheduled or resumed (`cancel_at_period_end`), a downgrade scheduled (`pending_plan` set), a scheduled downgrade reverted (`pending_plan` null again), an upgrade applied (new `plan_name` / `link_id` / `amount_minor`), or the scheduled plan taking over at the period end.
+- **`subscription.canceled`**: the subscription ended. No further charges.
 
 <Expandable title="data fields" defaultOpen>
-  <ResponseField name="id" type="string">The subscription ID.</ResponseField>
-  <ResponseField name="status" type="string">Stripe status: `active`, `trialing`, `past_due`, `unpaid`, `canceled`, `incomplete`.</ResponseField>
+  <ResponseField name="id" type="string">The subscription's id, a UUID. The same value as `metadata.subscriptionId` on the checkout event and `id` in the [subscriptions API](/sdk/pay-subscriptions).</ResponseField>
+  <ResponseField name="status" type="string">The status after the change, one of the eight [subscription statuses](/sdk/pay-subscriptions#statuses). A subscription that never activated sends no event, so `incomplete` and `incomplete_expired` do not appear on events.</ResponseField>
   <ResponseField name="plan_name" type="string | null">Plan name, from the backing payment link.</ResponseField>
   <ResponseField name="currency" type="string">e.g. `"EUR"`.</ResponseField>
   <ResponseField name="amount_minor" type="number">Per-cycle price in integer minor units. `1000` = `€10.00`.</ResponseField>
   <ResponseField name="current_period_end" type="string | null">ISO 8601, or `null` before the first cycle.</ResponseField>
   <ResponseField name="cancel_at_period_end" type="boolean">`true` if cancellation is scheduled for period end.</ResponseField>
-  <ResponseField name="link_id" type="string">The current plan's payment-link id (the `linkId` you pass to `checkouts.create`).</ResponseField>
+  <ResponseField name="link_id" type="string">The current plan's payment link `id`, a UUID: the `linkId` you pass to `checkouts.create`. It is not the token in the checkout URL that `checkout.session.completed` sends as `link_id`.</ResponseField>
   <ResponseField name="pending_plan" type="object | null">
     Null unless a downgrade is scheduled. Then `{ link_id, plan_name, amount_minor, effective_at }`: the plan the subscription switches to at `effective_at` (the period end). `plan_name`, `link_id` and `amount_minor` above stay what the buyer paid for until then.
+  </ResponseField>
+  <ResponseField name="discount" type="object | null">
+    Null unless the subscriber redeemed a discount code. Then `{ code, kind }`, where `kind` is `discount` or `tracking` (a code that changes no price). The amount the code took off is on the subscription's first invoice. The SDK's TypeScript types do not list this field yet.
   </ResponseField>
   <ResponseField name="customer_email" type="string | null" />
   <ResponseField name="customer_name" type="string | null" />
@@ -244,16 +318,20 @@ Subscription lifecycle events, delivered to your **organization** webhook endpoi
 
 ```json Example
 {
-  "id": "evt_3f2a1b0c-9d8e-7f6a-5b4c-3d2e1f0a9b8c",
+  "id": "evt_3f2a1b0c9d8e7f6a",
   "type": "subscription.renewed",
+  "business": "9a8b7c6d-5e4f-3a2b-1c0d-9e8f7a6b5c4d",
   "data": {
-    "id": "sub_6pC2lNB6joCRQIZ1aMrTpi",
+    "id": "b7e2a1c4-5d6f-4a8b-9c0d-1e2f3a4b5c6d",
     "status": "active",
     "plan_name": "Pro Monthly",
+    "link_id": "4cbb8f52-7cf2-4480-8c66-34f794cd23d0",
     "currency": "EUR",
     "amount_minor": 1000,
     "current_period_end": "2026-09-19T12:00:00.000Z",
     "cancel_at_period_end": false,
+    "pending_plan": null,
+    "discount": null,
     "customer_email": "customer@example.com",
     "customer_name": "Alex Rivera",
     "livemode": true
@@ -261,13 +339,94 @@ Subscription lifecycle events, delivered to your **organization** webhook endpoi
 }
 ```
 
+## Dispute events
+
+Fired when a buyer's bank opens a chargeback on a sale, and when it closes. Both share the same `data` shape.
+
+- **`dispute.created`**: a buyer's bank opened a dispute on a sale.
+- **`dispute.closed`**: the dispute closed in your favor (`status` is `won`). A lost dispute sends no event.
+
+<Expandable title="data fields" defaultOpen>
+  <ResponseField name="dispute_id" type="string">The dispute's id at the card processor.</ResponseField>
+  <ResponseField name="status" type="string">The dispute's status as the card processor reports it, e.g. `needs_response` or `won`.</ResponseField>
+  <ResponseField name="transaction_id" type="string">The sale the dispute is about.</ResponseField>
+  <ResponseField name="amount_minor" type="number">Disputed amount in integer minor units. `4999` = `€49.99`.</ResponseField>
+  <ResponseField name="currency" type="string">e.g. `"EUR"`.</ResponseField>
+  <ResponseField name="livemode" type="boolean">`true` in live mode, `false` in test mode.</ResponseField>
+</Expandable>
+
+```json Example
+{
+  "id": "evt_1a2b3c4d5e6f7a8b",
+  "type": "dispute.created",
+  "business": "9a8b7c6d-5e4f-3a2b-1c0d-9e8f7a6b5c4d",
+  "data": {
+    "dispute_id": "dp_1P...",
+    "status": "needs_response",
+    "transaction_id": "8c7d6e5f-4a3b-2c1d-0e9f-8a7b6c5d4e3f",
+    "amount_minor": 4999,
+    "currency": "EUR",
+    "livemode": true
+  }
+}
+```
+
+## `account.updated`
+
+Fired when a business's verification changes: its identity check lands (verified, or declined), or our reviewers approve, reject, hold or resume it, or ask for a change. Sent to the business's own endpoint and, for a managed business, to its platform's. The body is the state after the change.
+
+<Expandable title="data fields" defaultOpen>
+  <ResponseField name="verification" type="string">`unverified`, `in_review`, `verified`, `on_hold`, or `rejected`.</ResponseField>
+  <ResponseField name="changes_requested" type="boolean">We asked the business for a change and are waiting on it.</ResponseField>
+  <ResponseField name="identity_verified" type="boolean">The identity check is done. For another app of your own company, this is your company's check.</ResponseField>
+  <ResponseField name="livemode" type="boolean">Always `true`: verification is about live money. The event still reaches your endpoint while you build in test mode, because an account has one webhook endpoint.</ResponseField>
+</Expandable>
+
+```json Example
+{
+  "id": "evt_4e1b9a0c2d3f5a67",
+  "type": "account.updated",
+  "business": "5b1f0c2e-8a4d-4c7b-9e21-3f6a7d8c9b10",
+  "data": {
+    "verification": "verified",
+    "changes_requested": false,
+    "identity_verified": true,
+    "livemode": true
+  }
+}
+```
+
+## `webhook.test`
+
+Sent when you click **Send test event** in **Settings → Developers → Webhooks**. Use it to check that your endpoint receives and verifies events. It goes to your account's webhook URL, signed like every other event.
+
+<Expandable title="data fields" defaultOpen>
+  <ResponseField name="message" type="string">Always `"Test event from AgentaOS"`.</ResponseField>
+  <ResponseField name="livemode" type="boolean">`true` if you sent it from live mode, `false` from test mode.</ResponseField>
+</Expandable>
+
+```json Example
+{
+  "id": "evt_test_5c2e9a1f0b7d3e48",
+  "type": "webhook.test",
+  "business": "9a8b7c6d-5e4f-3a2b-1c0d-9e8f7a6b5c4d",
+  "data": {
+    "message": "Test event from AgentaOS",
+    "livemode": false
+  }
+}
+```
+
 ## Next steps
 
-<CardGroup cols={2}>
+<Columns cols={2}>
   <Card title="Verify signatures" icon="shield-check" href="/payments/webhooks">
     How to register a URL and verify the HMAC-SHA256 signature, in TypeScript, Python, Go, and PHP.
   </Card>
   <Card title="Payment SDK: Webhooks" icon="node-js" href="/sdk/pay-webhooks">
     The `webhooks` resource in `@agentaos/pay`.
   </Card>
-</CardGroup>
+  <Card title="Platform webhooks" icon="building" href="/connect/webhooks">
+    One endpoint for all the businesses you manage.
+  </Card>
+</Columns>

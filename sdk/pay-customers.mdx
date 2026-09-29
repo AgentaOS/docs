@@ -1,6 +1,7 @@
 ---
 title: "Customers"
 description: "Read the people who have paid you with agentaos.customers."
+icon: "users"
 ---
 
 `agentaos.customers` mirrors the dashboard's Customers list: everyone who has completed a checkout against your org, scoped to the environment (test or live) your API key belongs to. It's read-only. A customer record is created automatically the first time someone pays, there's no `create`, `update`, or `retrieve` by ID, only `list`.
@@ -48,7 +49,7 @@ Returns `PaginatedList<Customer>`. See [Pagination](/sdk/pay-overview#pagination
 
 ## Next steps
 
-<CardGroup cols={2}>
+<Columns cols={2}>
   <Card title="Checkouts" icon="credit-card" href="/sdk/pay-checkouts">
     Pre-populate buyer info so it lands here correctly.
   </Card>
@@ -58,4 +59,4 @@ Returns `PaginatedList<Customer>`. See [Pagination](/sdk/pay-overview#pagination
   <Card title="Invoices" icon="receipt" href="/sdk/pay-invoices">
     Every invoice carries its own snapshot of buyer details at time of payment.
   </Card>
-</CardGroup>
+</Columns>

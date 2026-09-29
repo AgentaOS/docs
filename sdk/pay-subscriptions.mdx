@@ -1,9 +1,10 @@
 ---
 title: "Subscriptions"
-description: "Read and manage recurring billing with agentaos.subscriptions: list, invoices, free trials, plan changes, cancel. No create, by design."
+description: "Read and manage recurring billing with agentaos.subscriptions: list, invoices, free trials, plan changes, cancel, credits. No create, by design."
+icon: "rotate"
 ---
 
-`agentaos.subscriptions` is a read/manage surface, not a creation API. A subscription comes into existence when a buyer pays a [payment link](/sdk/pay-payment-links) created with `type: 'subscription'`, AgentaOS bills them every `billingInterval` from then on through Merchant of Record (card or bank). There is no `subscriptions.create()`: to start recurring billing, create a subscription payment link and let the buyer check out.
+`agentaos.subscriptions` reads and manages subscriptions; it has no `create()`. A subscription starts when a buyer pays a [payment link](/sdk/pay-payment-links) created with `type: 'subscription'`. From then on AgentaOS, as merchant of record, bills the buyer every `billingInterval` by card or bank.
 
 ```typescript
 const product = await agentaos.paymentLinks.create({
@@ -39,30 +40,50 @@ console.log(page.total, page.hasMore);
 
 <ParamField query="limit" type="number" default="20">Max 100.</ParamField>
 <ParamField query="offset" type="number" default="0" />
+<ParamField query="discountCode" type="string">Only the subscribers who redeemed this code. The code as the buyer types it, not case-sensitive.</ParamField>
 
 Returns `PaginatedList<Subscription>`.
 
+### Read one subscription
+
+There is no `retrieve(id)`. Store the subscription's `id` when the first `checkout.session.completed` arrives: it is `metadata.subscriptionId` on that event. To read the subscription later, page through `list()` and find it:
+
+```typescript
+import type { Subscription } from '@agentaos/pay';
+
+async function findSubscription(subscriptionId: string): Promise<Subscription | undefined> {
+  for (let offset = 0; ; offset += 100) {
+    const page = await agentaos.subscriptions.list({ limit: 100, offset });
+    const found = page.items.find((s) => s.id === subscriptionId);
+    if (found || !page.hasMore) return found;
+  }
+}
+```
+
+[Paywall for logged-in users](/sdk/paywall-for-logged-in-users) shows the full pattern: store the id on your user, then read the subscription before a paid feature.
+
 ### Subscription fields
 
-<ResponseField name="id" type="string">Subscription UUID.</ResponseField>
+<ResponseField name="id" type="string">The subscription's id, a UUID. The same value as `metadata.subscriptionId` on the checkout event and `id` on the [subscription events](/webhooks/events#subscription-events).</ResponseField>
 <ResponseField name="customerEmail" type="string | null" />
 <ResponseField name="customerName" type="string | null" />
 <ResponseField name="planName" type="string | null">The product name or description.</ResponseField>
 <ResponseField name="billingInterval" type="'month' | 'year' | null" />
 <ResponseField name="status" type="SubscriptionStatus">See statuses below.</ResponseField>
 <ResponseField name="unitAmountMinor" type="number">
-  Per-cycle amount in **integer minor units**. `1999` means €19.99. This is the one field in the entire SDK named `*Minor`, see the [money model](/sdk/pay-overview#the-money-model).
+  Per-cycle amount in integer minor units: `1999` means €19.99. See the [money model](/api-reference/introduction#money-model).
 </ResponseField>
 <ResponseField name="currency" type="string" />
 <ResponseField name="currentPeriodEnd" type="string | null">ISO 8601. `null` before the first billing cycle has booked.</ResponseField>
 <ResponseField name="stripeSubscriptionId" type="string | null">The underlying subscription ID from the card processor.</ResponseField>
-<ResponseField name="linkId" type="string">Same UUID as `checkouts.create({ linkId })` / product page Copy link ID.</ResponseField>
+<ResponseField name="linkId" type="string">The plan's payment link `id`, a UUID: the value `checkouts.create({ linkId })` takes and **Copy link ID** on the product page copies. It is not the token in the checkout URL, which `checkout.session.completed` sends as `linkId`.</ResponseField>
 <ResponseField name="pendingPlanChange" type="object | null">
   Null unless a downgrade is scheduled. Then `{ linkId, planName, unitAmountMinor, effectiveAt }`: the plan the subscription switches to at `effectiveAt` (the period end). `planName`, `unitAmountMinor` and `linkId` above stay what the buyer paid for until then, so gate access on them, not on the pending change.
 </ResponseField>
 <ResponseField name="cancelAtPeriodEnd" type="boolean" />
 <ResponseField name="canceledAt" type="string | null" />
 <ResponseField name="effectiveCancelDate" type="string | null" />
+<ResponseField name="discount" type="object | null">`{ code, kind }` when the subscriber redeemed a discount code, else `null`. `kind` is `discount` or `tracking` (a code that takes nothing off). What the code took off is on the first invoice.</ResponseField>
 
 ```json
 {
@@ -82,7 +103,7 @@ Returns `PaginatedList<Subscription>`.
 
 ### Statuses
 
-`SubscriptionStatus` is the raw subscription status from the card processor, mirrored onto the local record by AgentaOS's polling reconciliation (there are no inbound webhooks from the card processor in this system, statuses update on the next poll cycle):
+`SubscriptionStatus` is the card processor's status for the subscription. AgentaOS reads it on a schedule, so a change shows here after the next check. It has eight values. Webhook events never carry `incomplete` or `incomplete_expired`, because a subscription that never activated sends no event.
 
 | Status | Meaning |
 |---|---|
@@ -129,9 +150,10 @@ const product = await agentaos.paymentLinks.create({
 
 What you observe:
 
-- `checkout.session.completed` fires when the card is saved, with `amount: "0"`, `trial: true` and `trial_end` (ISO 8601) on `event.data`. Treat it as "trial started", not as money received.
+- `checkout.session.completed` fires when the card is saved, with `amount: "0"`. Treat it as "trial started", not as money received. The wire body also has `trial: true` and `trial_end` (ISO 8601), which `verify()` returns as `trial` and `trialEnd`. The SDK type does not declare them yet: read them through a [wider type](/sdk/pay-webhooks#fields-the-type-does-not-declare-yet), or read `event.data.metadata.trial`, which is also `true`.
 - `subscriptions.list()` shows `status: 'trialing'` and the plan's `unitAmountMinor`; `currentPeriodEnd` is the trial end while trialing.
-- Cancelling during the trial stops it before any charge.
+- When the trial ends and the first charge succeeds, `checkout.session.completed` and `subscription.renewed` fire. See [Event order for subscriptions](/webhooks/events#event-order-for-subscriptions).
+- Canceling during the trial stops it before any charge.
 
 ## `subscriptions.previewPlanChange(id, targetLinkId)`
 
@@ -139,13 +161,13 @@ Quote moving a subscription to another plan. Read-only: nothing is charged or sc
 
 ```typescript
 const quote = await agentaos.subscriptions.previewPlanChange(sub.id, PRO_PLUS_LINK_ID);
-// quote.direction      'upgrade' | 'downgrade'
+// quote.direction      'upgrade' | 'downgrade' | 'revert'
 // quote.dueTodayMinor  charged now (0 for a downgrade)
 // quote.effectiveAt    upgrade: now; downgrade: the current period end
 // quote.prorationDate  pass it to changePlan
 ```
 
-<ResponseField name="direction" type="'upgrade' | 'downgrade'">`upgrade` when the new plan costs more per cycle.</ResponseField>
+<ResponseField name="direction" type="'upgrade' | 'downgrade' | 'revert'">`upgrade` when the new plan costs more per cycle, `downgrade` when it costs the same or less, `revert` when the target is the current plan while a downgrade is pending.</ResponseField>
 <ResponseField name="currency" type="string" />
 <ResponseField name="dueTodayMinor" type="number">Integer minor units charged now. Always `0` for a downgrade.</ResponseField>
 <ResponseField name="dueTodayVatMinor" type="number" />
@@ -165,24 +187,28 @@ const result = await agentaos.subscriptions.changePlan(sub.id, {
   prorationDate: quote.prorationDate,
 });
 
-if (result.direction === 'upgrade') {
-  result.status;          // 'active'
-  result.unitAmountMinor; // new per-cycle amount, e.g. 4900
-} else {
-  result.effectiveAt;     // when the cheaper plan starts
-  result.unitAmountMinor;
+switch (result.direction) {
+  case 'upgrade':
+    console.log(result.status, result.unitAmountMinor); // charged now, e.g. 'active' 4900
+    break;
+  case 'downgrade':
+    console.log(result.effectiveAt, result.unitAmountMinor); // when the cheaper plan starts
+    break;
+  case 'revert':
+    console.log(result.unitAmountMinor); // the pending downgrade is canceled, the plan stays
+    break;
 }
 ```
 
 Show the quote to the merchant (or the subscriber) before calling this: the upgrade charge is real money. The CLI does both steps in one command: `agenta subscriptions change-plan <id> --to <linkId>` (add `--dry-run` for the quote only).
 
-**Cancelling a scheduled downgrade.** Change the plan to the current plan again. The preview and the result come back with `direction: 'revert'`, nothing is charged, and `pendingPlanChange` is null afterwards. Targeting the plan that is already pending returns `400` ("already scheduled").
+**Canceling a scheduled downgrade.** Change the plan to the current plan again. The preview and the result come back with `direction: 'revert'`, nothing is charged, and `pendingPlanChange` is null afterwards. Targeting the plan that is already pending returns `400` ("already scheduled").
 
-**Webhooks.** Every plan change fires `subscription.updated` on the organization endpoint: when a downgrade is scheduled (`data.pending_plan` is set), when it is reverted (`pending_plan` back to null), when an upgrade is applied, and when the scheduled plan takes over at the period end. See [Events](/webhooks/events).
+**Webhooks.** Every plan change fires `subscription.updated` on your account's webhook URL: when a downgrade is scheduled (`data.pendingPlan` is set), when it is reverted (`pendingPlan` back to null), when an upgrade is applied, and when the scheduled plan takes over at the period end. See [Events](/webhooks/events).
 
 ## `subscriptions.cancel(id)`
 
-Cancels at period end. The subscriber keeps access until `currentPeriodEnd`. No refund. Calling it again is a no-op. Pass `{ atPeriodEnd: false }` to cancel immediately instead.
+The cancellation always takes effect at the end of the current period: there is no immediate cancel. The subscriber keeps access until `currentPeriodEnd`. No refund. Calling it again is a no-op.
 
 ```typescript
 await agentaos.subscriptions.cancel(sub.id);
@@ -204,14 +230,57 @@ await agentaos.subscriptions.cancel(sub.id);
 }
 ```
 
+## `subscriptions.credit(id, { amountMinor, reason, idempotencyKey })`
+
+Put credit on the subscriber's account. It comes off their next invoice and lowers what the card is charged. It is not a refund: no money goes back to the card. The client must be signed in as an owner or admin; an API key is refused with `403`.
+
+```typescript
+import { randomUUID } from 'node:crypto';
+
+const credit = await agentaos.subscriptions.credit(sub.id, {
+  amountMinor: 1000, // €10.00 in the plan's currency
+  reason: 'Two days of downtime',
+  idempotencyKey: randomUUID(),
+});
+credit.nextInvoiceDueAfterCreditMinor; // what the next invoice will charge
+```
+
+<ParamField body="amountMinor" type="number" required>Positive integer minor units. There is no currency field: the subscription's currency is used. At most the whole next invoice.</ParamField>
+<ParamField body="reason" type="string" required>Why you give it. The subscriber never sees it.</ParamField>
+<ParamField body="idempotencyKey" type="string" required>One key per credit you mean to give. Send the same key again when you retry after a timeout; a new key gives a second credit.</ParamField>
+
+<ResponseField name="id" type="string">The ledger entry id.</ResponseField>
+<ResponseField name="amountMinor" type="number" />
+<ResponseField name="currency" type="string" />
+<ResponseField name="reason" type="string" />
+<ResponseField name="creditBalanceMinor" type="number">All unspent credit this buyer has with you now.</ResponseField>
+<ResponseField name="nextInvoiceMinor" type="number">What the next invoice would have charged before this credit.</ResponseField>
+<ResponseField name="nextInvoiceDueAfterCreditMinor" type="number">What it charges after it.</ResponseField>
+<ResponseField name="nextInvoiceAt" type="string">ISO 8601.</ResponseField>
+<ResponseField name="createdBy" type="string">The id of the person who gave it.</ResponseField>
+<ResponseField name="createdAt" type="string">ISO 8601.</ResponseField>
+
+The subscription must be `active` or `trialing`, not scheduled to cancel, and without a pending plan change; otherwise the call returns `400`. While the buyer has credit left, `previewPlanChange` and `changePlan` return `400` until the next invoice.
+
+## `subscriptions.credits(id)`
+
+The credits given on this subscription, newest first, and what is still unspent. Owner or admin only, like `credit`.
+
+```typescript
+const { items, balanceMinor } = await agentaos.subscriptions.credits(sub.id);
+```
+
+<ResponseField name="items" type="CreditEntry[]">`{ id, amountMinor, reason, createdBy, createdAt }` for each credit.</ResponseField>
+<ResponseField name="balanceMinor" type="number">Unspent credit on the buyer, shared by every subscription they have with you.</ResponseField>
+
 ## Next steps
 
-<CardGroup cols={2}>
+<Columns cols={2}>
   <Card title="Sell a subscription" icon="rotate" href="/guides/sell-a-subscription">
     Create a product, share the link or check out a logged-in user.
   </Card>
   <Card title="Payment links" icon="link" href="/sdk/pay-payment-links">
-    Create the `type: 'subscription'` link that gives birth to a subscription.
+    Create the `type: 'subscription'` link that starts a subscription.
   </Card>
   <Card title="Customers" icon="users" href="/sdk/pay-customers">
     The people paying your subscriptions.
@@ -222,4 +291,4 @@ await agentaos.subscriptions.cancel(sub.id);
   <Card title="Errors" icon="triangle-exclamation" href="/sdk/pay-errors">
     What `cancel()` throws on an unknown subscription ID.
   </Card>
-</CardGroup>
+</Columns>

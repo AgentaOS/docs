@@ -1,9 +1,10 @@
 ---
 title: "Error codes"
 description: "How the API reports errors, the status codes you will see, and how to handle them."
+icon: "triangle-exclamation"
 ---
 
-When a request fails, the API returns the matching HTTP status code and a JSON body describing what went wrong. Every response also carries an `x-request-id` header (echoed back as `requestId` in error bodies), include it when you contact support. The [TypeScript SDK](/sdk/pay-errors) turns each response into a typed error for you, so most integrations never parse this body by hand.
+When a request fails, the API returns the matching HTTP status code and a JSON body describing what went wrong. Every response also carries an `x-request-id` header, which error bodies repeat as `requestId`. Include it when you contact support. The [TypeScript SDK](/sdk/pay-errors) turns each response into a typed error for you, so most integrations never parse this body by hand.
 
 ## Error response format
 
@@ -26,17 +27,18 @@ When a request fails, the API returns the matching HTTP status code and a JSON b
 | `errors` | array | On `400` validation errors: one `{ field, message }` per invalid field. |
 | `timestamp` | string | ISO 8601 time the error was produced. |
 | `requestId` | string | Correlates the request. Also returned as the `x-request-id` response header. |
+| `code` | string | On some errors only: a stable, machine-readable code such as `key_no_longer_valid`. Branch on it when it is present. |
 
 ## Status codes
 
 | Status | Meaning | When it occurs |
 |---|---|---|
 | `400` | Bad request | Missing or invalid parameters. See the `errors` array. |
-| `401` | Unauthorized | Missing, invalid, or expired API key. |
+| `401` | Unauthorized | Missing or invalid API key, or a key whose creator no longer administers the business (`key_no_longer_valid`). |
 | `403` | Forbidden | Valid key, but no access to this resource. |
 | `404` | Not found | The resource does not exist, or is not in your organization or environment. |
-| `409` | Conflict | A concurrent modification. Retry the read, then the write. |
-| `429` | Rate limited | Too many requests. Honor the `Retry-After` header when present. |
+| `409` | Conflict | The request conflicts with the record's current state: another request changed it, a product reached its purchase limit, or a state code such as `client_joined` applies. For a concurrent change, read the record again, then retry the write. A repeated idempotency key never returns `409`. |
+| `429` | Rate limited | Too many requests from your IP address to one endpoint. Honor the `Retry-After` header. See [Rate limits](/api-reference/introduction#rate-limits). |
 | `5xx` | Server error | Something went wrong on our side. Safe to retry with backoff. |
 
 ## Common scenarios
@@ -58,7 +60,7 @@ When a request fails, the API returns the matching HTTP status code and a JSON b
 
 ### Authentication (401)
 
-The `x-api-key` header is missing or the key is wrong. Check you are using the right key: `sk_test_` for test mode, `sk_live_` for production.
+The `x-api-key` header is missing or the key is wrong. Check you are using the right key: `sk_test_` for test mode, `sk_live_` for live mode.
 
 ### Not found (404)
 
@@ -66,11 +68,11 @@ The resource ID is wrong, or it belongs to a different environment. Test and liv
 
 ### Rate limited (429)
 
-Back off and retry. When present, the `Retry-After` header tells you how many seconds to wait.
+Back off and retry. The `Retry-After` header tells you how many seconds to wait.
 
 ## Handling errors with the SDK
 
-The [TypeScript SDK](/sdk/pay-errors) maps every response to a typed `AgentaOSError` subclass with `status`, `code`, `message`, `requestId`, and (on validation) `errors`, and retries transient failures for you.
+The [TypeScript SDK](/sdk/pay-errors) maps every error response to a typed `AgentaOSError` subclass with `status`, `code`, `message`, `requestId`, and (on validation) `errors`. A `409` becomes `IdempotencyError`, whatever its cause. The SDK retries a `429`, a `5xx` and a network error for you.
 
 ```typescript
 import { AgentaOSError, ValidationError } from '@agentaos/pay';
@@ -88,8 +90,8 @@ try {
 
 ## Environments
 
-There is one base URL. Your key prefix selects the environment: `sk_test_` uses test mode, `sk_live_` uses production. See [Test mode](/getting-started/test-mode).
+There is one base URL. Your key prefix selects the environment: `sk_test_` uses test mode, `sk_live_` uses live mode. See [Test mode](/getting-started/test-mode).
 
-## Need help?
+## Support
 
-Include the `requestId` (or the `x-request-id` header) from the failed response when you contact support. It lets us find the exact request instantly.
+Include the `requestId` (or the `x-request-id` header) from the failed response when you contact support. It lets us find the exact request.

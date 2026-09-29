@@ -1,16 +1,74 @@
 ---
 title: "Changelog"
 description: "What's new in AgentaOS."
+icon: "clock-rotate-left"
+rss: true
 ---
 
-<Update label="August 6, 2026" description="v1.1">
-  - **Built for AI agents.** Copy any page as Markdown, or open it in ChatGPT or Claude, right from the docs.
-  - **No-code products and invoices.** Create a product or send an invoice from the dashboard, share the link, get paid.
-  - Added a plain-English payments glossary.
+<Update label="September 28, 2026" description="In the next release" tags={["Checkout", "Platforms", "Payouts"]}>
+  ## Embedded checkout
+
+  Put the AgentaOS checkout on your own page, inline or as an overlay, with a script tag or the `@agentaos/checkout` package. Add your sites under **Approved sites**, and set the button color, font, corners, and background under **Checkout appearance**. It applies to the hosted checkout too. See [Embedded checkout](/payments/embedded-checkout).
+
+  ## Platforms, in private preview
+
+  Run your clients' businesses from one account. Add a business, invite your client by email, and take a share of each sale, counted on the price before VAT. From code, send the `AgentaOS-Account` header to act as a business you manage. Your webhook receives your clients' events, every event names its `business`, and `account.updated` tells you when a business's verification changes. See [Build a platform](/guides/build-a-platform).
+
+  ## Stablecoin payouts, in public preview
+
+  Be paid in USDC or EURC to a wallet instead of your bank account. See [Stablecoin payouts](/payouts/stablecoin-payouts).
+
+  ## New pages
+
+  [Payout statements and self-billed invoices](/payouts/statements), and [Product release phases](/getting-started/release-phases), which explains the Private preview and Public preview tags.
 </Update>
 
-<Update label="August 5, 2026" description="v1.0">
-  - Accept **Card, Apple Pay, and Google Pay** as your Merchant of Record, with tax, invoices, and payouts handled.
-  - **Subscriptions**, invoices, receipts, customers, and webhooks.
-  - **TypeScript SDK, CLI, and MCP server** so your AI agents can run the store.
+<Update label="September 17, 2026" tags={["Checkout"]}>
+  ## Discount codes
+
+  Create a code under **Discounts**, and a buyer types it at checkout to pay less. A code can also take nothing off and only track who sent the buyer. See [Discount codes](/payments/discount-codes).
+</Update>
+
+<Update label="September 8, 2026" tags={["Subscriptions"]}>
+  ## Downgrades at the period end
+
+  A downgrade keeps the plan the buyer paid for until the end of the period, then switches. Pick the current plan again before then to revert the change. See [Subscriptions](/payments/subscriptions).
+</Update>
+
+<Update label="August 23, 2026" tags={["Subscriptions"]}>
+  ## Free trials
+
+  A subscription plan can start with a free trial.
+
+  ## Plan changes
+
+  Move a subscriber to another plan. An upgrade applies at once, and the buyer pays the prorated difference today. See [Subscriptions](/payments/subscriptions).
+</Update>
+
+<Update label="August 6, 2026" description="v1.1" tags={["Docs", "Dashboard"]}>
+  ## Built for AI agents
+
+  Copy any page as Markdown, or open it in ChatGPT or Claude, right from the docs.
+
+  ## No-code products and invoices
+
+  Create a product or send an invoice from the dashboard, share the link, get paid.
+
+  ## Payments glossary
+
+  Added a plain-English payments glossary.
+</Update>
+
+<Update label="August 5, 2026" description="v1.0" tags={["Checkout", "Subscriptions", "Developers"]}>
+  ## Card, Apple Pay, and Google Pay
+
+  Accept **Card, Apple Pay, and Google Pay** as your merchant of record, with tax, invoices, and payouts handled.
+
+  ## Subscriptions
+
+  **Subscriptions**, invoices, receipts, customers, and webhooks.
+
+  ## TypeScript SDK, CLI, and MCP server
+
+  **TypeScript SDK, CLI, and MCP server** so your AI agents can run the store.
 </Update>

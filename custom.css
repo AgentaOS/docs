@@ -1,13 +1,10 @@
-/* Match the landing page (agentaos.ai): Bricolage Grotesque + Inter + Space Grotesk */
-@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;450;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
-
-/* Sidebar — subtle paper/sand tint, ink navy in dark */
-nav[aria-label="Sidebar"] {
-  background: linear-gradient(180deg, #F6F7F9 0%, #ffffff 100%);
+/* Card icons: tinted tile (documented data-component-part selector) */
+[data-component-part="card-icon"] {
+  background: rgba(79, 70, 229, 0.08);
+  border-radius: 0.5rem;
+  padding: 0.4rem;
 }
-.dark nav[aria-label="Sidebar"] {
-  background: linear-gradient(180deg, #0E1A3D 0%, #0B1533 100%);
-}
+.dark [data-component-part="card-icon"] { background: rgba(165, 180, 252, 0.12); }
 
 /* Cards — depth + hover, brand indigo */
 .card {
@@ -25,12 +22,7 @@ nav[aria-label="Sidebar"] {
 
 /* Headings — landing letter-spacing */
 h1 { letter-spacing: -0.02em; }
-h2 {
-  margin-top: 2rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid rgba(11, 21, 51, 0.10);
-}
-.dark h2 { border-bottom-color: rgba(255, 255, 255, 0.12); }
+h2 { margin-top: 2rem; }
 
 /* Tables — cleaner */
 table th {
@@ -46,47 +38,6 @@ pre {
   border-radius: 8px !important;
 }
 
-/* ---- Topbar buttons in the landing's neo-brutalist style ---- */
-/* "Open Account" CTA — indigo fill, ink border, hard shadow, lift on hover */
-a.group[href="https://app.agentaos.ai"] {
-  background: #4F46E5 !important;
-  color: #fff !important;
-  border: 1.5px solid #0B1533 !important;
-  border-radius: 12px !important;
-  box-shadow: 3px 3px 0 #0B1533 !important;
-  font-weight: 650 !important;
-  padding: 8px 16px !important;
-  transition: transform 0.12s ease, box-shadow 0.12s ease !important;
-}
-a.group[href="https://app.agentaos.ai"]:hover {
-  transform: translate(-2px, -2px) !important;
-  box-shadow: 5px 5px 0 #0B1533 !important;
-  color: #fff !important;
-}
-
-/* "Website" topbar link — ghost button (white, ink border, hard shadow) */
-.navbar-link a {
-  background: #fff !important;
-  color: #0B1533 !important;
-  border: 1.5px solid #0B1533 !important;
-  border-radius: 12px !important;
-  box-shadow: 3px 3px 0 #0B1533 !important;
-  font-weight: 600 !important;
-  padding: 7px 14px !important;
-  transition: transform 0.12s ease, box-shadow 0.12s ease !important;
-}
-.navbar-link a:hover {
-  transform: translate(-2px, -2px) !important;
-  box-shadow: 5px 5px 0 #0B1533 !important;
-  color: #0B1533 !important;
-}
-
-/* Dark mode: light border/shadow so the buttons read on navy */
-.dark a.group[href="https://app.agentaos.ai"] { box-shadow: 3px 3px 0 #A5B4FC !important; border-color: #A5B4FC !important; }
-.dark a.group[href="https://app.agentaos.ai"]:hover { box-shadow: 5px 5px 0 #A5B4FC !important; }
-.dark .navbar-link a { background: transparent !important; color: #FFFFFF !important; border-color: #A5B4FC !important; box-shadow: 3px 3px 0 #A5B4FC !important; }
-.dark .navbar-link a:hover { box-shadow: 5px 5px 0 #A5B4FC !important; color: #FFFFFF !important; }
-
 /* ---- Content links — brand indigo, underlined ---- */
 #content-area a.link, .prose a.link {
   color: #4F46E5 !important;
@@ -100,3 +51,22 @@ a.group[href="https://app.agentaos.ai"]:hover {
 
 /* ---- Announcement banner — match the landing's ink bar (#0B1533, white text) ---- */
 #banner { background-color: #0B1533 !important; }
+
+/* Release-phase pill: sits at the top of a preview page, next to the first line of its callout */
+.preview-pill {
+  display: inline-block;
+  vertical-align: baseline;
+  margin-right: 0.35rem;
+  padding: 0.1rem 0.55rem;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  color: #4338CA;
+  background: rgba(79, 70, 229, 0.12);
+  white-space: nowrap;
+}
+.dark .preview-pill { color: #C7D2FE; background: rgba(165, 180, 252, 0.16); }
+.preview-pill-public { color: #047857; background: rgba(16, 185, 129, 0.12); }
+.dark .preview-pill-public { color: #A7F3D0; background: rgba(52, 211, 153, 0.16); }

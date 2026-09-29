@@ -1,19 +1,20 @@
 ---
-title: "Handle Webhooks"
-description: "Register a webhook URL, verify the signature, and fulfil an order the moment checkout.session.completed fires. A complete, runnable Express example."
+title: "Receive webhooks in Express"
+description: "Register a webhook URL, verify the signature, and fulfill an order the moment checkout.session.completed fires. A complete, runnable Express example."
+icon: "code-branch"
 ---
 
-By the end of this guide you'll have a real Express endpoint that verifies AgentaOS's signature and marks an order paid the moment a checkout completes, safely, even if the same event is delivered more than once.
+By the end of this page you have an Express endpoint that verifies AgentaOS's signature and marks an order paid when a checkout completes. It fulfills each order once, even if the same event arrives twice.
 
 ## Before you start
 
-- Node.js 20+, Express, and `@agentaos/pay` installed (`npm install @agentaos/pay express`).
-- A URL AgentaOS can reach over HTTPS. For local development, run a tunnel (ngrok or similar) so `http://localhost:3000` gets a public HTTPS address to register.
-- A payment link or checkout to test against, see [Accept your first payment](/guides/accept-your-first-payment) if you don't have one yet.
+- Node.js 20.6 or later, and `@agentaos/pay` and Express installed (`npm install @agentaos/pay express`). The samples run on Express 4 and 5.
+- A URL AgentaOS can reach over HTTPS. AgentaOS does not deliver to `localhost` or a private address, so for local development run a tunnel service that gives `http://localhost:3000` a public HTTPS address.
+- A payment link or checkout to test against. See [Accept your first payment](/guides/accept-your-first-payment) if you don't have one yet.
 
 <Steps>
   <Step title="Register a webhook URL and reveal the signing secret">
-    Open [app.agentaos.ai](https://app.agentaos.ai) → **Developer** → **Webhooks**, and enter the HTTPS URL you want events sent to, for example `https://myshop.com/webhooks`. Click **Reveal signing secret**, copy the `whsec_...` value, and add it to your server's environment as `AGENTAOS_WEBHOOK_SECRET`. Never commit it, never log it, never send it to the client.
+    In [app.agentaos.ai](https://app.agentaos.ai), open **Settings → Developers → Webhooks**, enter the HTTPS URL you want events sent to, for example `https://myshop.com/webhooks`, and click **Save**. Click **Reveal signing secret**, copy the `whsec_...` value, and add it to your server's environment as `AGENTAOS_WEBHOOK_SECRET`. Never commit it, never log it, never send it to the client.
   </Step>
 
   <Step title="Set up the raw-body route">
@@ -30,7 +31,7 @@ By the end of this guide you'll have a real Express endpoint that verifies Agent
   </Step>
 
   <Step title="Verify the signature">
-    `webhooks.verify()` parses the `t=...,v1=...` header, rejects it if older than 5 minutes, recomputes the HMAC-SHA256 digest in constant time, and returns a typed `WebhookEvent`, or throws `WebhookVerificationError` if anything doesn't check out.
+    `webhooks.verify()` parses the `t=...,v1=...` header, rejects a timestamp older than 5 minutes or in the future, recomputes the HMAC-SHA256 digest in constant time, and returns a typed `WebhookEvent`. If any check fails, it throws `WebhookVerificationError`. Keep your server's clock synced (NTP): a clock that runs behind rejects every event.
 
     ```typescript
     import { AgentaOS, WebhookVerificationError } from '@agentaos/pay';
@@ -47,9 +48,11 @@ By the end of this guide you'll have a real Express endpoint that verifies Agent
         );
       } catch (err) {
         if (err instanceof WebhookVerificationError) {
-          return res.status(400).send('Invalid signature');
+          res.status(400).send('Invalid signature');
+          return;
         }
-        return res.status(500).send('Webhook processing failed');
+        res.status(500).send('Webhook processing failed');
+        return;
       }
 
       // Signature is valid, safe to act on event.data now.
@@ -58,7 +61,7 @@ By the end of this guide you'll have a real Express endpoint that verifies Agent
   </Step>
 
   <Step title="React to checkout.session.completed, idempotently">
-    Key your fulfillment logic off `event.data.sessionId`, and check whether you've already processed it before doing anything. Retries mean the same event can arrive more than once, your handler needs to be safe to run twice.
+    Key your fulfillment logic on `event.data.sessionId`, and check whether you've already processed it before doing anything. Retries mean the same event can arrive more than once, so your handler must be safe to run twice.
 
     ```typescript
     // Simple in-memory store keyed by sessionId. Use a real database in production,
@@ -67,7 +70,7 @@ By the end of this guide you'll have a real Express endpoint that verifies Agent
 
     switch (event.type) {
       case 'checkout.session.completed': {
-        const { sessionId, amount, currency } = event.data;
+        const { sessionId, amount, currency, metadata } = event.data;
 
         if (fulfilledSessions.has(sessionId)) {
           break; // already handled this payment, skip
@@ -75,18 +78,16 @@ By the end of this guide you'll have a real Express endpoint that verifies Agent
         fulfilledSessions.add(sessionId);
 
         console.log(`Order ${sessionId} paid: ${amount} ${currency}`);
-        // event.data.metadata is the checkout metadata.
-        // metadata.customerId is whatever you passed on checkouts.create.
-        // For a subscription, metadata.subscriptionId is also on this event.
-        // See /guides/sell-a-subscription
+        // metadata.customerId is the id you passed on checkouts.create.
+        // For a subscription, metadata.subscriptionId is also set.
         break;
       }
     }
     ```
 
-    <Note>
-    `event.data.amount` is a **string** (`"49.99"`), not a number. Every other `amount` you pass into a create call is a plain number, webhook payloads are the one place it's serialized as a string. Parse it before doing arithmetic.
-    </Note>
+    `metadata` holds what you set on `checkouts.create`, so `metadata.customerId` is your own user id. `verify()` camelCases every key, including the keys inside `metadata`: use camelCase keys in metadata, because a key like `user_id` comes back as `userId`. The event's `customerId` field is different: it is AgentaOS's own id for the buyer, not yours. A subscription renewal fires this event without your `metadata`. See [Event order for subscriptions](/webhooks/events#event-order-for-subscriptions) and [Sell a subscription](/guides/sell-a-subscription).
+
+    `event.data.amount` is a string, such as `"49.99"`. See the [money model](/api-reference/introduction#money-model).
   </Step>
 
   <Step title="Respond 200 quickly">
@@ -119,9 +120,11 @@ app.post('/webhooks', express.raw({ type: 'application/json' }), (req, res) => {
     );
   } catch (err) {
     if (err instanceof WebhookVerificationError) {
-      return res.status(400).send('Invalid signature');
+      res.status(400).send('Invalid signature');
+      return;
     }
-    return res.status(500).send('Webhook processing failed');
+    res.status(500).send('Webhook processing failed');
+    return;
   }
 
   if (event.type === 'checkout.session.completed') {
@@ -143,14 +146,14 @@ app.listen(3000, () => console.log('Webhook server listening on :3000'));
 ```
 
 <Tip>
-Not using Node? The signing algorithm is plain HMAC-SHA256 over `{timestamp}.{raw_body}`, straightforward to reimplement in any language. See [manual verification in Python, Go, and PHP](/payments/webhooks#manual-verification-no-sdk).
+Not using Node? The signing algorithm is HMAC-SHA256 over `{timestamp}.{raw_body}`, and any language can check it. See [manual verification in Python, Go, and PHP](/payments/webhooks#manual-verification-no-sdk).
 </Tip>
 
 ## Test it end to end
 
 <Steps>
   <Step title="Start your server">
-    Run the example above, and make sure your tunnel or production URL points at it.
+    Save the example as `webhook-server.ts`, put `AGENTAOS_API_KEY` and `AGENTAOS_WEBHOOK_SECRET` in a `.env` file, and run `npx tsx --env-file=.env webhook-server.ts`. Make sure your tunnel or production URL points at it.
   </Step>
   <Step title="Create a checkout with a webhookUrl">
     Use the link or checkout from [Accept your first payment](/guides/accept-your-first-payment), or create a new one with `webhookUrl` set to your endpoint.
@@ -165,13 +168,13 @@ Not using Node? The signing algorithm is plain HMAC-SHA256 over `{timestamp}.{ra
 
 ## Verify it worked
 
-- Your endpoint returned `200` for the delivery (check **Developer → Webhooks** in the dashboard for delivery status).
+- Your endpoint returned `200` for the delivery. The event list in **Settings → Developers → Webhooks** shows each delivery's status and response code.
 - Your logs show exactly one fulfillment for that `sessionId`, even if AgentaOS retries the delivery.
 - An invalid or missing `X-AgentaOS-Signature` header gets rejected with `400`, not silently processed. Try POSTing a fake payload without a valid signature to confirm `webhooks.verify()` throws as expected.
 
 ## Next steps
 
-<CardGroup cols={2}>
+<Columns cols={2}>
   <Card title="Event reference" icon="bell" href="/webhooks/events">
     Every event type, its full payload, and a JSON example.
   </Card>
@@ -184,4 +187,4 @@ Not using Node? The signing algorithm is plain HMAC-SHA256 over `{timestamp}.{ra
   <Card title="Payouts" icon="money-bill-transfer" href="/payouts/overview">
     What happens to your balance after the payment lands.
   </Card>
-</CardGroup>
+</Columns>

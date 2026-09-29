@@ -1,20 +1,56 @@
 ---
 title: "Receipts"
-description: "Every paid invoice gets a receipt automatically. Download the PDF, or resend the email to the buyer."
+description: "Every paid invoice gets a receipt, emailed to the buyer automatically. Download the PDF, or send the email again."
+icon: "receipt"
 ---
 
-The moment a payment is confirmed, AgentaOS emails the buyer a receipt. You don't trigger it and don't need to build it: it's automatic, tied to the invoice, and always available to re-send if the buyer loses it.
+When a payment clears, AgentaOS emails the buyer a receipt at the email they gave at checkout. You do not send it or build it. The receipt belongs to the paid invoice, and you can send it again if the buyer loses it. AgentaOS also emails you when you make a sale.
 
-<Info>
-A receipt exists for every paid invoice. If an invoice was issued before receipts existed on your account, `getReceipt` falls back to the invoice PDF, so the method always returns something useful.
-</Info>
+A receipt exists only for a paid invoice. An open or voided invoice has no receipt.
+
+## In the dashboard
+
+In the sidebar, click **Invoices**, then open a paid invoice from the **Paid** tab.
+
+- **Download receipt** saves the receipt PDF.
+- **Resend invoice** emails the receipt to the buyer again. The button is grayed out when the invoice has no buyer email.
+
+<Frame caption="A paid invoice: Download invoice, Download receipt and Resend invoice.">
+  <img src="/images/product/invoice-detail.png" alt="A paid invoice INV-2026-0001 for €12.40 with the buttons Download invoice, Download receipt and Resend invoice, the invoice preview from AgentaOS (Aristokrates OÜ) as merchant of record for ClientCo, and the details with the receipt number RCP-2026-0001" />
+</Frame>
+
+## Send a receipt again
+
+Resending goes to the buyer's email on the invoice, the same address as the first receipt. Only an owner or an admin can resend a receipt.
+
+<Tabs>
+  <Tab title="SDK">
+    ```typescript
+    const result = await agentaos.invoices.sendReceipt('invoice-uuid');
+    console.log(result.sentTo); // the address it went to
+    ```
+  </Tab>
+  <Tab title="CLI">
+    ```bash
+    agenta invoices send-receipt invoice-uuid
+    ```
+  </Tab>
+  <Tab title="cURL">
+    ```bash
+    curl -X POST https://api.agentaos.ai/api/v1/gateway/invoices/invoice-uuid/send-receipt \
+      -H "x-api-key: sk_live_..."
+    ```
+  </Tab>
+</Tabs>
+
+The call returns `{ ok: true, sentTo }`. It fails when the invoice is not paid, or when the invoice has no buyer email.
 
 ## Download the receipt PDF
 
 <Tabs>
   <Tab title="SDK">
     ```typescript
-    import { writeFileSync } from 'fs';
+    import { writeFileSync } from 'node:fs';
 
     const pdf = await agentaos.invoices.getReceipt('invoice-uuid');
     writeFileSync('receipt.pdf', pdf);
@@ -34,45 +70,15 @@ A receipt exists for every paid invoice. If an invoice was issued before receipt
   </Tab>
 </Tabs>
 
-## Resend the receipt email
-
-Re-sends to whichever email address is on file for the buyer, the same address the original receipt went to. Only works for paid invoices: there's nothing to send a receipt for on an unpaid or voided one.
-
-<Tabs>
-  <Tab title="SDK">
-    ```typescript
-    const result = await agentaos.invoices.sendReceipt('invoice-uuid');
-    console.log(result.sentTo); // the email it was sent to
-    ```
-  </Tab>
-  <Tab title="CLI">
-    ```bash
-    agenta invoices send-receipt invoice-uuid
-    ```
-  </Tab>
-  <Tab title="cURL">
-    ```bash
-    curl -X POST https://api.agentaos.ai/api/v1/gateway/invoices/invoice-uuid/send-receipt \
-      -H "x-api-key: sk_live_..."
-    ```
-  </Tab>
-</Tabs>
-
-## Response
-
-<ResponseField name="ok" type="boolean">Always `true` on success.</ResponseField>
-<ResponseField name="sentTo" type="string">The email address the receipt was (re-)sent to.</ResponseField>
+An invoice from before receipts existed on AgentaOS has no receipt document. For that invoice, the call returns the invoice PDF, which is also a proof of payment.
 
 ## Next steps
 
-<CardGroup cols={2}>
+<Columns cols={2}>
   <Card title="Invoices" icon="file-invoice" href="/payments/invoices">
-    Every receipt is tied to an underlying invoice.
+    The invoice behind every receipt.
   </Card>
   <Card title="Customers" icon="users" href="/payments/customers">
-    Where the buyer's email on file comes from.
+    Where the buyer's email comes from.
   </Card>
-  <Card title="Webhooks" icon="bell" href="/payments/webhooks">
-    React to `checkout.session.completed` the moment a receipt goes out.
-  </Card>
-</CardGroup>
+</Columns>

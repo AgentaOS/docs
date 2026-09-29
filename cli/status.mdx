@@ -1,9 +1,10 @@
 ---
 title: "Status"
-description: "Check who you're logged in as, whether payment tools are ready, and what to do next."
+description: "Check who you're logged in as, how far along going live you are, and the next command to run."
+icon: "signal"
 ---
 
-`agenta status` is the command to run right after `agenta login`, and the one to reach for whenever something isn't working: it tells you exactly what's configured, what's missing, and the next command to run.
+`agenta status` is the command to run right after `agenta login`, and the one to reach for whenever something isn't working. It says who you are signed in as, where going live stands, and the next command to run.
 
 ```bash
 agenta status
@@ -11,40 +12,56 @@ agenta status
 
 Alias: `agenta whoami`.
 
-## What it checks
+## Status checks
 
-- **Account**: are you logged in, and as who (read from your session).
-- **Organization and wallet**: your org name and whether a payout wallet is activated.
-- **Payment tools**: whether `agenta pay checkout` will actually work right now.
+- **Account**: who you are signed in as, and for which business.
+- **Going live**: how many go-live steps are done, your business verification, the free Revenue & Pricing Audit, and your payout account.
+- **Next step**: the one command that moves you forward, when there is one.
+
+Test payments work as soon as you are signed in. Live payments wait on a verified business and a payout account.
 
 ## Usage
 
 ```bash
-agenta status [--json]
+agenta status [--business <id>] [--json]
 ```
 
 | Flag | Description |
 |---|---|
+| `--business <id>` | Show the status of a [business you manage](/cli/businesses). |
 | `--json` | Output a single JSON object instead of the human-readable summary. |
 
 ## Example output
 
 ```bash Output
-  AgentaOS CLI
-  ───────────────────────────────────
-  Account:      demo@founder.dev
-  Organization: Acme Freelance
-  Wallet:       0x71C7...976F
-  JWT expires:  2026-08-06 14:32 UTC (6h 40m remaining)
-  Server:       https://api.agentaos.ai
-  Config:       /Users/you/.agenta
+  Signed in as demo@example.com for Acme Freelance on https://api.agentaos.ai.
 
-  Payment tools:  ✓ Ready
-
-  Next: agenta pay checkout -a 50 to create a checkout
+  Test payments work now. Live money waits on verification and a payout account.
+  Go-live steps done: 1 of 3.
+  Business verification: Not submitted.
+  Free Revenue & Pricing Audit: Not requested.
+  Payout account: not yet added.
+  Next: start with the free audit (agenta audit request).
 ```
 
-If your wallet isn't activated yet, `Payment tools` shows what's blocking you instead of a green check, and `Next` points at `agenta login` to finish activation.
+The three go-live steps are a first product or payment, a verified business and a payout account. The dashboard's setup guide counts four items: the same three, and **Go live** as the fourth. The first line changes as you go:
+
+| Where you are | First line |
+|---|---|
+| Not verified yet | Test payments work now. Live money waits on verification and a payout account. |
+| Verified, no payout account | Test payments work now. Live money waits on a payout account. |
+| Ready | You can take live payments. |
+
+The `Next` line names the step that blocks you first:
+
+| Where you are | `Next` points to |
+|---|---|
+| AgentaOS asked for changes on your verification | `agenta verify resubmit` |
+| Not verified, no audit requested | `agenta audit request` |
+| Not verified, audit requested | `agenta verify submit` |
+| Verified, no payout account | Adding a payout account in the dashboard |
+
+In every other case there is no `Next` line, for example while your verification is in review.
 
 ### `--json`
 
@@ -52,24 +69,41 @@ If your wallet isn't activated yet, `Payment tools` shows what's blocking you in
 {
   "account": {
     "authenticated": true,
-    "email": "demo@founder.dev",
+    "email": "demo@example.com",
     "server": "https://api.agentaos.ai",
     "configDir": "/Users/you/.agenta",
-    "jwtExpiresAt": "2026-08-06T14:32:00.000Z",
-    "jwtSecondsRemaining": 24000,
+    "orgId": "0b7c6a2e-4f1d-4e8a-9c3b-2d5e7f9a1b04",
     "organization": "Acme Freelance",
-    "walletAddress": "0x71C7656EC7ab88b098defB751B7401B5f6d8976",
-    "walletActivated": true,
-    "paymentTools": {
-      "ready": true,
-      "hint": "Run agenta pay checkout -a 50 to create a checkout."
-    }
+    "jwtExpiresAt": "2026-09-28T14:32:00.000Z",
+    "jwtSecondsRemaining": 24000,
+    "paymentTools": { "ready": true, "mode": "test", "next": "agenta pay checkout -a 50" }
+  },
+  "goLive": {
+    "canGoLive": false,
+    "progress": { "done": 1, "total": 3 },
+    "verification": {
+      "state": "unverified",
+      "label": "Not submitted",
+      "heldReason": null,
+      "rejectReason": null,
+      "cooldownUntil": null,
+      "changesRequested": []
+    },
+    "audit": { "label": "Not requested", "requested": false, "reportUrl": null, "grade": null },
+    "payouts": { "connected": false },
+    "milestones": {
+      "firstProductAt": "2026-09-27T09:10:00.000Z",
+      "firstTestPaymentAt": "2026-09-27T09:25:00.000Z",
+      "firstLivePaymentAt": null,
+      "livePaymentCount": 0
+    },
+    "next": { "command": "agenta audit request", "why": "start with the free audit" }
   }
 }
 ```
 
 <Tip>
-`--json` also kicks in automatically whenever stdout isn't a terminal, so piping to `jq` or writing to a file gives you JSON without the flag: `agenta status | jq .account.walletActivated`.
+`--json` also kicks in automatically whenever stdout isn't a terminal, so piping to `jq` or writing to a file gives you JSON without the flag: `agenta status | jq .goLive.next`.
 </Tip>
 
 ## Response fields
@@ -78,14 +112,22 @@ If your wallet isn't activated yet, `Payment tools` shows what's blocking you in
 |---|---|
 | `account.authenticated` | Whether you have a valid session. |
 | `account.email` | Account email, decoded from your session token. |
-| `account.organization` | Your organization's name. |
-| `account.walletAddress` | Payout wallet address, `null` if not activated. |
-| `account.walletActivated` | Whether the wallet is ready to receive funds. |
-| `account.paymentTools.ready` | Whether `agenta pay checkout` will succeed right now. |
-| `account.paymentTools.hint` | What to do if it isn't ready. |
+| `account.organization` | Your business's name. |
+| `account.orgId` | Your business's ID. |
+| `account.paymentTools.ready` | Always `true` once you are signed in: test payments work. |
+| `account.paymentTools.next` | A command to try a test payment. |
 | `account.jwtExpiresAt` | ISO 8601 timestamp your session token expires at. |
 | `account.jwtSecondsRemaining` | Seconds left before that expiry. |
 | `account.configDir` | Where the CLI stores its local session config. |
+| `goLive.canGoLive` | Whether you can take live payments. |
+| `goLive.progress` | Go-live steps done, out of the total. |
+| `goLive.verification.state` | `unverified`, `in_review`, `on_hold`, `verified` or `rejected`. |
+| `goLive.verification.label` | The same state in words, including `Changes requested`. |
+| `goLive.verification.changesRequested` | What AgentaOS asked you to change. Empty when it asked for nothing. |
+| `goLive.audit` | Where the free audit stands, with the report link once it exists. |
+| `goLive.payouts.connected` | Whether you have added a payout account. |
+| `goLive.milestones` | When you made your first product, test payment and live payment, and your live payment count. |
+| `goLive.next` | The next `command` and `why`, or `null` when there is nothing to do. `command` is `null` when the step happens in the dashboard. |
 
 ## Not logged in
 
@@ -94,20 +136,20 @@ If your wallet isn't activated yet, `Payment tools` shows what's blocking you in
   "account": {
     "authenticated": false,
     "reason": "not-logged-in",
-    "hint": "Run agenta login to get started."
+    "next": "agenta login"
   }
 }
 ```
 
-`reason` is either `not-logged-in` or `session-expired`, so scripts can tell the two apart.
+The command prints this JSON with or without `--json`, and exits with code 0. `reason` is either `not-logged-in` or `session-expired`, so scripts can tell the two apart.
 
 ## Next steps
 
-<CardGroup cols={2}>
+<Columns cols={2}>
   <Card title="Login" icon="key" href="/cli/login">
     Authenticate or re-authenticate the CLI.
   </Card>
-  <Card title="Pay" icon="credit-card" href="/cli/pay">
-    Create and track checkouts.
+  <Card title="Verify" icon="badge-check" href="/cli/verify">
+    Submit your business verification.
   </Card>
-</CardGroup>
+</Columns>

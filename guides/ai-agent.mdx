@@ -1,26 +1,71 @@
 ---
-title: "Let an AI Agent Run Your Store"
-description: "Point a coding agent at the SKILL.md prompt, or connect the MCP server, so an AI agent can create checkouts, check status, and manage subscriptions for you."
+title: "Let an AI agent run your store"
+description: "Connect the AgentaOS MCP server, or give a coding agent the CLI, so an AI agent can create checkouts, check payments and manage subscriptions for you."
+icon: "wand-magic-sparkles"
 ---
 
-By the end of this guide an AI agent, running in your terminal or inside Claude Desktop / Cursor, can create checkouts, check payment status, and manage subscriptions for your store, in plain language instead of code you write yourself.
+By the end of this guide an AI agent can create checkouts, check payments and manage subscriptions for your store. You ask in plain words; the agent does the work.
 
-There are two ways in, and you can set up both, they don't conflict:
+There are two ways in. You can set up both; they do not conflict.
 
-<CardGroup cols={2}>
-  <Card title="Coding agents" icon="terminal">
-    Claude Code, Cursor's agent mode, or anything else that can run shell commands. Give it the SKILL.md prompt and the `agenta` CLI directly.
+<Columns cols={2}>
+  <Card title="Connect the MCP server" icon="plug">
+    Claude.ai, ChatGPT, Claude Code or Cursor. You approve the connection once in the browser and paste no key.
   </Card>
-  <Card title="Chat agents" icon="comments">
-    Claude Desktop, Cursor's chat, Windsurf, or any MCP-compatible client. Connect the AgentaOS MCP server instead.
+  <Card title="Give a coding agent the CLI" icon="terminal">
+    Any agent that runs shell commands, including one in CI. It uses the `agenta` CLI and the SKILL.md prompt.
   </Card>
-</CardGroup>
+</Columns>
 
 ## Before you start
 
-An AgentaOS account. Neither path needs an API key up front, `agenta login` and the MCP server's gateway key both come from the same dashboard you'd use anyway.
+You do not need an account up front. When you approve the connection or run `agenta login`, you sign in, and a new email creates your account.
 
-## Path A: a coding agent with the CLI
+## Path A: connect the MCP server
+
+<Steps>
+  <Step title="Open the setup dialog">
+    In the dashboard, go to **Settings → Developers** and click **Connect an AI agent**. The **Set up your AI agent** dialog asks "Where does your agent run?" Pick your client: **Claude Code**, **Cursor**, **ChatGPT**, **Claude.ai**, or **Other**. The dialog shows the steps for that client.
+
+    <Frame caption="The Set up your AI agent dialog with Claude Code picked: install the plugin, then approve it in AgentaOS.">
+      <img src="/images/agents/set-up-your-ai-agent.png" alt="The Set up your AI agent dialog in Settings. The Claude Code tab is selected next to Cursor, ChatGPT, Claude.ai and Other. Step 1, Install the plugin, shows two claude plugins commands with copy buttons. Step 2, Approve it here, says to type /mcp, choose agentaos, then Authenticate, and pick Test or Live on the AgentaOS page." />
+    </Frame>
+
+    <Frame caption="The same dialog with Claude.ai picked: add the connector, then approve it in AgentaOS.">
+      <img src="/images/agents/set-up-your-ai-agent-claude.png" alt="The Set up your AI agent dialog with the Claude.ai tab selected. Step 1, Add the connector, says: In Claude, Customize, Connectors, Add custom connector, and paste this URL, followed by https://mcp.agentaos.ai/mcp with a copy button. Step 2, Approve it here, says a page opens on AgentaOS where you pick Test or Live and press Approve." />
+    </Frame>
+  </Step>
+
+  <Step title="Connect your agent">
+    Follow [MCP server](/mcp/setup) for your client. For Claude.ai or ChatGPT, follow [Connect Claude.ai or ChatGPT](/mcp/remote-connector). Pick **Test mode** on the approval page while you try things out.
+  </Step>
+
+  <Step title="Try a prompt">
+    Ask your agent:
+
+    > Create a checkout for 50 EUR for my consulting invoice.
+
+    The agent calls `agenta_pay_checkout` and answers with the link to share, in a sentence like this one:
+
+    ```text
+    Checkout for €50.00 created. Share https://… with your customer.
+    ```
+  </Step>
+
+  <Step title="Manage what you sold">
+    Ask it directly:
+
+    > List my last 5 checkouts.
+
+    > Cancel the subscription for ana@example.com at the end of the current period.
+
+    The agent calls the matching tools, such as `agenta_pay_list`, `agenta_subscriptions_list` and `agenta_subscriptions_cancel`, and reports back in the chat.
+  </Step>
+</Steps>
+
+[MCP server](/mcp/setup#tools) lists every tool your agent can use.
+
+## Path B: a coding agent with the CLI
 
 <Steps>
   <Step title="Install the CLI and log in">
@@ -28,7 +73,7 @@ An AgentaOS account. Neither path needs an API key up front, `agenta login` and 
     curl -fsSL https://agentaos.ai/install | bash
     agenta login
     ```
-    `agenta login` is the one step that needs you: it opens a browser for sign-in. Every other command an agent runs afterward is non-interactive.
+    `agenta login` is the one step that needs you: it opens a browser for sign-in. Every command an agent runs after that is non-interactive.
   </Step>
 
   <Step title="Give your agent the skill">
@@ -38,7 +83,7 @@ An AgentaOS account. Neither path needs an API key up front, `agenta login` and 
     curl -fsSL https://agentaos.ai/SKILL.md
     ```
 
-    It teaches the agent the exact `agenta pay` commands, their flags, and how to handle the response, including always running `agenta status --json` first and always passing `--json` so output is machine-parseable instead of full of ANSI color codes.
+    It teaches the agent the `agenta` commands and their flags. It also tells the agent to run `agenta status --json` first and to pass `--json` to every command, so the output is JSON the agent can read.
   </Step>
 
   <Step title="Try a prompt">
@@ -50,78 +95,28 @@ An AgentaOS account. Neither path needs an API key up front, `agenta login` and 
   </Step>
 </Steps>
 
-## Path B: a chat agent with MCP
-
-<Steps>
-  <Step title="Get your keys">
-    A gateway key for the payment tools, from [app.agentaos.ai](https://app.agentaos.ai) → **Settings → Developers → API Keys**.
-  </Step>
-
-  <Step title="Add the server to your client's config">
-    For Claude Desktop, add this to your MCP server configuration:
-
-    ```json
-    {
-      "mcpServers": {
-        "agenta": {
-          "command": "npx",
-          "args": ["-y", "agentaos"],
-          "env": {
-            "AGENTAOS_GATEWAY_KEY": "sk_test_your-gateway-key"
-          }
-        }
-      }
-    }
-    ```
-
-    See [MCP setup](/mcp/setup) for Cursor and Windsurf equivalents.
-  </Step>
-
-  <Step title="Restart your client and ask it directly">
-    > List my last 5 checkouts.
-
-    > Cancel subscription sub_4f81c0 at the end of the current period.
-
-    The agent calls the matching tool, `agenta_pay_list_checkouts` or `agenta_pay_cancel_subscription`, and reports back in the chat.
-  </Step>
-</Steps>
-
-## What the agent can do
-
-The MCP server exposes these payment tools, all documented at [MCP setup](/mcp/setup):
-
-| Tool | What it does |
-|---|---|
-| `agenta_pay_create_checkout` | Create a checkout session and get a shareable `checkoutUrl`. |
-| `agenta_pay_get_checkout` | Get a checkout's status, amount, currency, and expiry. Use it to check whether a payment completed. |
-| `agenta_pay_list_checkouts` | List checkout sessions, filterable by status (`open`, `completed`, `expired`, `cancelled`). |
-| `agenta_pay_list_subscriptions` | List subscriptions: status, amount, billing interval, and subscriber. |
-| `agenta_pay_cancel_subscription` | Cancel a subscription. Defaults to cancel-at-period-end; pass `atPeriodEnd: false` to cancel immediately. |
-| `agenta_pay_list_customers` | List the customers who have paid you: email, name, country, and ID. |
-| `agenta_pay_send_receipt` | Re-send the receipt email for a paid invoice to the buyer on file. |
-
 <Tip>
-Both paths use the same underlying API and respect the same test/live key scoping. An agent working against a test key can only see and create test-mode data, exactly like a human integration would.
+An agent connected in test mode, or running on a test key, sees and creates test data only. It cannot move real money.
 </Tip>
 
 ## Verify it worked
 
-Ask the agent directly:
+Ask the agent:
 
 > What's my AgentaOS status?
 
-On the CLI path, it should run `agenta status --json` and report `paymentTools.ready: true`, along with your organization. On the MCP path, ask it to list your most recent checkout and confirm the amount and status match what you see in the dashboard.
+On the MCP path, the agent calls `agenta_status_get`. Before you go live, the answer starts with "Test payments work now." On the CLI path, the agent runs `agenta status --json` and reports `paymentTools.ready: true`, along with your business.
 
 ## Next steps
 
-<CardGroup cols={2}>
-  <Card title="MCP server setup" icon="server" href="/mcp/setup">
-    Every tool the MCP server exposes, and Cursor/Windsurf configuration.
+<Columns cols={2}>
+  <Card title="MCP server" icon="server" href="/mcp/setup">
+    Setup for each client, and every tool your agent can use.
   </Card>
   <Card title="CLI install" icon="terminal" href="/cli/install">
-    The full `agenta` CLI reference, for scripting outside an AI agent too.
+    The full `agenta` CLI reference, for scripts outside an AI agent too.
   </Card>
-  <Card title="Handle webhooks" icon="bell" href="/guides/handle-webhooks">
-    Checkouts an agent creates still need your server to fulfil them on completion.
+  <Card title="Handle webhooks" icon="bell" href="/sdk/handle-webhooks">
+    Checkouts an agent creates still need your server to fulfill them on completion.
   </Card>
-</CardGroup>
+</Columns>

@@ -1,20 +1,15 @@
 ---
-title: "Agent wallet (experimental)"
-description: "The advanced agent-wallet tools for on-chain operations. Optional, and outside the core payments product."
+title: "Agent wallet"
+description: "An on-chain wallet that an AI agent operates. Private preview, available on request."
+icon: "wallet"
 ---
 
-<Note>
-  **Advanced, and non-core.** The agent-wallet tools are optional and sit outside the core payments product. For most integrations the [payment tools](/mcp/setup), the [Payment SDK](/sdk/pay-overview), or the [CLI](/cli/install) are the better fit. This page covers on-chain and self-custody setups.
-</Note>
+import PrivatePreview from "/snippets/private-preview.mdx";
 
-Earlier versions of the MCP server and CLI also exposed an on-chain **agent wallet**, created from a sub-account and driven with an **API key and secret** alongside the gateway key:
+<PrivatePreview />
 
-```json
-"env": {
-  "AGENTA_API_KEY": "your-api-key",
-  "AGENTA_API_SECRET": "your-api-secret",
-  "AGENTAOS_GATEWAY_KEY": "sk_test_your-gateway-key"
-}
-```
+The agent wallet is an on-chain wallet that an AI agent operates, holding USDC or EURC. It is in private preview and available on request only: the CLI, the MCP server, and the Payment SDK do not include agent wallet tools. To ask for access, write to [contact@agentaos.ai](mailto:contact@agentaos.ai) and tell us what you need the wallet for.
 
-Those keys unlocked tools for on-chain operations, contract calls, and message signing. They are not part of the core payments setup. To get paid, use the payments API and the [payment tools](/mcp/setup).
+The agent wallet is separate from stablecoin payouts. To receive your balance in USDC or EURC at a wallet address you control, see [Stablecoin payouts](/payouts/stablecoin-payouts).
+
+To get paid, use the [payment tools](/mcp/setup), the [Payment SDK](/sdk/pay-overview), or the [CLI](/cli/install).

@@ -1,59 +1,90 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
+  "theme": "aspen",
   "name": "AgentaOS",
   "colors": {
     "primary": "#4F46E5",
     "light": "#A5B4FC",
-    "dark": "#3F37C9"
+    "dark": "#4338CA"
   },
   "favicon": "/images/agentaos-icon.png",
   "navigation": {
     "tabs": [
       {
         "tab": "Documentation",
+        "icon": "book-open",
         "groups": [
           {
             "group": "Getting Started",
+            "icon": "rocket",
             "pages": [
               "introduction",
               "getting-started/quickstart",
               "getting-started/test-mode",
               "getting-started/dashboard",
-              "getting-started/glossary"
+              "getting-started/glossary",
+              "getting-started/release-phases"
             ]
           },
           {
             "group": "Build with AI agents",
+            "icon": "robot",
             "pages": [
               "agents/overview",
-              "mcp/setup"
+              "mcp/setup",
+              "mcp/remote-connector",
+              "experimental/agent-wallet"
             ]
           },
           {
             "group": "Sell",
+            "icon": "cart-shopping",
             "pages": [
               "payments/payment-links",
               "payments/checkouts",
               "payments/subscriptions",
+              "payments/discount-codes",
               "payments/invoices",
               "payments/receipts",
-              "payments/customers"
+              "payments/customers",
+              "payments/embedded-checkout"
+            ]
+          },
+          {
+            "group": "Platforms",
+            "icon": "building",
+            "pages": [
+              "connect/overview",
+              "connect/fees",
+              "connect/webhooks"
             ]
           },
           {
             "group": "Merchant of Record",
+            "icon": "scale-balanced",
             "pages": [
               "mor/how-it-works",
+              "mor/verification",
               "mor/supported-countries",
               "mor/tax",
               "mor/pricing",
               "mor/account-review",
-              "payouts/overview"
+              "mor/refunds-and-disputes"
+            ]
+          },
+          {
+            "group": "Payouts",
+            "icon": "building-columns",
+            "pages": [
+              "payouts/overview",
+              "payouts/payout-accounts",
+              "payouts/stablecoin-payouts",
+              "payouts/statements"
             ]
           },
           {
             "group": "Webhooks",
+            "icon": "bell",
             "pages": [
               "payments/webhooks",
               "webhooks/events"
@@ -61,21 +92,16 @@
           },
           {
             "group": "For customers",
+            "icon": "user",
             "pages": [
               "for-customers/why-charged"
-            ]
-          },
-          {
-            "group": "Experimental",
-            "pages": [
-              "experimental/stablecoin-payouts",
-              "experimental/agent-wallet"
             ]
           }
         ]
       },
       {
         "tab": "Guides",
+        "icon": "map",
         "groups": [
           {
             "group": "Guides",
@@ -84,7 +110,7 @@
               "guides/accept-your-first-payment",
               "guides/sell-a-subscription",
               "guides/go-live",
-              "guides/handle-webhooks",
+              "guides/build-a-platform",
               "guides/ai-agent"
             ]
           }
@@ -92,9 +118,11 @@
       },
       {
         "tab": "Reference",
+        "icon": "code",
         "groups": [
           {
             "group": "SDK",
+            "icon": "cube",
             "pages": [
               "sdk/pay-overview",
               "sdk/pay-checkouts",
@@ -102,30 +130,44 @@
               "sdk/pay-subscriptions",
               "sdk/pay-invoices",
               "sdk/pay-customers",
+              "sdk/pay-businesses",
               "sdk/pay-webhooks",
-              "sdk/pay-errors"
+              "sdk/pay-errors",
+              {
+                "group": "Recipes",
+                "pages": [
+                  "sdk/paywall-for-logged-in-users",
+                  "sdk/handle-webhooks"
+                ]
+              }
             ]
           },
           {
             "group": "CLI",
+            "icon": "terminal",
             "pages": [
               "cli/install",
               "cli/login",
+              "cli/verify",
               "cli/products",
               "cli/pay",
               "cli/subscriptions",
+              "cli/discounts",
               "cli/customers",
               "cli/invoices",
+              "cli/businesses",
               "cli/status"
             ]
           },
           {
             "group": "API Reference",
+            "icon": "server",
             "pages": [
               "api-reference/introduction",
               "api-reference/error-codes",
               {
                 "group": "Payment Links",
+                "expanded": false,
                 "pages": [
                   "api-reference/payment-links/create",
                   "api-reference/payment-links/list",
@@ -136,6 +178,7 @@
               },
               {
                 "group": "Checkouts",
+                "expanded": false,
                 "pages": [
                   "api-reference/checkouts/create",
                   "api-reference/checkouts/list",
@@ -145,21 +188,38 @@
               },
               {
                 "group": "Subscriptions",
+                "expanded": false,
                 "pages": [
                   "api-reference/subscriptions/list",
                   "api-reference/subscriptions/plan-change-preview",
                   "api-reference/subscriptions/plan-change",
-                  "api-reference/subscriptions/cancel"
+                  "api-reference/subscriptions/cancel",
+                  "api-reference/subscriptions/invoices",
+                  "api-reference/subscriptions/credits-list",
+                  "api-reference/subscriptions/credits-create",
+                  "api-reference/subscriptions/resume"
+                ]
+              },
+              {
+                "group": "Discount Codes",
+                "expanded": false,
+                "pages": [
+                  "api-reference/discount-codes/create",
+                  "api-reference/discount-codes/list",
+                  "api-reference/discount-codes/retrieve",
+                  "api-reference/discount-codes/archive"
                 ]
               },
               {
                 "group": "Customers",
+                "expanded": false,
                 "pages": [
                   "api-reference/customers/list"
                 ]
               },
               {
                 "group": "Invoices",
+                "expanded": false,
                 "pages": [
                   "api-reference/invoices/list",
                   "api-reference/invoices/retrieve",
@@ -173,8 +233,21 @@
               },
               {
                 "group": "Transactions",
+                "expanded": false,
                 "pages": [
                   "api-reference/transactions/list"
+                ]
+              },
+              {
+                "group": "Businesses",
+                "expanded": false,
+                "pages": [
+                  "api-reference/businesses/list",
+                  "api-reference/businesses/create",
+                  "api-reference/businesses/retrieve",
+                  "api-reference/businesses/resend-invitation",
+                  "api-reference/businesses/revoke-invitation",
+                  "api-reference/businesses/verification-link"
                 ]
               },
               "api-reference/webhooks"
@@ -184,6 +257,7 @@
       },
       {
         "tab": "Changelog",
+        "icon": "clock-rotate-left",
         "groups": [
           {
             "group": "Changelog",
@@ -218,16 +292,22 @@
     "openapi": "openapi.json"
   },
   "appearance": {
-    "default": "light"
+    "default": "system"
   },
   "contextual": {
-    "options": ["copy", "view", "chatgpt", "claude"]
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude"
+    ]
   },
   "banner": {
     "content": "AgentaOS is the Merchant of Record for AI founders. [Sell software globally →](https://agentaos.ai)",
     "dismissible": true
   },
   "background": {
+    "decoration": "grid",
     "color": {
       "light": "#FFFFFF",
       "dark": "#0B1533"
@@ -242,7 +322,7 @@
     ],
     "primary": {
       "type": "button",
-      "label": "Log in",
+      "label": "Dashboard",
       "href": "https://app.agentaos.ai"
     }
   },
@@ -254,7 +334,64 @@
       "github": "https://github.com/AgentaOS/agentaos",
       "x": "https://x.com/agentaos",
       "linkedin": "https://linkedin.com/company/agentaos"
-    }
+    },
+    "links": [
+      {
+        "header": "Product",
+        "items": [
+          {
+            "label": "Pricing",
+            "href": "/mor/pricing"
+          },
+          {
+            "label": "Supported countries",
+            "href": "/mor/supported-countries"
+          },
+          {
+            "label": "Product release phases",
+            "href": "/getting-started/release-phases"
+          }
+        ]
+      },
+      {
+        "header": "Developers",
+        "items": [
+          {
+            "label": "API reference",
+            "href": "/api-reference/introduction"
+          },
+          {
+            "label": "SDK",
+            "href": "/sdk/pay-overview"
+          },
+          {
+            "label": "CLI",
+            "href": "/cli/install"
+          },
+          {
+            "label": "Changelog",
+            "href": "/changelog/overview"
+          }
+        ]
+      },
+      {
+        "header": "Company",
+        "items": [
+          {
+            "label": "Website",
+            "href": "https://agentaos.ai"
+          },
+          {
+            "label": "Support",
+            "href": "mailto:contact@agentaos.ai"
+          },
+          {
+            "label": "Why was I charged?",
+            "href": "/for-customers/why-charged"
+          }
+        ]
+      }
+    ]
   },
   "fonts": {
     "heading": {
@@ -264,10 +401,32 @@
       "family": "Inter"
     }
   },
+  "icons": {
+    "library": "fontawesome"
+  },
+  "styling": {
+    "eyebrows": "section",
+    "codeblocks": "system"
+  },
+  "thumbnails": {
+    "appearance": "dark"
+  },
   "redirects": [
     {
       "source": "/guides/saas-subscriptions",
       "destination": "/guides/sell-a-subscription"
+    },
+    {
+      "source": "/experimental/stablecoin-payouts",
+      "destination": "/payouts/stablecoin-payouts"
+    },
+    {
+      "source": "/guides/paywall-for-logged-in-users",
+      "destination": "/sdk/paywall-for-logged-in-users"
+    },
+    {
+      "source": "/guides/handle-webhooks",
+      "destination": "/sdk/handle-webhooks"
     }
   ]
 }

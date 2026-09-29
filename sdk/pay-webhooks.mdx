@@ -1,9 +1,10 @@
 ---
 title: "Webhooks"
 description: "Verify signed webhook payloads locally with agentaos.webhooks.verify(). HMAC-SHA256, timing-safe."
+icon: "bell"
 ---
 
-`agentaos.webhooks` makes no network call, `verify()` runs entirely in your process. It checks a payload's HMAC-SHA256 signature against your webhook secret, rejects stale or malformed signatures, and returns the parsed, camelCased event. Configure the destination URL and copy the signing secret from **Settings → Developers → Webhooks** in the dashboard (or set `webhookUrl` per checkout/link, see [Checkouts](/sdk/pay-checkouts)).
+`webhooks.verify()` runs in your process and makes no network call. It checks the payload's HMAC-SHA256 signature against your webhook secret, rejects a stale or malformed signature, and returns the parsed event with camelCase keys. Set the destination URL and copy the signing secret in **Settings → Developers → Webhooks**, or set `webhookUrl` on a [checkout](/sdk/pay-checkouts) or link.
 
 ## `webhooks.verify(payload, signature, secret, toleranceSec?)`
 
@@ -12,6 +13,7 @@ import express from 'express';
 import { AgentaOS, WebhookVerificationError } from '@agentaos/pay';
 
 const agentaos = new AgentaOS(process.env.AGENTAOS_API_KEY!);
+const app = express();
 
 // IMPORTANT: express.raw(), not express.json(). Verification needs the
 // exact bytes that were signed. Parsing JSON first breaks the signature.
@@ -25,7 +27,8 @@ app.post('/webhooks', express.raw({ type: 'application/json' }), (req, res) => {
     );
   } catch (err) {
     if (err instanceof WebhookVerificationError) {
-      return res.status(400).send('Invalid signature');
+      res.status(400).send('Invalid signature');
+      return;
     }
     throw err;
   }
@@ -44,7 +47,11 @@ app.post('/webhooks', express.raw({ type: 'application/json' }), (req, res) => {
 
   res.sendStatus(200);
 });
+
+app.listen(3000);
 ```
+
+The samples on this page run on Express 4 and 5.
 
 <ParamField body="payload" type="string | Buffer" required>
   The raw, unparsed request body. If it's a `Buffer`, it's decoded as UTF-8 before verifying.
@@ -59,10 +66,10 @@ app.post('/webhooks', express.raw({ type: 'application/json' }), (req, res) => {
 </ParamField>
 
 <ParamField body="toleranceSec" type="number" default="300">
-  Max age of the signature's timestamp, in seconds. A signature older than this (or with a timestamp in the future) throws `WebhookVerificationError`.
+  Max age of the signature's timestamp, in seconds. A signature older than this throws `WebhookVerificationError`. A timestamp in the future throws too, by any amount: if your server's clock runs behind AgentaOS's, every event fails, so keep the clock synced (NTP).
 </ParamField>
 
-Returns a typed `WebhookEvent`, throws [`WebhookVerificationError`](/sdk/pay-errors) on any failure.
+Returns a typed `WebhookEvent`. Throws [`WebhookVerificationError`](/sdk/pay-errors) on any failure.
 
 ### Signature format
 
@@ -73,35 +80,63 @@ The header is `t=<unix_timestamp>,v1=<hmac_hex>`. `verify()`:
 3. Recomputes `HMAC-SHA256(secret, "${t}.${payload}")` and compares it to `v1` with `crypto.timingSafeEqual` (constant-time, no early-exit on mismatch).
 4. `JSON.parse`s the payload and deep-transforms it from snake_case to camelCase before returning it as a `WebhookEvent`.
 
-Every failure at any step throws `WebhookVerificationError`, there's no partial or "unverified" event returned.
+Every failure at any step throws `WebhookVerificationError`. `verify()` never returns a partial or unverified event.
 
 ## `WebhookEvent`
 
 A discriminated union on `type`. `switch`/narrow on it to get typed `data`.
 
-<ResponseField name="id" type="string">
-  Unique event ID, `evt_<uuid>`. Present on every event, both on the wire and on the object `verify()` returns.
+<ResponseField name="type" type="'checkout.session.completed' | 'send.completed' | 'send.failed' | 'subscription.created' | 'subscription.renewed' | 'subscription.payment_failed' | 'subscription.updated' | 'subscription.canceled' | 'dispute.created' | 'dispute.closed' | 'account.updated' | 'webhook.test'" />
+<ResponseField name="business" type="string">
+  The id of the business the event happened in: your own, or one of the [businesses you manage](/connect/webhooks). Present on every event.
 </ResponseField>
-<ResponseField name="type" type="'checkout.session.completed' | 'send.completed' | 'send.failed' | 'subscription.created' | 'subscription.renewed' | 'subscription.payment_failed' | 'subscription.updated' | 'subscription.canceled'" />
+
+The wire JSON also carries an `id` for each event, but the `WebhookEvent` type does not declare it yet. Deduplicate on the keys in [Deduplication](/webhooks/events#deduplication).
+
+Amounts follow the [money model](/api-reference/introduction#money-model): `amount` in `data` is a string, and `amountMinor` is an integer in minor units.
 
 <Warning>
-Inside every event's `data`, **`amount` is a string**, e.g. `"49.99"`, not the `number` you get back from `checkouts.create()` or `paymentLinks.create()`. Parse it before doing math. See the [money model](/sdk/pay-overview#the-money-model).
+`verify()` camelCases every key, including the keys inside `metadata`. Use camelCase keys in metadata: a key like `user_id` comes back as `userId`.
 </Warning>
 
 ### `checkout.session.completed`
 
-Fires when a checkout session's payment confirms.
+Fires when a checkout is paid or a free trial starts. The full field list, with the wire names, is in [Events](/webhooks/events).
 
-<ResponseField name="linkId" type="string">The payment link's secure ID.</ResponseField>
+<ResponseField name="linkId" type="string">The payment link's public token from its `checkoutUrl`, not its `id`. `null` for a checkout created without a link, although the type says `string`.</ResponseField>
 <ResponseField name="sessionId" type="string" />
 <ResponseField name="amount" type="string">e.g. `"49.99"`.</ResponseField>
 <ResponseField name="currency" type="string" />
-<ResponseField name="txHash" type="string">On-chain settlement hash.</ResponseField>
-<ResponseField name="payer" type="string">Payer wallet address.</ResponseField>
+<ResponseField name="txHash" type="string">On-chain settlement hash. `null` for a card or bank sale, although the type says `string`.</ResponseField>
+<ResponseField name="payer" type="string">Payer wallet address. `null` for a card or bank sale, although the type says `string`.</ResponseField>
 <ResponseField name="payerType" type="'human' | 'agent'" />
-<ResponseField name="network" type="string">CAIP-2 network ID.</ResponseField>
+<ResponseField name="network" type="string">`card`, `bank_transfer`, or a CAIP-2 network ID for a stablecoin payment.</ResponseField>
 <ResponseField name="livemode" type="boolean">`true` in live mode, `false` in test mode.</ResponseField>
-<ResponseField name="metadata" type="object">Whatever `metadata` you passed at `checkouts.create()`.</ResponseField>
+<ResponseField name="metadata" type="object">The `metadata` you set on the checkout or payment link, with camelCase keys. `metadata.customerId` is your own id if you set one. On a renewal, `metadata` is AgentaOS's own: see [Event order for subscriptions](/webhooks/events#event-order-for-subscriptions).</ResponseField>
+
+#### Fields the type does not declare yet
+
+`verify()` also returns `rail`, `vendorReference`, `customerId`, `buyerEmail`, `buyerName` and `overpaidByCents` on every checkout event, and `trial` and `trialEnd` when a free trial starts. `customerId` is AgentaOS's id for the buyer, not your user id. `CheckoutCompletedData` does not declare these fields yet, so read them through a wider type:
+
+```typescript
+import type { CheckoutCompletedData } from '@agentaos/pay';
+
+type CheckoutCompletedWire = CheckoutCompletedData & {
+  customerId: string | null;
+  buyerEmail: string | null;
+  trial?: true;
+  trialEnd?: string | null;
+};
+
+if (event.type === 'checkout.session.completed') {
+  const data = event.data as CheckoutCompletedWire;
+  if (data.trial) {
+    console.log(`Trial started, first charge at ${data.trialEnd}`);
+  }
+}
+```
+
+`metadata.trial` is also `true` on a trial start, and needs no cast.
 
 ### `send.completed`
 
@@ -135,16 +170,16 @@ Same shape as `send.completed`, but `txHash` is always `null` and no broadcast s
 
 ### `subscription.*`
 
-All five `subscription.*` events carry the same `SubscriptionData`, delivered to your organization webhook endpoint.
+All five `subscription.*` events carry the same `SubscriptionData`, delivered to your account's webhook URL. For when each one fires, and in what order, see [Event order for subscriptions](/webhooks/events#event-order-for-subscriptions).
 
-<ResponseField name="id" type="string">The subscription ID.</ResponseField>
-<ResponseField name="status" type="string">Stripe status, verbatim: `incomplete`, `active`, `trialing`, `past_due`, `unpaid`, or `canceled`.</ResponseField>
+<ResponseField name="id" type="string">The subscription's id, a UUID: the `id` that `subscriptions.list()` returns.</ResponseField>
+<ResponseField name="status" type="string">The status after the change, one of the [subscription statuses](/sdk/pay-subscriptions#statuses). A subscription that never activated sends no event, so `incomplete` and `incomplete_expired` do not appear.</ResponseField>
 <ResponseField name="planName" type="string | null">The plan name, from the backing payment link.</ResponseField>
 <ResponseField name="currency" type="string" />
 <ResponseField name="amountMinor" type="number">Per-cycle price in integer minor units. `1000` means `€10.00`.</ResponseField>
 <ResponseField name="currentPeriodEnd" type="string | null">ISO 8601 timestamp, or `null` before the first cycle is set.</ResponseField>
 <ResponseField name="cancelAtPeriodEnd" type="boolean">`true` once a cancellation is scheduled for period end.</ResponseField>
-<ResponseField name="linkId" type="string">The current plan's payment-link id.</ResponseField>
+<ResponseField name="linkId" type="string">The current plan's payment link `id`, a UUID. Not the token in the checkout URL that `checkout.session.completed` sends as `linkId`.</ResponseField>
 <ResponseField name="pendingPlan" type="object | null">
   Null unless a downgrade is scheduled. Then `{ linkId, planName, amountMinor, effectiveAt }`: the plan the subscription switches to at `effectiveAt`. `subscription.updated` fires when it is scheduled, reverted, and when it takes over.
 </ResponseField>
@@ -152,25 +187,52 @@ All five `subscription.*` events carry the same `SubscriptionData`, delivered to
 <ResponseField name="customerName" type="string | null" />
 <ResponseField name="livemode" type="boolean">`true` in live mode, `false` in test mode.</ResponseField>
 
+### `dispute.created` / `dispute.closed`
+
+A buyer's bank opened a chargeback on a sale, or closed it in your favor. A lost dispute sends no event. Both carry the same `DisputeData`.
+
+<ResponseField name="disputeId" type="string" />
+<ResponseField name="status" type="string">The dispute's status as the card processor reports it, e.g. `needs_response`, or `won` on `dispute.closed`.</ResponseField>
+<ResponseField name="transactionId" type="string">The sale the dispute is about.</ResponseField>
+<ResponseField name="amountMinor" type="number">Integer minor units. `1240` means `€12.40`.</ResponseField>
+<ResponseField name="currency" type="string" />
+<ResponseField name="livemode" type="boolean">`true` in live mode, `false` in test mode.</ResponseField>
+
+### `account.updated`
+
+A business's verification changed: its identity check landed, or we approved, held, resumed or rejected it, or asked it for changes. For a platform, `business` names the client it happened to. See [Platform webhooks](/connect/webhooks).
+
+<ResponseField name="verification" type="'unverified' | 'in_review' | 'verified' | 'on_hold' | 'rejected'">Where the business's review stands, in the words the dashboard uses.</ResponseField>
+<ResponseField name="changesRequested" type="boolean">We have asked the business something and are waiting on it.</ResponseField>
+<ResponseField name="identityVerified" type="boolean">The identity check is done: its own, or its company's for another app of the same company.</ResponseField>
+<ResponseField name="livemode" type="boolean">Always `true`: verification is about live money.</ResponseField>
+
+### `webhook.test`
+
+The sample event the dashboard's **Send test event** button fires at your endpoint.
+
+<ResponseField name="message" type="string" />
+<ResponseField name="livemode" type="boolean">`true` in live mode, `false` in test mode.</ResponseField>
+
 <AccordionGroup>
   <Accordion title="Don't fulfill on the success page redirect">
-    `successUrl` is best-effort, the customer might close their browser before the redirect lands. Fulfill orders from the webhook (server-to-server, reliable), not the redirect.
+    The customer can close the browser before the `successUrl` redirect lands. Fulfill orders from the webhook, which your server receives directly, not from the redirect.
   </Accordion>
   <Accordion title="Webhooks can be delivered more than once">
-    Treat delivery as at-least-once. Use `event.data.sessionId` (or `transactionId`) to check whether you've already processed it before fulfilling again.
+    Record a key per event, such as `event.data.sessionId` or `event.data.transactionId`, and skip an event you have already handled. The key for each event type is in [Deduplication](/webhooks/events#deduplication).
   </Accordion>
   <Accordion title="Poll as a fallback, not a replacement">
-    If your endpoint is ever down, poll [`checkouts.retrieve()`](/sdk/pay-checkouts) for `status === 'completed'` as a backstop. Don't build your primary flow on polling, it's slower and burns rate limit budget.
+    If your endpoint is down, poll [`checkouts.retrieve()`](/sdk/pay-checkouts) for `status === 'completed'` as a backstop. Do not build your main flow on polling: it is slower, and every call counts against your [rate limit](/api-reference/introduction#rate-limits).
   </Accordion>
 </AccordionGroup>
 
 ## Next steps
 
-<CardGroup cols={2}>
+<Columns cols={2}>
   <Card title="Checkouts" icon="credit-card" href="/sdk/pay-checkouts">
     Set `webhookUrl` to receive `checkout.session.completed`.
   </Card>
   <Card title="Errors" icon="triangle-exclamation" href="/sdk/pay-errors">
     `WebhookVerificationError` and the rest of the error hierarchy.
   </Card>
-</CardGroup>
+</Columns>

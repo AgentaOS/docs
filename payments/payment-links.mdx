@@ -1,34 +1,87 @@
 ---
-title: "Payment Links"
-description: "Create a reusable, shareable link to sell a product. One-time or subscription, no code required to share it."
+title: "Products and payment links"
+sidebarTitle: "Products"
+description: "Create a product in the dashboard, share its buyer link, and get paid. One-time or subscription, with VAT handled for you."
+icon: "link"
 ---
 
-A payment link is a reusable product. Create one and share the URL anywhere: email, a landing page, a chat message. Every visitor who opens it gets their own checkout. One link can be paid many times.
+A product is one thing you sell at one price. It is a one-time payment or a subscription billed monthly or yearly. Every product has a buyer link, a public URL in the shape `https://app.agentaos.ai/pay/…`. You share that link, and each buyer who opens it gets their own checkout. One link can be paid any number of times.
 
-<Info>
-**Payment link vs. checkout:** a payment link is a template you create once and share. A [checkout](/payments/checkouts) is a single payment attempt, either created standalone or from a link. Opening a payment link's URL creates a new checkout behind the scenes.
-</Info>
+AgentaOS is the merchant of record on every sale. Buyers pay by card, and on EUR sales also by bank transfer. The checkout asks for the buyer's country, adds the correct VAT, and issues the invoice. You do not register for VAT in the buyer's country. See [How merchant of record works](/mor/how-it-works).
 
-## Without code
+The API calls a product a payment link. Both names mean the same object, and the product's ID is the `linkId` in the API.
 
-Do not want to touch the API? Create a product in the dashboard and share its link.
-
-<Frame caption="The product builder. Name it, price it, and your shareable payment link is generated as you type.">
-  <img src="/images/product/product-builder.png" alt="AgentaOS product builder with a name, price, and the generated shareable payment link" />
+<Frame caption="The Products page. Each row shows the price, the pricing type, and the sales and revenue for that product.">
+  <img src="/images/product/products.png" alt="The Products and Services page with three products: Pro Plus at 49 euros a month, Pro at 29 euros a month, and Plan A at 10 euros one-time" />
 </Frame>
 
+## Create a product in the dashboard
+
 <Steps>
-  <Step title="Create a product">
-    Open the **Products** page and add a name, description, price, and an optional image.
+  <Step title="Open the form">
+    In the sidebar, click **Products**. Then click **New product**.
   </Step>
-  <Step title="Share the link">
-    Click **Share** to copy the product's payment link. Send it by email, social, or a QR code. Every visit starts a fresh checkout.
+  <Step title="Fill in the details">
+    Under **Details**, enter the **Product name** and a **Description**. Add a **Product image** if you want one. The buyer sees all three on the checkout.
+  </Step>
+  <Step title="Set the price">
+    Under **Pricing**, enter the price and pick **EUR** or **USD**. Choose **One-time** or **Subscription**. For a subscription, pick **Monthly** or **Yearly**.
+  </Step>
+  <Step title="Set a redirect (optional)">
+    Under **After payment**, click **+ Redirect buyers after payment**. Enter a **Success URL** and a **Cancel URL**.
+  </Step>
+  <Step title="Create the product">
+    Click **Create product**. The confirmation screen shows the product as live, with **Copy link** to copy its buyer link.
   </Step>
 </Steps>
 
-Prefer code? Create links programmatically below.
+The **Summary** panel on the right of the form recaps the product as you type. Click **Preview** to see the product the way a buyer sees it.
 
-## Create a payment link
+In test mode, the confirmation screen shows **Try a test payment**. Use card `4242 4242 4242 4242`, any future date, and any CVC. Nothing is charged. See [Test mode and live mode](/getting-started/test-mode).
+
+### Subscriptions and trials
+
+When you choose **Subscription**, two more fields appear. **Free trial (days)** delays the first full charge by that number of days, up to 730. **Trial price** sets what the whole trial costs; leave it empty for a free trial. See [Subscriptions](/payments/subscriptions) for what happens after the buyer subscribes.
+
+In live mode, **Subscription** stays locked until your business is verified. See [Go live](/guides/go-live).
+
+### VAT on your prices
+
+The Products page shows how VAT applies to your prices: **VAT added at checkout** or **Prices include VAT**. Click **Change** next to it to set the default for your account under **Settings → Business**. The **Prices include VAT** checkbox on the product form changes it for that one product.
+
+## Share the buyer link
+
+Every product row on the Products page has a copy button that copies the buyer link. Send that link by email or in a chat, or put it behind a Buy button on your site.
+
+The link carries no information about who the buyer is. When your app must know which of your users paid, create a checkout from your server instead. See [Checkouts](/payments/checkouts#create-a-checkout-from-your-server).
+
+To show the checkout inside your own page, open the product and use **Embed on your site**. See [Embedded checkout](/payments/embedded-checkout).
+
+## Custom checkout fields
+
+A product can ask the buyer extra questions before they pay, such as an attendee name or a company. The checkout shows these fields under the line **Asked by** followed by your business name. Each field is required or optional.
+
+You add custom fields through the API with `checkoutFields`. The product form in the dashboard does not have them.
+
+```typescript
+const link = await agentaos.paymentLinks.create({
+  amount: 15,
+  currency: 'EUR',
+  name: 'Event ticket',
+  checkoutFields: [
+    { key: 'attendeeName', label: 'Attendee name', type: 'text', required: true },
+    { key: 'company', label: 'Company', type: 'text', required: false },
+  ],
+});
+```
+
+Each field has a `key`, a `label`, a `type` (`text`, `email`, `tel`, or `select`), and `required`. It can also have a `placeholder`, and `options` for `select`.
+
+## From code
+
+You can create and manage products with the SDK, the CLI, or the REST API. The full parameter and response reference is in [Payment links (SDK)](/sdk/pay-payment-links) and [agenta products](/cli/products).
+
+### Create a product
 
 <Tabs>
   <Tab title="SDK">
@@ -40,14 +93,19 @@ Prefer code? Create links programmatically below.
     const link = await agentaos.paymentLinks.create({
       amount: 49.99,
       currency: 'EUR',
-      description: 'Pro plan',
+      name: 'Pro plan',
       successUrl: 'https://myshop.com/success',
       cancelUrl: 'https://myshop.com/cancel',
-      webhookUrl: 'https://myshop.com/webhooks',
     });
 
     console.log(link.checkoutUrl);
-    // → https://app.agentaos.ai/pay/7rr6S9ml4BMp829wV5WeAA
+    // https://app.agentaos.ai/pay/7rr6S9ml4BMp829wV5WeAA
+    ```
+  </Tab>
+  <Tab title="CLI">
+    ```bash
+    agenta products create --name "Pro plan" --amount 49.99 --currency EUR \
+      --success-url https://myshop.com/success
     ```
   </Tab>
   <Tab title="cURL">
@@ -55,194 +113,79 @@ Prefer code? Create links programmatically below.
     curl -X POST https://api.agentaos.ai/api/v1/gateway/payment-links \
       -H "x-api-key: sk_live_..." \
       -H "Content-Type: application/json" \
-      -d '{
-        "amount": 49.99,
-        "currency": "EUR",
-        "description": "Pro plan",
-        "successUrl": "https://myshop.com/success",
-        "cancelUrl": "https://myshop.com/cancel",
-        "webhookUrl": "https://myshop.com/webhooks"
-      }'
+      -d '{ "amount": 49.99, "currency": "EUR", "name": "Pro plan" }'
     ```
   </Tab>
 </Tabs>
 
-<Note>
-From the terminal, `agenta products create` makes the same reusable link (see [agenta products](/cli/products); needs `agentaos` 2.1 or newer). `agenta pay checkout` creates a one-off [checkout](/payments/checkouts), not a reusable link.
-</Note>
+`amount` is in currency units: `49.99` means €49.99, not cents. See the [money model](/api-reference/introduction#money-model). The CLI creates test-mode products; create live products in the dashboard.
 
-`amount` is in currency units, not cents. `49.99` means €49.99. See the [money model](/payments/checkouts#money-model) if you're wiring this up against real numbers.
+### One-time vs. subscription
 
-## One-time vs. subscription
-
-A payment link is `type: 'one_time'` by default: every payment is independent, and the link can be reused indefinitely. Set `type: 'subscription'` to turn it into a recurring plan. Subscription links require a `billingInterval` and a verified account that accepts card and bank; they can't run in on-chain-only mode.
+A product is `type: 'one_time'` by default. Every payment is independent, and the link can be paid any number of times. Set `type: 'subscription'` to make a recurring plan. A subscription needs a `billingInterval`.
 
 ```typescript
 const plan = await agentaos.paymentLinks.create({
   amount: 29.99,
   currency: 'EUR',
-  description: 'Pro plan, monthly',
+  name: 'Pro plan, monthly',
   type: 'subscription',
-  billingInterval: 'month', // 'month' | 'year', required for subscriptions
+  billingInterval: 'month', // 'month' | 'year'
+  trialPeriodDays: 14, // optional, 1 to 730
 });
 ```
 
 <Warning>
-Creating a subscription link does not create a subscription. A subscription is created only when a buyer pays it at the hosted checkout. See [Subscriptions](/payments/subscriptions) for how the buyer-pays-in flow works and how to manage the result.
+Creating a subscription product does not create a subscription. A subscription starts only when a buyer pays the product at the checkout. See [Subscriptions](/payments/subscriptions).
 </Warning>
 
-## The checkout URL
-
-Every payment link returns a `checkoutUrl` in the shape `https://app.agentaos.ai/pay/{id}`. Share it as-is: a button, an email, a QR code. Each visit starts a fresh checkout scoped to that link's amount, currency, and configuration.
-
-## Custom checkout fields
-
-Collect extra information from the buyer before they pay by passing `checkoutFields`. Each field renders on the hosted checkout page and is required or optional per field.
-
-```typescript
-const link = await agentaos.paymentLinks.create({
-  amount: 15.00,
-  currency: 'EUR',
-  description: 'Event ticket',
-  checkoutFields: [
-    { key: 'attendeeName', label: 'Attendee name', type: 'text', required: true },
-    { key: 'company', label: 'Company', type: 'text', required: false },
-    { key: 'ticketTier', label: 'Ticket tier', type: 'select', required: true, options: ['Standard', 'VIP'] },
-  ],
-});
-```
-
-## Retrieve a payment link
+### Retrieve, list, and cancel
 
 <Tabs>
   <Tab title="SDK">
     ```typescript
     const link = await agentaos.paymentLinks.retrieve('link-uuid');
+
+    const page = await agentaos.paymentLinks.list({ limit: 20, offset: 0 });
+    console.log(page.total, page.hasMore);
+
+    await agentaos.paymentLinks.cancel('link-uuid');
+    ```
+  </Tab>
+  <Tab title="CLI">
+    ```bash
+    agenta products list --limit 20
     ```
   </Tab>
   <Tab title="cURL">
     ```bash
     curl https://api.agentaos.ai/api/v1/gateway/payment-links/link-uuid \
       -H "x-api-key: sk_live_..."
-    ```
-  </Tab>
-</Tabs>
 
-## List payment links
-
-Paginated: every list call returns `{ items, total, hasMore }`.
-
-<Tabs>
-  <Tab title="SDK">
-    ```typescript
-    const page = await agentaos.paymentLinks.list({ limit: 20, offset: 0 });
-    console.log(page.total, page.hasMore);
-    ```
-  </Tab>
-  <Tab title="cURL">
-    ```bash
     curl "https://api.agentaos.ai/api/v1/gateway/payment-links?limit=20&offset=0" \
       -H "x-api-key: sk_live_..."
-    ```
-  </Tab>
-</Tabs>
 
-## Cancel a payment link
-
-Cancelling stops new checkouts from being created against the link. It does not affect checkouts already in progress or subscriptions already running from it.
-
-<Tabs>
-  <Tab title="SDK">
-    ```typescript
-    await agentaos.paymentLinks.cancel('link-uuid');
-    ```
-  </Tab>
-  <Tab title="cURL">
-    ```bash
     curl -X DELETE https://api.agentaos.ai/api/v1/gateway/payment-links/link-uuid \
       -H "x-api-key: sk_live_..."
     ```
   </Tab>
 </Tabs>
 
-## Parameters
-
-<ParamField body="amount" type="number" required>
-  Amount in currency units (e.g. `49.99` = €49.99).
-</ParamField>
-
-<ParamField body="currency" type="string" default="org default">
-  `EUR` or `USD`.
-</ParamField>
-
-<ParamField body="description" type="string">
-  Shown on the checkout page. Max 1000 characters.
-</ParamField>
-
-<ParamField body="type" type="string" default="one_time">
-  `one_time` or `subscription`.
-</ParamField>
-
-<ParamField body="billingInterval" type="string">
-  `month` or `year`. Required when `type` is `subscription`, omit otherwise.
-</ParamField>
-
-<ParamField body="successUrl" type="string">
-  Redirect the buyer here after payment. HTTPS only.
-</ParamField>
-
-<ParamField body="cancelUrl" type="string">
-  "Cancel" link on the checkout page. HTTPS only.
-</ParamField>
-
-<ParamField body="webhookUrl" type="string">
-  Server notification URL for payment events. HTTPS only.
-</ParamField>
-
-<ParamField body="taxRateId" type="string">
-  UUID of a pre-created tax rate.
-</ParamField>
-
-<ParamField body="checkoutFields" type="array">
-  Custom fields to collect from the buyer at checkout. Each item has `key`, `label`, `type` (`text` | `email` | `tel` | `select`), `required`, and optionally `placeholder` or `options` (for `select`).
-</ParamField>
-
-<ParamField body="expiresAt" type="string">
-  ISO 8601. The link stops accepting new checkouts after this time.
-</ParamField>
-
-<ParamField body="metadata" type="object">
-  Custom key-value data, returned unchanged on every checkout created from this link. Max 8KB.
-</ParamField>
-
-## Response
-
-<ResponseField name="id" type="string">Link UUID.</ResponseField>
-<ResponseField name="checkoutUrl" type="string">Shareable payment URL.</ResponseField>
-<ResponseField name="amount" type="number">Amount in currency units.</ResponseField>
-<ResponseField name="currency" type="string">Settlement currency.</ResponseField>
-<ResponseField name="status" type="string">`active` or `cancelled`.</ResponseField>
-<ResponseField name="sellerMode" type="string">`mor` (card + bank) or `crypto` (on-chain). Derived, never set by you.</ResponseField>
-<ResponseField name="type" type="string">`one_time` or `subscription`.</ResponseField>
-<ResponseField name="billingInterval" type="string | null">`month` or `year` for subscription links; `null` for one-time.</ResponseField>
-<ResponseField name="paymentCount" type="number">Times this link has been paid.</ResponseField>
-<ResponseField name="checkoutFields" type="array">Custom fields configured on this link.</ResponseField>
-<ResponseField name="expiresAt" type="string | null">ISO 8601.</ResponseField>
-<ResponseField name="createdAt" type="string">ISO 8601.</ResponseField>
+A list call returns `{ items, total, hasMore }`. Canceling a product stops new checkouts on its link. Checkouts already in progress and subscriptions already running from it continue.
 
 ## Next steps
 
-<CardGroup cols={2}>
+<Columns cols={2}>
   <Card title="Checkouts" icon="credit-card" href="/payments/checkouts">
-    A single payment attempt, standalone or created from a link.
+    What the buyer sees, and how to start a checkout from your server.
   </Card>
   <Card title="Subscriptions" icon="rotate" href="/payments/subscriptions">
-    How a `type: 'subscription'` link turns into a running subscription.
+    How a subscription product becomes a running subscription.
+  </Card>
+  <Card title="Discount codes" icon="ticket" href="/payments/discount-codes">
+    Codes a buyer types at checkout.
   </Card>
   <Card title="Webhooks" icon="bell" href="/payments/webhooks">
-    Get notified the moment someone pays your link.
+    Get notified when a buyer pays.
   </Card>
-  <Card title="How Merchant of Record works" icon="building-columns" href="/mor/how-it-works">
-    Why we can handle card, bank, and tax as your seller of record.
-  </Card>
-</CardGroup>
+</Columns>

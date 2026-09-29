@@ -1,167 +1,198 @@
 ---
 title: "Subscriptions"
-description: "Recurring billing. Created when a buyer pays a subscription payment link, managed from the API, CLI, or dashboard."
+description: "Sell a monthly or yearly plan. The buyer pays on the checkout, AgentaOS bills every cycle as merchant of record, and you manage plan changes and cancellations from the dashboard or from code."
+icon: "rotate"
 ---
 
-A subscription is a running, recurring commitment: card on file, billed automatically every cycle. AgentaOS manages the billing for you (retries on failed cards, prorations, cancellations) via our card processor under the hood.
+A subscription starts from a product with a monthly or yearly price. The buyer pays for it on the hosted checkout or on the checkout embedded in your site, and their card is charged again every cycle. AgentaOS is the merchant of record: it adds VAT where the buyer owes it, takes the payment, and issues the invoice for every cycle.
 
-<Warning>
-**There is no `subscriptions.create()`.** Subscriptions are created by the buyer, not by you. You create a [payment link](/payments/payment-links) with `type: 'subscription'`, the buyer pays it at the hosted checkout, and that payment starts the subscription. This resource is the merchant-side management surface: list what's running, cancel what shouldn't be.
-</Warning>
+You create the plan once. Each buyer who pays for it starts their own subscription, and you see each one under **Subscriptions** in the dashboard. For a step-by-step first sale, see [Sell a subscription](/guides/sell-a-subscription).
 
-## How a subscription gets created
+## Create a plan
 
-<Steps>
-  <Step title="Create a subscription product">
-    ```typescript
-    const product = await agentaos.paymentLinks.create({
-      amount: 19.99,
-      currency: 'EUR',
-      description: 'Pro, monthly',
-      type: 'subscription',
-      billingInterval: 'month',
-    });
-    // product.id is the linkId
-    ```
-  </Step>
-  <Step title="Share checkoutUrl">
-    The buyer opens `product.checkoutUrl` and pays with a card at the hosted checkout, exactly like a one-time payment. Logged-in users: create a checkout with `checkouts.create({ linkId: product.id })` instead. See [Sell a subscription](/guides/sell-a-subscription).
-  </Step>
-  <Step title="First cycle books, subscription goes active">
-    AgentaOS creates a customer and subscription with our card processor behind the scenes, charges cycle 1, and the subscription becomes visible to `subscriptions.list()`.
-  </Step>
-  <Step title="Renews automatically">
-    Every `billingInterval`, the card on file is charged again. No action from you unless the charge fails or the buyer cancels.
-  </Step>
-</Steps>
+In the dashboard, go to **Products** and click **New product**. Under **Pricing**, click **Subscription**, then pick **Monthly** or **Yearly**. The price you type is the plan price before VAT, unless you tick **Prices include VAT**. Below the price, the form shows what buyers pay. For a €29 plan it reads "EU consumers pay €35.96 (€29.00 + €6.96 VAT), you receive €29.00 before fees. Everyone else pays €29.00."
 
-## Money model: `unitAmountMinor`
+<Frame caption="Pricing for a monthly plan at €29 with a 14-day free trial.">
+  <img src="/images/subscriptions/new-plan-pricing.png" alt="The Pricing section of Create a new product: price €29, EUR, Subscription and Monthly selected, Free trial (days) set to 14, and Trial price left empty." />
+</Frame>
 
-Every other amount in this API is decimal currency units (`amount: 49.99` means €49.99). Subscriptions are the one exception: `unitAmountMinor` is an **integer of the smallest currency unit**, mirroring how our card processor represents recurring prices internally.
+Click **Create product**. The plan gets a link that you send to buyers, and a link ID that your code uses. Make one product for each price: a monthly Pro plan and a yearly Pro plan are two products.
 
-```typescript
-subscription.unitAmountMinor; // 1999
-// → €19.99 per cycle (1999 minor units, EUR has 2 decimals)
-```
+## Subscription statuses
 
-<Tip>
-The field name is the signal: anything ending in `Minor` is an integer of cents/pence, not decimal currency. Everywhere else in this API (payment links, checkouts, invoices), a plain `amount` is already in currency units, no conversion needed.
-</Tip>
+A subscription moves through these statuses. The dashboard shows the status on each subscription, and the API returns it as `status`.
 
-## Statuses
-
-`status` is the raw subscription status from the card processor, passed through unchanged:
-
-| Status | Meaning |
+| Status | When |
 |---|---|
-| `incomplete` | First payment hasn't succeeded yet (e.g. card requires authentication). |
-| `incomplete_expired` | First payment failed and the authentication window lapsed. Subscription never activated. |
-| `trialing` | In a free trial period, not yet charged. |
-| `active` | Paid and current. |
-| `past_due` | A renewal charge failed; the card processor is retrying. |
-| `canceled` | Ended, no further charges. |
-| `unpaid` | Retries exhausted without a successful charge. |
-| `paused` | Billing paused; no charges while in this state. |
+| `incomplete` | The buyer started the checkout but did not finish paying or saving a card. |
+| `trialing` | The buyer started a free trial. Their card is saved and nothing is charged. |
+| `active` | The first payment went through. The card is charged again at the start of each cycle. |
+| `past_due` | A renewal charge failed and the charge is retried. |
+| `canceled` | The subscription ended. There are no more charges. |
 
-## List subscriptions
+The dashboard shows the next charge date under **Renews**. Each paid cycle produces an invoice. The [SDK reference](/sdk/pay-subscriptions#statuses) lists every status, including the rare ones.
 
-Paginated: every list call returns `{ items, total, hasMore }`.
+## Free trials
 
-<Tabs>
-  <Tab title="SDK">
-    ```typescript
-    const page = await agentaos.subscriptions.list({ limit: 20, offset: 0 });
-    console.log(page.total, page.hasMore);
-    ```
-  </Tab>
-  <Tab title="CLI">
-    ```bash
-    agenta subscriptions list --limit 20
-    ```
-  </Tab>
-  <Tab title="cURL">
-    ```bash
-    curl "https://api.agentaos.ai/api/v1/gateway/subscriptions?limit=20&offset=0" \
-      -H "x-api-key: sk_live_..."
-    ```
-  </Tab>
-</Tabs>
+A trial belongs to the plan. Type the number of days in **Free trial (days)**, from 1 to 730. At checkout the buyer sees €0.00 due today and the price that follows the trial.
 
-## Cancel a subscription
+<Frame caption="The buyer saves a card and pays nothing today.">
+  <img src="/images/subscriptions/checkout-start-trial.png" alt="The checkout for the Pro plan. Due today is €0.00, the note says €35.96 a month after the 14-day free trial, and the button reads Start 14-day free trial." />
+</Frame>
 
-Defaults to cancel-at-period-end: the buyer keeps what they already paid for until `currentPeriodEnd`, and there's no refund. Pass `atPeriodEnd: false` to cancel immediately instead. Calling cancel on an already-canceled subscription is a no-op, safe to retry.
+The €35.96 is the €29.00 plan price plus 24% VAT, the Estonian rate. The checkout charges it to every EU consumer while AgentaOS sells under the EU distance-selling threshold. See [How tax works](/mor/tax#the-rate-on-eu-sales-today).
 
-<Tabs>
-  <Tab title="SDK">
-    ```typescript
-    // Cancel at period end (default): buyer keeps access until currentPeriodEnd
-    await agentaos.subscriptions.cancel('sub-uuid');
+When the buyer clicks **Start 14-day free trial**, their card is saved and the subscription starts as `trialing`. The first charge happens when the trial ends. The buyer and you each get an email when the trial starts.
 
-    // Cancel immediately: access revoked now, no refund
-    await agentaos.subscriptions.cancel('sub-uuid', { atPeriodEnd: false });
-    ```
-  </Tab>
-  <Tab title="CLI">
-    ```bash
-    # At period end (default)
-    agenta subscriptions cancel sub-uuid
-
-    # Immediately
-    agenta subscriptions cancel sub-uuid --now
-    ```
-  </Tab>
-  <Tab title="cURL">
-    ```bash
-    curl -X POST https://api.agentaos.ai/api/v1/gateway/subscriptions/sub-uuid/cancel \
-      -H "x-api-key: sk_live_..." \
-      -H "Content-Type: application/json" \
-      -d '{ "atPeriodEnd": true }'
-    ```
-  </Tab>
-</Tabs>
+To charge for the trial instead of giving it free, type an amount in **Trial price**. That amount covers the whole trial, and the buyer pays it at checkout.
 
 <Note>
-Cancellation never issues a refund. It only stops future renewals. If you owe the buyer money back for the current period, that's a separate, manual step on your side.
+The `checkout.session.completed` webhook for a free trial has `amount` `"0"`, `trial: true`, and `trial_end`. Treat it as "trial started", not as money received. See [Webhook events](/webhooks/events).
 </Note>
 
-## Response
+## Upgrade and downgrade
 
-**Subscription object** (from `list`):
+To move a subscriber to another plan, open the subscription and click **Change plan**. Pick the new plan. The dialog shows what the change costs before you confirm it.
 
-<ResponseField name="id" type="string">Subscription UUID.</ResponseField>
-<ResponseField name="customerEmail" type="string | null">Subscriber email.</ResponseField>
-<ResponseField name="customerName" type="string | null">Subscriber name.</ResponseField>
-<ResponseField name="planName" type="string | null">The plan's name or description, from the payment link.</ResponseField>
-<ResponseField name="billingInterval" type="string | null">`month` or `year`.</ResponseField>
-<ResponseField name="status" type="string">One of the statuses above.</ResponseField>
-<ResponseField name="unitAmountMinor" type="number">Per-cycle amount in integer minor units (e.g. `1999` = €19.99).</ResponseField>
-<ResponseField name="currency" type="string">Settlement currency.</ResponseField>
-<ResponseField name="currentPeriodEnd" type="string | null">ISO 8601 end of the current paid period. `null` before the first cycle books.</ResponseField>
-<ResponseField name="stripeSubscriptionId" type="string | null">Underlying subscription ID from the card processor.</ResponseField>
+<Frame caption="An upgrade from Pro to Pro Plus during a trial.">
+  <img src="/images/subscriptions/change-plan-quote.png" alt="The Change plan dialog with Pro Plus at €49.00 a month selected. It shows Due today €0.00 (incl. VAT), then €60.76 a month starting Oct 12, 2026." />
+</Frame>
 
-**Cancel result:**
+- **Upgrade** (the new plan costs more): the buyer pays the prorated difference today on their saved card, and the new plan applies at once. During a free trial nothing has been paid yet, so the amount due today is €0.00.
+- **Downgrade** (the new plan costs the same or less): nothing is charged today. The buyer keeps the current plan until the current period ends, and then the new plan starts.
 
-<ResponseField name="status" type="string">Status after cancellation.</ResponseField>
-<ResponseField name="currentPeriodEnd" type="string | null">ISO 8601 end of the current paid period.</ResponseField>
-<ResponseField name="cancelAtPeriodEnd" type="boolean">Whether the subscription is scheduled to end at period end.</ResponseField>
-<ResponseField name="effectiveCancelDate" type="string | null">ISO date the cancellation takes effect.</ResponseField>
+A scheduled downgrade shows on the subscription as **Scheduled change** until it takes effect.
+
+<Frame caption="A downgrade to Pro, scheduled for the end of the period.">
+  <img src="/images/subscriptions/scheduled-change.png" alt="The Plan section of a subscription. Scheduled change reads Pro (€35.96/mo) from Oct 12, 2026." />
+</Frame>
+
+To undo a scheduled downgrade, click **Change plan** and pick the current plan. The dashboard labels it "current plan", and choosing it cancels the scheduled change without a charge.
+
+A plan change keeps the currency and the billing interval. You can move a monthly EUR plan only to another monthly EUR plan. The subscription must be `trialing` or `active`.
+
+## Cancel
+
+Click **Cancel subscription** on the subscription page and confirm. The subscription stays active until the end of the current period, and then it ends. The buyer keeps what they paid for, and nothing is refunded.
+
+<Frame caption="A cancellation scheduled for the end of the period.">
+  <img src="/images/subscriptions/cancel-scheduled.png" alt="A subscription page with the status Cancels Oct 12, 2026. The side panel says Active until Oct 12, 2026, then cancels. No further charges, with a Resume subscription button." />
+</Frame>
+
+Until the period ends, **Resume subscription** undoes the cancellation. A subscription always runs to the end of the period it is in; it cannot be ended earlier.
+
+## Credits
+
+A credit takes money off a subscriber's next invoice, for example to make up for two days of downtime. It is not a refund: no money goes back to the card, and receipts already sent stay as they are. The credit comes out of what you earn on that invoice.
+
+To give one, open the subscription and click **Give credit** under **Credit**. Type the **Amount** and a **Reason**, then click **Confirm credit**. The form says of the reason: "The subscriber never sees this. It is what you and your team read later."
+
+<Frame caption="Giving a €10 credit from the subscription page.">
+  <img src="/images/subscriptions/credit-form.png" alt="The Credit section of a subscription with Amount 10, Reason Two days of downtime in September, and the buttons Confirm credit and Cancel." />
+</Frame>
+
+The panel then shows what the next invoice will charge.
+
+<Frame caption="The credit and the smaller next invoice.">
+  <img src="/images/subscriptions/credit-given.png" alt="The Credit section reads: €10.00 credited. It comes off their next invoice on Oct 12, 2026, leaving €50.76 to pay." />
+</Frame>
+
+- A credit can cover the whole next invoice, and no more.
+- The subscription must be `active` or `trialing`, not scheduled to cancel, and without a scheduled plan change.
+- While a subscriber has credit left, a plan change waits until their next invoice.
+- The unspent credit belongs to the buyer, and it is shared by every subscription they have with you.
+- Only an owner or admin can give or see credits. An API key cannot.
+
+The buyer pays less on their next charge. When a credit covers a whole month, their receipt says the credit covered it and nothing was charged to the card.
+
+## Discount codes
+
+A buyer can type a discount code at checkout. On a subscription, the discount applies to the first invoice only, and every renewal charges the full price. The subscription records which code the buyer used, so you can list the subscribers each code brought in. See [Discount codes](/payments/discount-codes).
+
+## Emails and receipts for the buyer
+
+- A receipt email for every paid cycle, with the receipt attached as a PDF. AgentaOS issues it as the merchant of record, and the subscription page lists each paid cycle under **Billing history**. See [Invoices](/payments/invoices) and [Receipts](/payments/receipts).
+- An email when a free trial starts.
+
+## From code
+
+For a signed-in user who upgrades inside your app, see the runnable demo on [Paywall for logged-in users](/sdk/paywall-for-logged-in-users).
+
+The same actions are in the SDK (`@agentaos/pay`) and the CLI (`agenta`). The SDK needs an API key: `const agentaos = new AgentaOS(process.env.AGENTAOS_API_KEY!)`. Code uses the subscription `id` that `subscriptions list` returns.
+
+<Tabs>
+  <Tab title="CLI">
+    ```bash
+    # Create a monthly plan with a 14-day free trial
+    agenta products create --name "Pro" -a 29 -c EUR --subscription --interval month --trial-days 14
+
+    # List subscriptions
+    agenta subscriptions list --limit 20
+
+    # Quote a plan change, then apply it
+    agenta subscriptions change-plan <subscriptionId> --to <linkId> --dry-run
+    agenta subscriptions change-plan <subscriptionId> --to <linkId>
+
+    # Cancel at the end of the period
+    agenta subscriptions cancel <subscriptionId>
+
+    # Give a €10 credit, then list the credits given
+    agenta subscriptions credit <subscriptionId> -a 10 --reason "Two days of downtime"
+    agenta subscriptions credits <subscriptionId>
+    ```
+  </Tab>
+  <Tab title="SDK">
+    ```typescript
+    // Create a monthly plan with a 14-day free trial
+    const plan = await agentaos.paymentLinks.create({
+      name: 'Pro',
+      amount: 29,
+      currency: 'EUR',
+      type: 'subscription',
+      billingInterval: 'month',
+      trialPeriodDays: 14,
+    });
+    // plan.id is the link ID; plan.checkoutUrl is the link for buyers
+
+    // List subscriptions
+    const page = await agentaos.subscriptions.list({ limit: 20 });
+
+    // Quote a plan change, then apply it with the quote's prorationDate
+    const quote = await agentaos.subscriptions.previewPlanChange(subscriptionId, proPlusLinkId);
+    const change = await agentaos.subscriptions.changePlan(subscriptionId, {
+      targetLinkId: proPlusLinkId,
+      prorationDate: quote.prorationDate,
+    });
+
+    // Cancel at the end of the period
+    const cancel = await agentaos.subscriptions.cancel(subscriptionId);
+
+    // Give a €10 credit (minor units), then list the credits given
+    const credit = await agentaos.subscriptions.credit(subscriptionId, {
+      amountMinor: 1000,
+      reason: 'Two days of downtime',
+      idempotencyKey: randomUUID(), // from node:crypto; reuse the same key on a retry
+    });
+    const credits = await agentaos.subscriptions.credits(subscriptionId);
+    ```
+  </Tab>
+</Tabs>
+
+The quote has `direction` (`upgrade`, `downgrade`, or `revert`), `dueTodayMinor`, `nextInvoiceMinor`, and `nextInvoiceAt`. Amounts that end in `Minor` are in minor units: `4900` is €49.00. Show the quote to the person who approves the change before you apply it, because an upgrade charges the card. Credits need an owner or admin who is signed in, through `agenta login` or the dashboard session: an API key is refused. Every field is in the reference: [SDK subscriptions](/sdk/pay-subscriptions) and [CLI subscriptions](/cli/subscriptions).
 
 ## Next steps
 
-<CardGroup cols={2}>
+<Columns cols={2}>
   <Card title="Sell a subscription" icon="rotate" href="/guides/sell-a-subscription">
-    Create a product, share the link or check out a logged-in user.
+    Create a plan, take the first subscriber, change their plan, and cancel.
   </Card>
-  <Card title="Payment links" icon="link" href="/payments/payment-links">
-    Create the `type: 'subscription'` link that starts this flow.
+  <Card title="Discount codes" icon="ticket" href="/payments/discount-codes">
+    Take money off the first invoice, or track who sent a buyer.
   </Card>
-  <Card title="Customers" icon="users" href="/payments/customers">
-    See who's subscribed to you.
+  <Card title="Embedded checkout" icon="window-maximize" href="/payments/embedded-checkout">
+    Show the checkout on your own page.
   </Card>
-  <Card title="Invoices" icon="file-invoice" href="/payments/invoices">
-    Every renewal charge issues its own invoice.
+  <Card title="Webhook events" icon="bell" href="/webhooks/events">
+    React to trials, renewals, failed payments, and plan changes.
   </Card>
-  <Card title="Webhooks" icon="bell" href="/payments/webhooks">
-    Get notified when a subscription payment lands.
-  </Card>
-</CardGroup>
+</Columns>

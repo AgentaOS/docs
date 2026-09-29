@@ -1,13 +1,33 @@
 ---
 title: "Customers"
-description: "The buyers who have paid you. Read-only, populated automatically from checkouts."
+description: "Everyone who paid you or whom you billed, with their revenue and payments. Built for you from checkouts and invoices."
+icon: "users"
 ---
 
-A customer record is created the moment someone pays you for the first time: email, name, country, and VAT number, pulled from what they entered at checkout. This is a read surface, the same list the [dashboard](https://app.agentaos.ai) Customers page shows. There's no `create` or `update`: you can't add a customer that hasn't paid, and buyer details come from the checkout, not from you editing a record after the fact.
+The Customers page lists the people who paid you and the people you billed. AgentaOS adds a customer when someone pays you for the first time. It also adds one when you bill someone by email, on an invoice or on a checkout your server creates. You do not add or import customers yourself.
 
-## List customers
+A customer's details come from what the buyer typed at checkout, or from what you entered on the invoice: email, name, country, and VAT number. Test mode and live mode keep separate customer lists.
 
-Paginated: every list call returns `{ items, total, hasMore }`.
+## The Customers page
+
+<Frame caption="The Customers page. Each row shows the customer's revenue and number of payments.">
+  <img src="/images/product/customers.png" alt="The Customers page with three customers: Alex Buyer with 10 euros revenue and 1 payment, and two billed customers with no payments yet, each row with a Create invoice button" />
+</Frame>
+
+In the sidebar, click **Customers**. Each row shows:
+
+- The customer's name or email.
+- **Revenue**: what the customer paid you, before VAT.
+- **Payments**: how many payments they made.
+- **Last active**: their most recent activity.
+
+A customer you billed who has not paid yet shows a dash for revenue and payments. Type in **Search customers** to find a customer by name or email. Click **Create invoice** in a row to bill that customer.
+
+Click a row to open the customer. The customer page shows their details, when you first saw them, and their invoices.
+
+## From code
+
+The API returns the same list. It is read-only: there is no call to create or update a customer. The full reference is in [Customers (SDK)](/sdk/pay-customers) and [agenta customers](/cli/customers).
 
 <Tabs>
   <Tab title="SDK">
@@ -29,23 +49,15 @@ Paginated: every list call returns `{ items, total, hasMore }`.
   </Tab>
 </Tabs>
 
-## Response
-
-<ResponseField name="id" type="string">Customer UUID.</ResponseField>
-<ResponseField name="email" type="string">Customer email.</ResponseField>
-<ResponseField name="name" type="string | null">Customer name.</ResponseField>
-<ResponseField name="country" type="string | null">ISO 3166-1 alpha-2 country code.</ResponseField>
-<ResponseField name="vatNumber" type="string | null">VAT number on file, if provided.</ResponseField>
-<ResponseField name="stripeCustomerId" type="string | null">Underlying customer ID from the card processor, for card/bank payers.</ResponseField>
-<ResponseField name="createdAt" type="string">ISO 8601, when this buyer first paid you.</ResponseField>
+The list is newest first, and each call returns `{ items, total, hasMore }`.
 
 ```json
 {
   "items": [
     {
       "id": "a1b2c3d4-...",
-      "email": "john@example.com",
-      "name": "John Doe",
+      "email": "buyer@example.com",
+      "name": "Jane Doe",
       "country": "DE",
       "vatNumber": "DE123456789",
       "stripeCustomerId": "cus_...",
@@ -57,16 +69,21 @@ Paginated: every list call returns `{ items, total, hasMore }`.
 }
 ```
 
+<ResponseField name="id" type="string">Customer UUID.</ResponseField>
+<ResponseField name="email" type="string">Customer email.</ResponseField>
+<ResponseField name="name" type="string | null">Customer name.</ResponseField>
+<ResponseField name="country" type="string | null">ISO 3166-1 alpha-2 country code.</ResponseField>
+<ResponseField name="vatNumber" type="string | null">VAT number, if the customer gave one.</ResponseField>
+<ResponseField name="stripeCustomerId" type="string | null">The card processor's customer ID. Set when the customer first subscribes or saves a card.</ResponseField>
+<ResponseField name="createdAt" type="string">ISO 8601. When AgentaOS first added this customer.</ResponseField>
+
 ## Next steps
 
-<CardGroup cols={2}>
-  <Card title="Subscriptions" icon="rotate" href="/payments/subscriptions">
-    See which customers have an active subscription.
-  </Card>
+<Columns cols={2}>
   <Card title="Invoices" icon="file-invoice" href="/payments/invoices">
-    Every invoice a customer has been issued.
+    Every invoice a customer has.
   </Card>
-  <Card title="Checkouts" icon="credit-card" href="/payments/checkouts">
-    Pre-fill buyer details to skip the checkout form next time.
+  <Card title="Subscriptions" icon="rotate" href="/payments/subscriptions">
+    Customers with a running subscription.
   </Card>
-</CardGroup>
+</Columns>

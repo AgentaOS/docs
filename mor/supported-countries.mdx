@@ -1,21 +1,22 @@
 ---
-title: "Supported Countries & Currencies"
+title: "Supported countries and currencies"
 description: "Where you can sell, which payment methods reach which buyers, and the countries where you can get paid out with AgentaOS."
+icon: "earth-europe"
 ---
 
 AgentaOS accepts purchases from buyers in almost every country, and pays merchants out by bank transfer across the countries listed below. For how the money moves end to end, see [How it works](/mor/how-it-works).
 
 <Info>
-Do not see your country in the payout list? Bank payout coverage expands over time. In the meantime, [stablecoin payouts (experimental)](/experimental/stablecoin-payouts) let you withdraw your balance on-chain from anywhere. Reach out and we will confirm your options.
+If your country is not in the payout list: bank payout coverage expands over time. In the meantime, [stablecoin payouts (public preview)](/payouts/stablecoin-payouts) pay your balance to a wallet in USDC or EURC. Ask us at [contact@agentaos.ai](mailto:contact@agentaos.ai) and we confirm your options.
 </Info>
 
 ## Accepting payment (your buyer's side)
 
-<CardGroup cols={1}>
+<Columns cols={1}>
   <Card title="Card, Apple Pay, and Google Pay" icon="credit-card">
     135+ currencies, from buyers worldwide. Your buyer pays in their local currency, and you do not need a merchant account in their country.
   </Card>
-</CardGroup>
+</Columns>
 
 Purchases are accepted from buyers worldwide, except the sanctioned or embargoed jurisdictions in the [unsupported list](#unsupported-countries-for-purchases) below.
 
@@ -24,12 +25,12 @@ Purchases are accepted from buyers worldwide, except the sanctioned or embargoed
 Whichever method your buyer uses, your AgentaOS balance settles in **EUR or USD**, then pays out to your bank account:
 
 <Card title="Local bank transfer" icon="building-columns" href="/payouts/overview">
-  Available across every supported country below, through our banking partner. Payout fees pass through at cost, with no markup.
+  Available across every supported country below, through our banking partner. See [Payout fees](#payout-fees).
 </Card>
 
 ### Payout fees
 
-We pass payout costs through at cost. AgentaOS adds no markup of its own. What you pay depends on the route your money takes:
+Each payout carries the [payout fee](/payouts/overview#fees). AgentaOS adds the bank transfer cost at cost, and that cost depends on the route your money takes:
 
 | Route | Typical fee per payout |
 |---|---|
@@ -41,41 +42,45 @@ Cross-border Swift fees vary by destination and payout currency, typically betwe
 
 ## Supported payout countries
 
-You can receive a bank payout in the following countries. This list follows our banking partner's live coverage, so it grows over time.
+You can receive a bank payout in the following countries. This list follows our banking partner's coverage, which grows over time.
 
 | | | | |
 |---|---|---|---|
 | Albania | Andorra | Argentina | Australia |
-| Austria | Bangladesh** | Belgium | Bosnia and Herzegovina |
-| Brazil | Bulgaria | Canada | Cayman Islands |
+| Austria | Bangladesh** | Belgium | Bosnia and Herzegovina† |
+| Brazil | Bulgaria | Canada | Cayman Islands† |
 | Chile | China* | Colombia** | Costa Rica |
 | Croatia | Cyprus | Czech Republic | Denmark |
-| Dominican Republic | Egypt | Estonia | Finland |
+| Dominican Republic† | Egypt | Estonia | Finland |
 | France | Georgia | Germany | Gibraltar |
-| Greece | Guatemala | Hong Kong | Hungary |
+| Greece | Guatemala† | Hong Kong | Hungary |
 | Iceland | India | Indonesia | Ireland |
 | Israel | Italy | Japan | Kenya |
 | Latvia | Liechtenstein | Lithuania | Luxembourg |
 | Malaysia | Malta | Mexico | Moldova |
 | Monaco | Montenegro | Morocco | Nepal** |
 | Netherlands | New Zealand | Nigeria | North Macedonia |
-| Norway | Pakistan** | Peru | Philippines |
+| Norway | Pakistan** | Peru† | Philippines |
 | Poland | Portugal | Romania | San Marino |
 | Serbia | Singapore | Slovakia | Slovenia |
 | South Africa | South Korea | Spain | Sri Lanka |
-| Sweden | Switzerland | Taiwan | Tanzania** |
+| Sweden | Switzerland | Taiwan† | Tanzania** |
 | Thailand | Turkey | Ukraine** | United Arab Emirates |
 | United Kingdom | United States | Uruguay | Vietnam |
 | Zambia | | | |
 
-### Bank transfer partner restrictions
+### What the marks mean
 
-Some local bank payouts carry extra rules from our banking partner. Countries marked `**` may have restrictions, for example only individual (personal) bank accounts being supported, or business transfers not being available. China (`*`) has per-transfer limits. These come from the partner and can change over time, so check with us before you rely on a specific route.
+- `**` Personal bank accounts only, in the recipient's own name. Our banking partner does not pay a business account in these countries. In Bangladesh the partner also refuses transfers sent by a business, so ask us before you count on a bank payout there.
+- `*` China: a business is paid to a CNY account at a bank in mainland China, with a transfer reason on file; the recipient's bank can ask for the contract and the invoice. A person is paid through a card or wallet network, with a cap on each payout.
+- `†` No local route. The payout travels by Swift, so the cross-border fee in the table above applies.
+
+Some routes cap one payout. Brazil: 10,000 USD to a business account and 3,000 USD to a personal account, and the account holder's tax number is required. Argentina: 18,000 USD per calendar month. India: 1.5 million INR per working day. These caps are our banking partner's and can change. If your balance is above a cap, ask us before the payout window.
 
 ## Unsupported countries for purchases
 
 <Accordion title="Unsupported countries (sanctioned and embargoed jurisdictions)">
-We cannot accept payments from customers or merchants in the following countries:
+AgentaOS cannot accept payments from customers or merchants in the following countries:
 
 - Afghanistan
 - Antarctica
@@ -110,7 +115,7 @@ We cannot accept payments from customers or merchants in the following countries
 
 <AccordionGroup>
   <Accordion title="Can I sell to buyers in any country?">
-    Cards reach 135+ currencies through our card processor's global network. Purchases are blocked only in the sanctioned or embargoed jurisdictions listed above.
+    Yes, through the card processor's global network. Purchases are blocked only in the sanctioned or embargoed jurisdictions listed above.
   </Accordion>
   <Accordion title="What currency lands in my balance?">
     Your AgentaOS balance always settles in EUR or USD, whatever currency your buyer paid in and whatever method they used.
@@ -119,18 +124,18 @@ We cannot accept payments from customers or merchants in the following countries
     No. Bank payouts reach the countries listed above, and coverage expands over time. See [Payouts](/payouts/overview).
   </Accordion>
   <Accordion title="My country is not on the payout list. What now?">
-    Bank payout coverage expands over time as our banking partner adds routes. Reach out and we will confirm your options.
+    Bank payout coverage expands over time as our banking partner adds routes. Ask us at [contact@agentaos.ai](mailto:contact@agentaos.ai) and we confirm your options.
   </Accordion>
 </AccordionGroup>
 
 ## Next steps
 
-<CardGroup cols={3}>
+<Columns cols={3}>
   <Card title="How it works" icon="handshake" href="/mor/how-it-works">
-    What a Merchant of Record is and why it matters.
+    What a merchant of record is and what it does for you.
   </Card>
   <Card title="How tax works" icon="scale-balanced" href="/mor/tax">
-    Destination VAT, where we are registered, and what shows on the invoice.
+    Where AgentaOS is registered for VAT, and what shows on the invoice.
   </Card>
   <Card title="Pricing" icon="credit-card" href="/mor/pricing">
     Transaction fees, plans, and the Founding 30 offer.
@@ -138,4 +143,4 @@ We cannot accept payments from customers or merchants in the following countries
   <Card title="Payouts" icon="money-bill-transfer" href="/payouts/overview">
     Move your balance to your bank or wallet.
   </Card>
-</CardGroup>
+</Columns>

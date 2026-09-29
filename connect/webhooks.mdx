@@ -1,0 +1,77 @@
+---
+title: "Platform webhooks"
+description: "One webhook endpoint for all your clients. Every event says which business it happened in, and account.updated tells you when a client's verification changes."
+icon: "satellite-dish"
+---
+
+import PrivatePreview from "/snippets/private-preview.mdx";
+
+<PrivatePreview />
+
+As a platform you do not set up a webhook for each client. **Your own webhook endpoint also receives every event of every business you manage**, signed with your own signing secret. It works in test mode too. `account.updated` is always a live event (`livemode: true`), because it is about your client's real verification. It still reaches your endpoint while you build in test mode, because an account has one webhook endpoint.
+
+Set your endpoint once, as any account does: see [Webhooks](/payments/webhooks).
+
+## Which business an event is from
+
+Every event carries `business`: the id of the business it happened in.
+
+- An event from your own sales carries your own id.
+- An event from a client's sale carries that client's business id.
+
+```json
+{
+  "id": "evt_8c7d6e5f-4a3b-2c1d-0e9f-8a7b6c5d4e3f",
+  "type": "checkout.session.completed",
+  "business": "5b1f0c2e-8a4d-4c7b-9e21-3f6a7d8c9b10",
+  "data": { "session_id": "kR9pQwErTyUiOpAsDfGh", "amount": "49.99", "currency": "EUR", "livemode": true }
+}
+```
+
+Route on `business` to the right client in your own system. Store our business id on your side when you create the business; it is the only link between the two.
+
+If the client has its own webhook URL, it still gets its own copy, signed with its own secret. Yours is separate.
+
+## When a client's verification changes
+
+`account.updated` fires when a business's verification changes: its identity check lands (verified, or declined), or our reviewers approve, reject, hold or resume it, or ask for changes.
+
+```json
+{
+  "id": "evt_4e1b9a0c2d3f5a67",
+  "type": "account.updated",
+  "business": "5b1f0c2e-8a4d-4c7b-9e21-3f6a7d8c9b10",
+  "data": {
+    "verification": "verified",
+    "changes_requested": false,
+    "identity_verified": true,
+    "livemode": true
+  }
+}
+```
+
+<ResponseField name="verification" type="string">
+  `unverified`, `in_review`, `verified`, `on_hold` or `rejected`.
+</ResponseField>
+<ResponseField name="changes_requested" type="boolean">
+  We asked the business for a change and are waiting on it.
+</ResponseField>
+<ResponseField name="identity_verified" type="boolean">
+  The identity check is done. For another app of your own company, this is your company's check.
+</ResponseField>
+<ResponseField name="livemode" type="boolean">
+  Always `true`: verification is about live money.
+</ResponseField>
+
+A typical use: when `identity_verified` turns `true`, stop reminding your client to complete the identity check. To read the current state at any time, call [`businesses.retrieve(id)`](/sdk/pay-businesses) and look at `status` and `identityVerified`. [Business status](/sdk/pay-businesses#business-status) shows how `verification` matches `status` and the status in the dashboard.
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Events" icon="list" href="/webhooks/events">
+    Every event and its fields.
+  </Card>
+  <Card title="Verify signatures" icon="shield-check" href="/payments/webhooks">
+    Check each delivery before you trust it.
+  </Card>
+</Columns>
