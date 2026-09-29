@@ -33,7 +33,7 @@ agenta businesses list
 
 ```bash Output
   2 businesses:
-    - ClientCo (in review, invitation open for founder@clientco.com) — 5b1f0c2e-8a4d-4c7b-9e21-3f6a7d8c9b10
+    - ClientCo (in review, invitation open for founder@example.com) — 5b1f0c2e-8a4d-4c7b-9e21-3f6a7d8c9b10
     - Acme Notes (live, your own company, identity verified) — 7c2e1d3f-9b5e-4d8c-0f32-4a7b8e9d0c21
 ```
 
@@ -44,7 +44,7 @@ agenta businesses get <id>
 ```
 
 ```bash Output
-  ClientCo (in review, invitation open for founder@clientco.com) — 5b1f0c2e-8a4d-4c7b-9e21-3f6a7d8c9b10
+  ClientCo (in review, invitation open for founder@example.com) — 5b1f0c2e-8a4d-4c7b-9e21-3f6a7d8c9b10
   Act as it: add --business 5b1f0c2e-8a4d-4c7b-9e21-3f6a7d8c9b10 to any command.
 ```
 
@@ -71,7 +71,7 @@ agenta businesses create --name <name> --country <code> [--client-email <email>]
 </ParamField>
 
 ```bash
-agenta businesses create --name ClientCo --country DE --client-email founder@clientco.com --no-invite-email
+agenta businesses create --name ClientCo --country DE --client-email founder@example.com --no-invite-email
 ```
 
 ```bash Output

@@ -130,7 +130,7 @@ You need an API key from **Developers → API keys**. A test key (`sk_test_...`)
         const { business: biz, inviteUrl } = await agentaos.businesses.create({
           name: 'ClientCo',
           country: 'DE',
-          clientEmail: 'founder@clientco.com', // optional
+          clientEmail: 'founder@example.com', // optional
           sendInvitationEmail: false,          // optional: we send no email, you send inviteUrl
         });
 
@@ -141,7 +141,7 @@ You need an API key from **Developers → API keys**. A test key (`sk_test_...`)
       <Tab title="CLI">
         ```bash
         agenta businesses create --name ClientCo --country DE \
-          --client-email founder@clientco.com --no-invite-email
+          --client-email founder@example.com --no-invite-email
         ```
 
         ```bash Output

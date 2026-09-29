@@ -1182,7 +1182,7 @@
               "example": {
                 "name": "ClientCo",
                 "country": "DE",
-                "clientEmail": "founder@clientco.com",
+                "clientEmail": "founder@example.com",
                 "sendInvitationEmail": false
               }
             }
@@ -2288,7 +2288,7 @@
               "feesDisplay": "€12.50"
             }
           ],
-          "invitedEmail": "founder@clientco.com",
+          "invitedEmail": "founder@example.com",
           "identityVerified": false
         }
       },
@@ -2313,7 +2313,7 @@
                 "feesDisplay": "€12.50"
               }
             ],
-            "invitedEmail": "founder@clientco.com",
+            "invitedEmail": "founder@example.com",
             "identityVerified": false
           }
         ]

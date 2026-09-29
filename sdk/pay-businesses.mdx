@@ -37,7 +37,7 @@ Returns one `Business`, the same shape as a row of `list()`.
 const { business, inviteToken, inviteUrl } = await agentaos.businesses.create({
   name: 'ClientCo',
   country: 'DE',
-  clientEmail: 'founder@clientco.com',
+  clientEmail: 'founder@example.com',
   sendInvitationEmail: false,
 });
 ```
@@ -141,7 +141,7 @@ Calling it again while a check is open gives back the same check.
   "platformFee": { "bps": 1000, "fixedMinor": 50 },
   "sameLegalEntity": false,
   "feesThisMonth": [{ "currency": "EUR", "feesMinor": 1250, "feesDisplay": "€12.50" }],
-  "invitedEmail": "founder@clientco.com",
+  "invitedEmail": "founder@example.com",
   "identityVerified": false
 }
 ```
