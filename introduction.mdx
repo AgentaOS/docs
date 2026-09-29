@@ -23,7 +23,7 @@ AgentaOS runs billing, tax, invoices, and payouts, so you do not build a billing
 
 ## AgentaOS as your merchant of record
 
-AgentaOS is a billing and payments platform for AI founders, and your **merchant of record**: the legal seller of your product. Your buyer pays AgentaOS, and AgentaOS takes the payment, charges the VAT, issues the invoice and pays you out. As the registered seller, AgentaOS carries the payment and tax liability, so you do not register for tax abroad, file a cross-border return, or reconcile three processors. AgentaOS is PCI compliant. See [How it works](/mor/how-it-works).
+AgentaOS is a billing and payments platform for AI founders, and your **merchant of record**: the legal seller of your product. Your buyer pays AgentaOS, and AgentaOS takes the payment, charges the VAT, issues the invoice and pays you out. As the registered seller, AgentaOS carries the tax liability, so you do not register for tax abroad, file a cross-border return, or reconcile three processors. A lost dispute costs you the sale plus the dispute fee: see [Refunds and disputes](/mor/refunds-and-disputes). AgentaOS is PCI compliant. See [How it works](/mor/how-it-works).
 
 ## Start where you are
 
@@ -44,11 +44,11 @@ AgentaOS is a billing and payments platform for AI founders, and your **merchant
 
 Fees and plans are on [Pricing](/mor/pricing).
 
-## What AgentaOS handles
+## Checkout, tax, and payouts
 
 <Columns cols={3}>
   <Card title="Checkout" icon="cart-shopping" href="/payments/checkouts">
-    Card, Apple Pay, and Google Pay. Cards work in 135+ currencies, from buyers worldwide.
+    Card, with Apple Pay and Google Pay on devices that support them, and bank transfer on EUR sales. Cards work in 135+ currencies, from buyers worldwide.
   </Card>
   <Card title="Tax" icon="calculator" href="/mor/tax">
     AgentaOS calculates the VAT, collects it, and pays it to the tax office.
@@ -105,7 +105,7 @@ Fees and plans are on [Pricing](/mor/pricing).
     `agenta`. Manage payments, subscriptions, customers, and invoices from the terminal, with `--json` for scripts.
   </Card>
   <Card title="MCP server" icon="plug" href="/mcp/setup">
-    Connect Claude, Cursor, or Windsurf and let your AI agents run your store.
+    Connect Claude Code, Cursor, ChatGPT, or Claude.ai and let your AI agents run your store.
   </Card>
   <Card title="Paywall for logged-in users" icon="lock" href="/sdk/paywall-for-logged-in-users">
     A runnable demo app: a plan behind a login, the webhook, access checks, the user's invoices, cancel and upgrade.
@@ -120,7 +120,7 @@ Your AI agents can set up and operate AgentaOS on their own, without the dashboa
 Read https://agentaos.ai/SKILL.md and set up AgentaOS for me
 ```
 
-Give this to any AI coding agent (Claude, Cursor, Copilot, Windsurf) and it will install the CLI, sign you in, create your first product and share the link, and wire up webhooks in your codebase.
+Give this to any AI coding agent, such as Claude Code or Cursor, and it will install the CLI, sign you in, create your first product and share the link, and wire up webhooks in your codebase.
 
 ## Quick start
 
@@ -147,7 +147,7 @@ To integrate with code, follow the [code integration](/getting-started/quickstar
     Minutes in test mode. Create an account, grab a test key, and create your first checkout. Going live needs a short business verification: see [Account review](/mor/account-review).
   </Accordion>
   <Accordion title="What payment methods do you support?">
-    Card, Apple Pay, and Google Pay. Cards work in 135+ currencies, from buyers worldwide.
+    Card, with Apple Pay and Google Pay on devices that support them, and bank transfer on EUR sales. Cards work in 135+ currencies, from buyers worldwide.
   </Accordion>
   <Accordion title="Which countries and taxes do you cover?">
     AgentaOS charges EU consumers VAT at the Estonian rate while its EU sales are under the €10,000 threshold, and charges no tax to buyers outside the EU. See [How tax works](/mor/tax#the-rate-on-eu-sales-today) and [Supported countries](/mor/supported-countries).

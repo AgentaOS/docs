@@ -127,6 +127,20 @@ agenta invoices list --business <id>
 
 Filing a client's verification with `agenta verify submit … --business <id>` is recorded as filed by the platform. A business you do not manage is refused with `You cannot act as this business.`
 
+### File a client's verification
+
+This is the same verification any account submits, sent as the business. We record it as filed by the platform, and our reviewers see that. File only what your client confirmed to you.
+
+```bash
+agenta verify submit --entity business --legal-name "ClientCo GmbH" \
+  --registration-number "HRB 123456" --country DE \
+  --street "Hauptstrasse 1" --city Berlin --postal 10115 \
+  --url https://clientco.com --description "Scheduling software for clinics" \
+  --accept-declaration --business <id>
+```
+
+Run `agenta verify declaration` first to read what `--accept-declaration` attests to. See [Verify](/cli/verify) for every flag.
+
 <Tip>
 Add `--json` to any command for a single JSON object, e.g. `agenta businesses create … --json` returns `business`, `inviteToken` and `inviteUrl`.
 </Tip>

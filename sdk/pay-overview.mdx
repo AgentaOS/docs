@@ -4,7 +4,7 @@ description: "@agentaos/pay is the server-side TypeScript SDK for AgentaOS. Inst
 icon: "cube"
 ---
 
-`@agentaos/pay` is a server-side TypeScript SDK for the AgentaOS Payment API. AgentaOS is a Merchant of Record: create a checkout or a payment link, and AgentaOS collects the payment (card or wallet), calculates and remits tax, issues the invoice, and settles to your balance. The SDK is a thin, typed wrapper over the REST API, one class per resource, camelCase in, camelCase out.
+`@agentaos/pay` is a server-side TypeScript SDK for the AgentaOS Payment API. AgentaOS is a merchant of record: create a checkout or a payment link, and AgentaOS collects the payment (card or wallet), calculates and remits tax, issues the invoice, and settles to your balance. The SDK is a thin, typed wrapper over the REST API, one class per resource, camelCase in, camelCase out.
 
 <Warning>
 `@agentaos/pay` is **backend-only**. The constructor throws if it detects `window`/`document`, so it cannot run in a browser bundle. Your API key grants full read/write access to your payments, customers, and invoices, never ship it to client-side code.
@@ -40,7 +40,7 @@ console.log(checkout.checkoutUrl);
 // → https://app.agentaos.ai/checkout/mZrESFyR7RC9RPsJfZCVkg
 ```
 
-Get a key from the dashboard: **Developers → API keys**. See [Test mode and live mode](/getting-started/test-mode) for the difference between a `sk_test_` and `sk_live_` key.
+Get a key from the dashboard: **Developers → API keys**. See [Test mode and testing](/getting-started/test-mode) for the difference between a `sk_test_` and `sk_live_` key.
 
 ## Authentication
 

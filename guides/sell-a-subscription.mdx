@@ -134,27 +134,11 @@ The status changes to **Cancels** followed by the end date. The subscriber keeps
 
 ## From code: subscribe a signed-in user
 
-The complete integration, as a runnable demo app with the user's invoices and plan management, is [Paywall for logged-in users](/sdk/paywall-for-logged-in-users).
+When the buyer already has an account in your app, create the checkout from your server with the plan's link ID and your own user ID in `metadata`. Use these pages:
 
-When the buyer already has an account in your app, create the checkout from your server with the plan's link ID. Your own user ID in `metadata` comes back to you in the webhook. To copy the link ID, open **Building this into your site?** on the plan's page and click **Copy ID**.
-
-```typescript
-import { AgentaOS } from '@agentaos/pay';
-
-const agentaos = new AgentaOS(process.env.AGENTAOS_API_KEY!);
-
-const checkout = await agentaos.checkouts.create({
-  linkId: PRO_LINK_ID,
-  buyerEmail: user.email,
-  buyerCountry: user.country, // ISO 3166-1 alpha-2, for example 'DE'
-  metadata: { customerId: user.id },
-});
-// Send the user to checkout.checkoutUrl
-```
-
-When they finish, `checkout.session.completed` carries your `customerId` and the new `subscriptionId` in `data.metadata`. Store the `subscriptionId` on your user. Renewals do not carry your `customerId`, so match them by that `subscriptionId`. See [Handle webhooks](/sdk/handle-webhooks) to verify the event.
-
-Creating plans, listing subscriptions, plan changes, and canceling from code are on the [Subscriptions](/payments/subscriptions#from-code) page.
+- [Subscriptions in the SDK](/sdk/pay-subscriptions): the checkout call for a signed-in user, and how to match renewals to your user.
+- [Paywall for logged-in users](/sdk/paywall-for-logged-in-users): the complete integration, as a runnable demo app with the user's invoices and plan management.
+- [Subscriptions](/payments/subscriptions#from-code): creating plans, listing subscriptions, plan changes, and canceling from code.
 
 ## Next steps
 
@@ -165,7 +149,7 @@ Creating plans, listing subscriptions, plan changes, and canceling from code are
   <Card title="Discount codes" icon="ticket" href="/payments/discount-codes">
     Give new subscribers money off their first invoice.
   </Card>
-  <Card title="Handle webhooks" icon="bell" href="/sdk/handle-webhooks">
+  <Card title="Receive webhooks in Express" icon="bell" href="/sdk/handle-webhooks">
     Unlock access when a subscriber pays.
   </Card>
   <Card title="Go live" icon="rocket" href="/guides/go-live">

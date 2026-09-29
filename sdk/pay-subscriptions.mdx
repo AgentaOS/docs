@@ -24,6 +24,8 @@ const checkout = await agentaos.checkouts.create({
 });
 ```
 
+To copy a plan's link ID in the dashboard, open **Building this into your site?** on the plan's page and click **Copy ID**. When the buyer finishes, `checkout.session.completed` carries your `customerId` and the new `subscriptionId` in `data.metadata`. Store the `subscriptionId` on your user. Renewals do not carry your `customerId`, so match them by that `subscriptionId`. See [Receive webhooks in Express](/sdk/handle-webhooks) to verify the event.
+
 See [Sell a subscription](/guides/sell-a-subscription).
 
 ## `subscriptions.list(params?)`

@@ -58,7 +58,7 @@ const { business, inviteToken, inviteUrl } = await agentaos.businesses.create({
   `false`: we send no email. You send `inviteUrl` to your client yourself (white-label).
 </ParamField>
 
-The business starts in test mode and goes live after its own verification.
+The business starts in test mode and goes live after its own verification. Store `business.id` next to your own record of the client.
 
 <ResponseField name="business" type="Business">The new business.</ResponseField>
 <ResponseField name="inviteToken" type="string | null">The invitation token, or `null` without `clientEmail`.</ResponseField>
@@ -186,6 +186,63 @@ Either way the SDK sends the id in the `AgentaOS-Account` header. Leave it out t
 <Tip>
 Filing a client's verification with `accountReview.submit(…, { business })` is recorded as filed by the platform. Only your client can complete the identity check: send them the link from `createVerificationLink`.
 </Tip>
+
+### File a client's verification
+
+This is the same verification any account submits, sent as the business.
+
+<Warning>
+We record it as filed by the platform, and our reviewers see that. File only what your client confirmed to you.
+</Warning>
+
+```typescript
+await agentaos.accountReview.submit(
+  {
+    entityType: 'business',
+    legalName: 'ClientCo GmbH',
+    registrationNumber: 'HRB 123456',
+    taxCountry: 'DE',
+    address: { street: 'Hauptstrasse 1', city: 'Berlin', postal: '10115', country: 'DE' },
+    productUrl: 'https://clientco.com',
+    productDescription: 'Scheduling software for clinics',
+    checklist: {
+      prohibited_ok: true,
+      checklist_ack: true,
+      cooldown_ack: true,
+      privacy_ok: true,
+      tos_ok: true,
+    },
+  },
+  { business: biz.id },
+);
+```
+
+See [Account review](/mor/account-review) for what we check.
+
+## One webhook for every business
+
+You need no webhook per client. Your own endpoint receives every event of every business you manage, signed with your own secret. Each event carries `business`, the id of the business it happened in.
+
+```typescript
+const event = agentaos.webhooks.verify(
+  req.body, // raw body
+  req.headers['x-agentaos-signature'] as string,
+  process.env.AGENTAOS_WEBHOOK_SECRET!, // your own secret, for every client
+);
+
+switch (event.type) {
+  case 'checkout.session.completed':
+    await fulfil(event.business, event.data.sessionId); // event.business = the client's id
+    break;
+  case 'account.updated': {
+    const client = await agentaos.businesses.retrieve(event.business);
+    await saveVerification(client.id, client.status, client.identityVerified);
+    break;
+  }
+}
+```
+
+`account.updated` fires when the client's verification changes. Set your endpoint in **Settings → Developers → Webhooks**. See [Platform webhooks](/connect/webhooks).
 
 ## Next steps
 

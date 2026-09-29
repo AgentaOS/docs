@@ -81,7 +81,7 @@ Click **Preview** on the product's page, or **Try a test payment** on the screen
   </Step>
 </Steps>
 
-## What the buyer sees
+## The buyer's confirmation page
 
 The checkout shows **Payment complete** with the amount, the invoice number, and the lines of the invoice. In test mode, it also says "Test payment: no money was paid. This invoice and receipt are not valid." The buyer can click **Download invoice** or **Download receipt**.
 
@@ -102,10 +102,10 @@ The buyer also gets a receipt by email, with the invoice attached. The subject l
     </Frame>
   </Step>
   <Step title="Transactions">
-    Click **Transactions**. The sale is at the top of the list as **Received** with the amount the buyer paid.
+    Click **Transactions**. The sale is at the top of the list as **Received** with the amount the buyer paid. The image below shows an earlier test sale of €12.40.
 
-    <Frame caption="The Transactions list with a test card payment.">
-      <img src="/images/product/transactions.png" alt="The Transactions page with one row: Received +€12.40, Customer, Card via AgentaOS, Clearing, Sep 28, 2026." />
+    <Frame caption="The Transactions list with an earlier test sale of €12.40.">
+      <img src="/images/product/transactions.png" alt="The Transactions page with one row from an earlier test sale: Received +€12.40, Customer, Card via AgentaOS, Clearing, Sep 28, 2026." />
     </Frame>
   </Step>
   <Step title="The sale page">
@@ -120,10 +120,10 @@ The buyer also gets a receipt by email, with the invoice attached. The subject l
     </Frame>
   </Step>
   <Step title="Invoices">
-    Click **Invoices**. The sale's invoice is in the list as **Paid**, with the buyer's email. Open it and click **Download invoice**. The PDF of a test invoice has a **TEST** badge next to its title.
+    Click **Invoices**. The sale's invoice is in the list as **Paid**, with the buyer's email. Open it and click **Download invoice**. The PDF of a test invoice has a **TEST** badge next to its title. The image below shows the invoice for an earlier test sale of €12.40.
 
-    <Frame caption="The Invoices list with the invoice for a test sale.">
-      <img src="/images/product/invoices.png" alt="The Invoices page with one invoice: buyer@example.com, INV-2026-0001, Sep 28, 2026, €12.40, Paid." />
+    <Frame caption="The Invoices list with the invoice for an earlier test sale of €12.40.">
+      <img src="/images/product/invoices.png" alt="The Invoices page with one invoice from an earlier test sale: buyer@example.com, INV-2026-0001, Sep 28, 2026, €12.40, Paid." />
     </Frame>
   </Step>
 </Steps>
@@ -145,7 +145,7 @@ To create products and checkouts from your server, and to know when a buyer pays
   <Card title="Go live" icon="rocket" href="/guides/go-live">
     Verify your business and take real payments.
   </Card>
-  <Card title="Handle webhooks" icon="bell" href="/sdk/handle-webhooks">
+  <Card title="Receive webhooks in Express" icon="bell" href="/sdk/handle-webhooks">
     Let your server react when a buyer pays.
   </Card>
 </Columns>

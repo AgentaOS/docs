@@ -15,7 +15,7 @@
         "icon": "book-open",
         "groups": [
           {
-            "group": "Getting Started",
+            "group": "Getting started",
             "icon": "rocket",
             "pages": [
               "introduction",
@@ -166,7 +166,7 @@
               "api-reference/introduction",
               "api-reference/error-codes",
               {
-                "group": "Payment Links",
+                "group": "Payment links",
                 "expanded": false,
                 "pages": [
                   "api-reference/payment-links/create",
@@ -201,7 +201,7 @@
                 ]
               },
               {
-                "group": "Discount Codes",
+                "group": "Discount codes",
                 "expanded": false,
                 "pages": [
                   "api-reference/discount-codes/create",

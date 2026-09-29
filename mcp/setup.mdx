@@ -4,11 +4,11 @@ description: "Connect Claude, ChatGPT, Cursor or any MCP client to AgentaOS, and
 icon: "plug"
 ---
 
-The AgentaOS MCP server gives your AI agent the same operations as the `agenta` CLI: products, checkouts, verification, subscriptions, discount codes, customers and invoices. The CLI commands and the MCP tools come from one catalog, so each tool has a matching command with the same inputs and the same answer.
+The AgentaOS MCP server gives your AI agent the same operations as the `agenta` CLI: account status, the Revenue & Pricing Audit, products, checkouts, verification, subscriptions, discount codes, customers, invoices, and the businesses you manage. The CLI commands and the MCP tools come from one catalog, so each tool has a matching command with the same inputs and the same answer.
 
 ## Connect your agent
 
-Start in the dashboard: go to **Settings → Developers** and click **Connect an AI agent**. The **Set up your AI agent** dialog asks "Where does your agent run?" and shows the steps for the client you pick.
+Start in the dashboard: open **Developers → API keys** in the sidebar and click **Connect an AI agent**. The **Set up your AI agent** dialog asks "Where does your agent run?" and shows the steps for the client you pick.
 
 <Frame caption="The Set up your AI agent dialog with Claude Code picked: install the plugin, then approve it in AgentaOS.">
   <img src="/images/agents/set-up-your-ai-agent.png" alt="The Set up your AI agent dialog in Settings. The Claude Code tab is selected next to Cursor, ChatGPT, Claude.ai and Other. Step 1, Install the plugin, shows two claude plugins commands with copy buttons. Step 2, Approve it here, says to type /mcp, choose agentaos, then Authenticate, and pick Test or Live on the AgentaOS page." />
@@ -63,7 +63,7 @@ A headless agent or a CI job runs the server on its own machine instead, with an
 
 <Steps>
   <Step title="Create a test key">
-    With the dashboard in test mode, go to **Settings → Developers**, click **Connect an AI agent** and choose **Other**. Click **Generate one named Other agent**, then **Create key**. Copy the key: the dashboard shows it only once. It stays under **API Keys** with the name "Other agent".
+    With the dashboard in test mode, open **Developers → API keys** in the sidebar, click **Connect an AI agent** and choose **Other**. Click **Generate one named Other agent**, then **Create key**. Copy the key: the dashboard shows it only once. It stays under **API Keys** with the name "Other agent".
   </Step>
   <Step title="Add the server">
     Add an MCP server named `agentaos` that runs `npx -y agentaos`, with the key in `AGENTAOS_GATEWAY_KEY`:
