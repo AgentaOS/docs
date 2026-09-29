@@ -10,9 +10,17 @@ import PublicPreview from "/snippets/public-preview.mdx";
 
 A stablecoin payout sends your balance to a wallet instead of your bank account. You choose it per currency: your EUR balance pays out in EURC and your USD balance pays out in USDC. Payouts keep the same schedule as bank payouts, the 1st and the 15th of each month. See [Payouts](/payouts/overview).
 
-A stablecoin payout needs a verified account, the same as a bank payout. See [Go live](/guides/go-live).
+## Who can be paid in stablecoins
 
-AgentaOS turns wallet payouts on for your account when you ask at [contact@agentaos.ai](mailto:contact@agentaos.ai). Until then, the **Payout accounts** tab shows no wallet section, and the API answers "Wallet payouts are not open for this account yet."
+Wallet payouts are switched on per account, after your account has paid you once by bank. The rule:
+
+1. Your business is verified and the identity check has passed, the same as for any payout. See [Verify your business](/mor/verification).
+2. You have a bank payout account that shows **Ready for payouts** (the name check passed). See [Add a payout account](/payouts/payout-accounts).
+3. You have received at least one bank payout to that account.
+
+When all three are true, ask at [contact@agentaos.ai](mailto:contact@agentaos.ai) and AgentaOS switches wallet payouts on for your account. Until then, the **Payout accounts** tab shows no wallet section, and the API answers "Wallet payouts are not open for this account."
+
+If your country has no local bank route, so that a bank payout can only travel by Swift (the countries marked on [Supported countries](/mor/supported-countries#supported-payout-countries)), ask after step 1: AgentaOS can switch wallet payouts on without the bank payout in that case.
 
 ## Networks
 
