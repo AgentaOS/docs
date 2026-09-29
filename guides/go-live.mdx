@@ -1,10 +1,10 @@
 ---
 title: "Go live"
-description: "Take real money: verify your business, add a payout account, switch to live mode, and copy your products to live."
+description: "Take real money: verify your business, switch to live mode, and copy your products to live. Add a bank account before your first payout."
 icon: "toggle-on"
 ---
 
-By the end of this guide your business is verified, has a payout account, and sells for real money. Test mode and live mode are separate: each has its own products, sales, customers, and invoices. Your products do not move to live by themselves. You copy each one with the **Copy to live** button on its product page, and the live copy gets a new buyer link. If you built an integration, only your code carries over, with a live API key in place of the test key.
+By the end of this guide your business is verified and sells for real money. You do not need a bank account to go live. You need one before your first payout. Test mode and live mode are separate: each has its own products, sales, customers, and invoices. Your products do not move to live by themselves. You copy each one with the **Copy to live** button on its product page, and the live copy gets a new buyer link. If you built an integration, only your code carries over, with a live API key in place of the test key.
 
 ## Before you start
 
@@ -13,17 +13,18 @@ By the end of this guide your business is verified, has a payout account, and se
 
 ## Verify your business
 
-Open **Go live** in the sidebar. The page lists the steps to real money and counts them, for example "1 of 4 done". The same count shows next to **Go live** in the sidebar, for example "1/4". The four rows are:
+Open **Go live** in the sidebar. The page lists the steps to real money and counts them, for example "1 of 3 done". The same count shows next to **Go live** in the sidebar, for example "1/3". The three rows are:
 
 1. **Create your first product**
 2. **Verify your business**
-3. **Add a payout account**
-4. **Go live**
+3. **Go live**
 
 Above the rows, **Your Revenue & Pricing Audit** is an optional offer. It is not a step and holds nothing up. See [Revenue & Pricing Audit](/grow/pricing-audit).
 
+Below the rows, **Getting paid** has two rows: **Bank account** and **Stablecoin payouts**. They are not steps, and your first sale does not wait for them. On the right, **Your account** shows your business name, when the identity check comes, and your payout schedule.
+
 <Frame caption="The Go live page in test mode. The Test and Live switch is at the bottom of the sidebar.">
-  <img src="/images/product/go-live-tracker.png" alt="Go live page showing 1 of 4 done, with the rows Create your first product, Verify your business, Add a payout account, and Go live, and the Test and Live switch at the bottom of the sidebar" />
+  <img src="/images/product/go-live-tracker.png" alt="Go live page showing 1 of 3 done, with the rows Create your first product, Verify your business, and Go live. Below them, Getting paid has the rows Bank account and Stablecoin payouts. The Your account panel is on the right, and the Test and Live switch is at the bottom of the sidebar" />
 </Frame>
 
 AgentaOS is the merchant of record on every live sale, so we check whose product we sell before real money moves. To start, click **Start** on the **Verify your business** row. The form asks one question per screen, in three parts: **You**, **Your product**, and **The rules**. It takes about 5 minutes and saves as you go, so you can click **Save & finish later** and come back.
@@ -36,17 +37,9 @@ On the last screen, click **Submit for review**. The form says: "Reviewed by a p
 
 After you submit, the dashboard shows "Submitted for review", and the row shows **In review**. You do not need to do anything while we review. When we approve your business, the row says "Verified. Card and bank payments are on." For what we check, and for what to do if we ask for changes, see [Verify your business](/mor/verification).
 
-## Add a payout account
-
-A payout account is the bank account we send your money to. Open **Balances**, then the **Payout accounts** tab, and add one account per currency. You can add it before your verification is done. See [Add a payout account](/payouts/payout-accounts) for the steps.
-
-Before the first payout, the owner or an admin completes the identity check, in live mode, from the **Home** or **Balances** page. See [The identity check](/mor/verification#the-identity-check). See [Payouts](/payouts/overview) for how your balance moves to your account.
-
-Payouts to a stablecoin wallet are in public preview and available on request. See [Stablecoin payouts](/payouts/stablecoin-payouts).
-
 ## Switch to live mode
 
-When your business is verified and your payout account is added, the **Go live** row says "Everything is ready. Turn on real payments." Click **Go live** on that row. The dashboard switches to live mode and shows "You're live".
+When your business is verified, the **Go live** page says "Everything is ready. Turn on real payments." Click **Go live** on the **Go live** row. The dashboard switches to live mode and shows "You're live". If you have no bank account yet, that message has the link **Add a bank account to get paid, about two minutes.**
 
 You can also use the switch at the bottom of the sidebar, below **Settings**. It has two options, **Test** and **Live**. Click **Live**, and the dashboard shows "Switched to Live mode" with "You are now viewing live data. Real funds apply." While your business is not verified, clicking **Live** opens the **Go live** page instead.
 
@@ -75,6 +68,20 @@ The live copy has its own buyer link. The test link stays a test link, so replac
 3. Click **Copy link**, and put this link on your site, in your emails, and in your social posts.
 4. Click **Preview** to open the live checkout page and check it. A payment on this page charges a real card.
 
+## Add a bank account for payouts
+
+Your sales collect in your AgentaOS balance from the first live sale. To move that balance to your bank, add a bank account. You can add it at any time, also before your verification is done.
+
+On the **Go live** page, the **Bank account** row under **Getting paid** says "Where we pay you. Not needed to sell. Add it before your first payout, about two minutes." Click **Add** on that row. After you go live, the row is highlighted, its last sentence is "Your balance waits until then.", and its button is **Add bank account**. Each button opens the **Payout accounts** tab on **Balances** with the form. See [Add a bank account](/payouts/payout-accounts) for the fields and the name check.
+
+<Frame caption="The Go live page right after you go live. The Bank account row is the next thing to do.">
+  <img src="/images/product/go-live-getting-paid.png" alt="Go live page in live mode showing 3 of 3 done. Under Getting paid, the Bank account row is highlighted and says: Where we pay you. Add it before your first payout, about two minutes. Your balance waits until then. It has the button Add bank account. The Stablecoin payouts row below it says 0 of 3 done. At the bottom right, the message You're live has the link Add a bank account to get paid, about two minutes." />
+</Frame>
+
+Before the first payout, the owner or an admin completes the identity check, in live mode, from the **Home** or **Balances** page. See [The identity check](/mor/verification#the-identity-check). See [Payouts](/payouts/overview) for how your balance moves to your account.
+
+Payouts to a stablecoin wallet are in public preview. The **Stablecoin payouts** row counts the conditions you meet, for example "0 of 3 done". See [Stablecoin payouts](/payouts/stablecoin-payouts).
+
 ## Changes for your buyers
 
 In live mode, your buyers pay real money:
@@ -98,7 +105,7 @@ Your webhook endpoint, under **Webhooks** on the same page, receives both test a
 
 Checklist before your first live sale:
 
-- [ ] Business verified and payout account added.
+- [ ] Business verified.
 - [ ] Each product copied to live, and the live buyer links shared.
 - [ ] `sk_live_` key deployed in place of the test key.
 - [ ] `successUrl` and `cancelUrl` point at your live site.
@@ -110,7 +117,7 @@ To verify your business from the CLI, run `agenta login`, then `agenta verify de
 
 <Columns cols={3}>
   <Card title="Payouts" icon="money-bill-transfer" href="/payouts/overview">
-    How your balance moves to your payout account.
+    How your balance moves to your bank account or your wallet.
   </Card>
   <Card title="Pricing" icon="tag" href="/mor/pricing">
     What each live sale costs.

@@ -116,7 +116,7 @@ Calling it again while a check is open gives back the same check.
 <ResponseField name="name" type="string">The name buyers see.</ResponseField>
 <ResponseField name="country" type="string | null">ISO 3166-1 alpha-2.</ResponseField>
 <ResponseField name="status" type="'test_only' | 'in_review' | 'changes_needed' | 'on_hold' | 'rejected' | 'live'">
-  Where the business stands. `live` means verified and with a payout account. `changes_needed` means we asked the business for a change. See [Business status](#business-status).
+  Where the business stands. `live` means verified. `changes_needed` means we asked the business for a change. See [Business status](#business-status).
 </ResponseField>
 <ResponseField name="platformOrgId" type="string">Your own id: the platform that manages it.</ResponseField>
 <ResponseField name="createdAt" type="string">ISO 8601.</ResponseField>
@@ -159,7 +159,7 @@ The dashboard, the `status` field and the [`account.updated`](/connect/webhooks)
 | **Rejected** | `rejected` | `rejected` |
 | **Live** | `live` | `verified` |
 
-A business is live when it is verified and has a payout account saved. Until it has a payout account, a verified business shows **Test only** (`test_only`), and `verification` is already `verified`.
+A business is live when it is verified. A bank account is not part of the status: the business needs one before its first payout, not before its first sale. **Test only** (`test_only`) means that no verification was submitted.
 
 ## Acting for a business
 
