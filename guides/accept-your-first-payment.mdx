@@ -1,168 +1,151 @@
 ---
-title: "Accept Your First Payment"
-description: "Create a product, share its link, and watch a test payment land. No code required."
+title: "Accept your first payment"
+description: "Create a product in the dashboard, share its buyer link, pay it yourself in test mode, and see the sale, the VAT, and your net. No code."
+icon: "credit-card"
 ---
 
-By the end of this guide you'll have a shareable payment link, a completed test payment against it, and a confirmed record in your dashboard. Every step runs in **test mode**: test money, no real card, nothing to lose.
+This guide takes you from no product to a first sale in the dashboard. You create a product, pay for it yourself as a test buyer, and then find the sale, the invoice, and your net amount. Everything runs in **Test mode**, so no real money moves.
 
-You can do all of this from the dashboard. No code required. If you'd rather create links and detect payments programmatically, jump to [Do it in code](#do-it-in-code).
+The full product settings are on the [Products](/payments/payment-links) page. The buyer's checkout, field by field, is on the [Checkouts](/payments/checkouts) page.
 
-<Note>
-  All you need is an AgentaOS account. Sign up at [app.agentaos.ai](https://app.agentaos.ai), no card required.
-</Note>
+## Before you start
 
-## From the dashboard
+- An AgentaOS account. Sign up at [app.agentaos.ai](https://app.agentaos.ai). The dashboard opens in **Test mode**.
+- The test card `4242 4242 4242 4242`, with any future expiry date and any CVC. Type it only into the card form on the checkout page.
+
+## Create the product
 
 <Steps>
-  <Step title="Create a product">
-    Open **Catalog → Products** and click **New product**. Give it a name and a price (for example, `Pro plan`, `49.00`), choose **one-time** or **subscription**, and save. Amounts are plain currency units: `49.00` means €49.00, never cents.
+  <Step title="Open the form">
+    In the sidebar, click **Products**, then click **New product**. The form opens with the title **Create a new product**.
+  </Step>
+  <Step title="Name it">
+    Under **Details**, type a **Product name**, for example `Starter guide`, and a **Description**. The buyer sees both on the checkout.
+  </Step>
+  <Step title="Set the price">
+    Under **Pricing**, type the price, for example `19`, and pick **EUR** or **USD**. Leave **One-time** selected.
 
-    <Frame caption="The product builder. Name it, price it, and your shareable payment link is generated as you type.">
-      <img src="/images/product/product-builder.png" alt="AgentaOS product builder with a name, price, and the generated shareable payment link" />
+    Under the price, the form shows what a buyer pays with VAT. For a €19 product, it reads "EU consumers pay €23.56 (€19.00 + €4.56 VAT), you receive €19.00 before fees. Everyone else pays €19.00." Select **Prices include VAT** if your price already contains the VAT.
+
+    <Frame caption="The form for a one-time product at €19. The line under the price shows what a buyer pays with VAT.">
+      <img src="/images/product/new-product-form.png" alt="The Create a new product form. Details has the product name Starter guide and the description A 40-page PDF on pricing your first product. Pricing shows 19, EUR, and One-time, the Prices include VAT checkbox, and the line EU consumers pay €23.56 (€19.00 + €4.56 VAT), you receive €19.00 before fees. Everyone else pays €19.00. The Summary on the right shows Buyer pays €19.00." />
     </Frame>
-
-    The moment you save, the product gets its own reusable payment link and a QR code.
   </Step>
+  <Step title="Create it">
+    Click **Create product**. The next screen says "Starter guide is live". Live here is the product's word for published. You are still in test mode.
 
-  <Step title="Copy the payment link">
-    On the product page, click **Copy link**. It looks like `https://app.agentaos.ai/pay/{id}`. Paste it anywhere: a button, an email, a chat message, an invoice, or share the QR code. Every visitor who opens it gets their own checkout, and there's nothing for the buyer to install.
-  </Step>
-
-  <Step title="Open the checkout and pay with a test card">
-    Open the link in a browser. This is the page your buyer sees. AgentaOS is the merchant of record, so the checkout collects the buyer's country, calculates the right VAT, and shows one clear total before payment.
-
-    <Frame caption="The live checkout in test mode. The buyer's country drives the VAT; AgentaOS is the merchant of record.">
-      <img src="/images/product/checkout.png" alt="AgentaOS checkout page showing the product, buyer details, destination VAT, and the total due" />
+    <Frame caption="The screen after you create the product, in test mode.">
+      <img src="/images/product/product-created.png" alt="The confirmation screen: Starter guide is live. Pay it yourself first. It takes a minute and proves the whole thing works. Below are the button Try a test payment, the line Use card 4242 4242 4242 4242, any future date, any CVC. Nothing is charged, and the buttons Copy link and View product." />
     </Frame>
-
-    In test mode, the checkout renders the real secure card form, not a mock. Pay with the standard test card:
-
-    | Field | Value |
-    |---|---|
-    | Card number | `4242 4242 4242 4242` |
-    | Expiry | Any future date |
-    | CVC | Any 3 digits |
-
-    <Warning>
-    Type the test card directly into the checkout page. Never send a card number to any AgentaOS API call yourself, in test mode or in live. We (and our card processor) never accept a raw card number over the API.
-    </Warning>
-  </Step>
-
-  <Step title="Confirm the payment landed">
-    Open [app.agentaos.ai](https://app.agentaos.ai) → **Home** or **Finance → Payments**. Your test payment shows up in the balance and the activity feed within seconds. A tax-correct invoice appears under **Finance → Invoices**, and a customer record is created for the email that paid.
   </Step>
 </Steps>
 
-## What you just built
+## Share the buyer link
 
-That one payment created a customer, a transaction, and a tax-correct invoice, all visible in the dashboard. No code, no integration, no card data touching your systems.
+Click **View product** to open the product's page. Every product has one buyer link, and one link works for every buyer.
 
-## Do it in code
+- **Copy link** copies the buyer link. Send it in an email or a chat, or put it behind a button on your site.
+- **QR code** shows a code that opens the same link on a phone.
+- **Preview** opens the checkout in a new tab, the way a buyer sees it.
 
-The dashboard is enough to get paid. Reach for the API when you want to **create links or checkouts programmatically**, or **detect a payment from your own system** (fulfil an order, provision access, update your database) the moment it clears. Everything the dashboard does is available over the SDK, CLI, and REST API.
+<Frame caption="The product's page with the QR code open.">
+  <img src="/images/product/product-page.png" alt="The product page for Starter guide: Active, One-time, EUR, €19.00 one-time, VAT added at checkout, with the buttons Copy link, Edit, Copy to live, Preview, QR code, and Deactivate, and the QR code below them." />
+</Frame>
+
+## Pay it yourself
+
+Click **Preview** on the product's page, or **Try a test payment** on the screen after you create the product. The checkout opens. A banner at the top reads **Test payment · 4242 4242 4242 4242 · any expiry · any CVC**.
 
 <Steps>
-  <Step title="Install the SDK or CLI">
-    <Tabs>
-      <Tab title="SDK">
-        ```bash
-        npm install @agentaos/pay
-        ```
-        `@agentaos/pay` is server-side only (Node.js 20+, ESM). Never ship your API key to a browser. Grab a test key (`sk_test_...`) from **Developers → API keys**.
-      </Tab>
-      <Tab title="CLI">
-        <CodeGroup>
-        ```bash Install
-        curl -fsSL https://agentaos.ai/install | bash
-        ```
-        ```bash Log in
-        agenta login
-        ```
-        </CodeGroup>
-        `agenta login` opens your browser to sign in, no API key needed. See [Login](/cli/login) for the details.
-      </Tab>
-    </Tabs>
+  <Step title="Fill in the buyer details">
+    Type an email such as `buyer@example.com` and pick a **Country**. The order summary on the left adds the tax for that country and shows the **Total due**.
+
+    <Frame caption="The first checkout step, with a buyer in Germany.">
+      <img src="/images/product/first-payment-details.png" alt="The checkout for Starter guide with the Test payment banner at the top. The summary shows Starter guide €19.00, Tax 24% €4.56, and Total due €23.56, and Sold by AgentaOS, merchant of record. The form has the email buyer@example.com, the country Germany, and the button Continue to payment." />
+    </Frame>
+
+    The 24% is the Estonian rate. The checkout charges it to every EU consumer while AgentaOS sells under the EU distance-selling threshold. See [How tax works](/mor/tax#the-rate-on-eu-sales-today).
   </Step>
-
-  <Step title="Create a payment link">
-    A payment link is a reusable, shareable URL. Every visitor who opens it gets their own checkout. Amounts are plain currency units: `49.99` means €49.99, never cents.
-
-    <Tabs>
-      <Tab title="SDK">
-        ```typescript
-        import { AgentaOS } from '@agentaos/pay';
-
-        const agentaos = new AgentaOS(process.env.AGENTAOS_API_KEY!); // sk_test_...
-
-        const link = await agentaos.paymentLinks.create({
-          amount: 49.99,
-          currency: 'EUR',
-          description: 'Pro plan',
-          successUrl: 'https://myshop.com/success',
-          webhookUrl: 'https://myshop.com/webhooks',
-        });
-
-        console.log(link.checkoutUrl);
-        // → https://app.agentaos.ai/pay/7rr6S9ml4BMp829wV5WeAA
-        ```
-      </Tab>
-      <Tab title="cURL">
-        ```bash
-        curl -X POST https://api.agentaos.ai/api/v1/gateway/payment-links \
-          -H "x-api-key: sk_test_..." \
-          -H "Content-Type: application/json" \
-          -d '{
-            "amount": 49.99,
-            "currency": "EUR",
-            "description": "Pro plan",
-            "successUrl": "https://myshop.com/success",
-            "webhookUrl": "https://myshop.com/webhooks"
-          }'
-        ```
-      </Tab>
-      <Tab title="CLI">
-        ```bash
-        agenta pay checkout -a 49.99 -c EUR -d "Pro plan" --json
-        ```
-
-        <Note>
-        `agenta pay checkout` creates a one-off checkout. For a reusable link (a product), run `agenta products create --name "Pro plan" -a 49.99 -c EUR --json` instead (needs `agentaos` 2.1 or newer), or use the dashboard's **Catalog → Products** page.
-        </Note>
-      </Tab>
-    </Tabs>
-
-    Share the `checkoutUrl` exactly as you'd share a link from the dashboard. The buyer's checkout page is identical.
+  <Step title="Continue to payment">
+    Click **Continue to payment**.
   </Step>
+  <Step title="Enter the test card">
+    Type `4242 4242 4242 4242` in **Card number**, any future date in **Expiration date**, and any three digits in **Security code**.
 
-  <Step title="Detect the payment">
-    <Tabs>
-      <Tab title="Webhook">
-        If you set a `webhookUrl`, AgentaOS POSTs a `checkout.session.completed` event the moment payment clears, with `sessionId`, `amount` (a string, `"49.99"`), and `currency` in the payload. This is the reliable way to react to a payment server-side. See [Handle webhooks](/guides/handle-webhooks) to build a verified handler.
-      </Tab>
-      <Tab title="Status check">
-        Poll the checkout with `checkouts.retrieve()` (SDK), `agenta pay get <sessionId>` (CLI), or a `GET` against the REST API. It moves from `open` to `completed` when the payment clears.
-      </Tab>
-    </Tabs>
-
-    <Warning>
-    Don't trust the `successUrl` redirect as proof of payment. The buyer's browser might close before it fires. A webhook or a status check against the checkout is the source of truth.
-    </Warning>
+    <Frame caption="The Review & pay step, before the card is entered.">
+      <img src="/images/product/first-payment-review.png" alt="The Review and pay step: Paying as buyer@example.com, €23.56, Edit details, the Card and Bank transfer options, the card form with Card number, Expiration date, and Security code, Country Germany, and the button Pay €23.56." />
+    </Frame>
+  </Step>
+  <Step title="Pay">
+    Click **Pay** followed by the amount, here **Pay €23.56**.
   </Step>
 </Steps>
+
+## What the buyer sees
+
+The checkout shows **Payment complete** with the amount, the invoice number, and the lines of the invoice. In test mode, it also says "Test payment: no money was paid. This invoice and receipt are not valid." The buyer can click **Download invoice** or **Download receipt**.
+
+<Frame caption="What the buyer sees after paying.">
+  <img src="/images/product/checkout-success.png" alt="The Payment complete page: €23.56, Paid to AgencyOne, the notice Test payment: no money was paid. This invoice and receipt are not valid, the invoice TEST-INV-2026-0004 with Starter guide €19.00, Tax 24% €4.56, and Total €23.56, and the buttons Download invoice and Download receipt." />
+</Frame>
+
+The buyer also gets a receipt by email, with the invoice attached. The subject line is "Receipt from" followed by your business name. In test mode, the subject starts with `[TEST]`, and the invoice number starts with `TEST-`. See [Test mode and testing](/getting-started/test-mode#test-invoices-receipts-and-emails) for how each test document is marked.
+
+## See the sale
+
+<Steps>
+  <Step title="Home">
+    In the sidebar, click **Home**. The setup guide marks **Create your first product** as done: "Test payment cleared. Nice."
+
+    <Frame caption="Home after the first test payment.">
+      <img src="/images/product/home.png" alt="The Home page: Welcome, AgencyOne. The Setup guide shows 1 of 4, with Create your first product checked and the line Test payment cleared. Nice. Real money next: verify your business." />
+    </Frame>
+  </Step>
+  <Step title="Transactions">
+    Click **Transactions**. The sale is at the top of the list as **Received** with the amount the buyer paid.
+
+    <Frame caption="The Transactions list with a test card payment.">
+      <img src="/images/product/transactions.png" alt="The Transactions page with one row: Received +€12.40, Customer, Card via AgentaOS, Clearing, Sep 28, 2026." />
+    </Frame>
+  </Step>
+  <Step title="The sale page">
+    Click the sale to open it. Under **Buyer & payment**, three rows show where the buyer's money goes:
+
+    - **VAT** is the tax on the sale. AgentaOS collects and handles it.
+    - **AgentaOS fee** is the fee for the sale. See [Pricing](/mor/pricing).
+    - **Your net** is what is left for you.
+
+    <Frame caption="The sale page. VAT, AgentaOS fee, and Your net are at the bottom of Buyer & payment.">
+      <img src="/images/product/sale-page.png" alt="The sale page: Paid, €23.56, for A 40-page PDF on pricing your first product. Buyer and payment lists Email buyer@example.com, Country Germany, Method Visa 4242, VAT (24%) €4.56, AgentaOS fee €1.91, and Your net €17.09, with the buttons Request refund, View invoice, and View product." />
+    </Frame>
+  </Step>
+  <Step title="Invoices">
+    Click **Invoices**. The sale's invoice is in the list as **Paid**, with the buyer's email. Open it and click **Download invoice**. The PDF of a test invoice has a **TEST** badge next to its title.
+
+    <Frame caption="The Invoices list with the invoice for a test sale.">
+      <img src="/images/product/invoices.png" alt="The Invoices page with one invoice: buyer@example.com, INV-2026-0001, Sep 28, 2026, €12.40, Paid." />
+    </Frame>
+  </Step>
+</Steps>
+
+## From code
+
+To create products and checkouts from your server, and to know when a buyer pays, use the SDK:
+
+- [Checkouts in the SDK](/sdk/pay-checkouts)
+- [Payment links in the SDK](/sdk/pay-payment-links)
+- [Quickstart for developers](/getting-started/quickstart#code-integration)
 
 ## Next steps
 
-<CardGroup cols={2}>
-  <Card title="Sell a subscription" icon="rotate" href="/guides/sell-a-subscription">
-    Turn this into a recurring plan buyers pay into every month or year.
-  </Card>
-  <Card title="Handle webhooks" icon="bell" href="/guides/handle-webhooks">
-    Build a verified handler so your server reacts to payments automatically.
+<Columns cols={2}>
+  <Card title="Sell a subscription" icon="repeat" href="/guides/sell-a-subscription">
+    Create a monthly plan with a free trial and take your first subscriber.
   </Card>
   <Card title="Go live" icon="rocket" href="/guides/go-live">
-    Move from test mode to accepting real money.
+    Verify your business and take real payments.
   </Card>
-  <Card title="Payment links" icon="link" href="/payments/payment-links">
-    Every parameter, response field, and the checkout-fields feature, in full.
+  <Card title="Handle webhooks" icon="bell" href="/sdk/handle-webhooks">
+    Let your server react when a buyer pays.
   </Card>
-</CardGroup>
+</Columns>

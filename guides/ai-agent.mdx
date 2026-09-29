@@ -1,20 +1,21 @@
 ---
 title: "Let an AI agent run your store"
 description: "Connect the AgentaOS MCP server, or give a coding agent the CLI, so an AI agent can create checkouts, check payments and manage subscriptions for you."
+icon: "wand-magic-sparkles"
 ---
 
 By the end of this guide an AI agent can create checkouts, check payments and manage subscriptions for your store. You ask in plain words; the agent does the work.
 
 There are two ways in. You can set up both; they do not conflict.
 
-<CardGroup cols={2}>
+<Columns cols={2}>
   <Card title="Connect the MCP server" icon="plug">
     Claude.ai, ChatGPT, Claude Code or Cursor. You approve the connection once in the browser and paste no key.
   </Card>
   <Card title="Give a coding agent the CLI" icon="terminal">
     Any agent that runs shell commands, including one in CI. It uses the `agenta` CLI and the SKILL.md prompt.
   </Card>
-</CardGroup>
+</Columns>
 
 ## Before you start
 
@@ -23,6 +24,18 @@ You do not need an account up front. When you approve the connection or run `age
 ## Path A: connect the MCP server
 
 <Steps>
+  <Step title="Open the setup dialog">
+    In the dashboard, go to **Settings → Developers** and click **Connect an AI agent**. The **Set up your AI agent** dialog asks "Where does your agent run?" Pick your client: **Claude Code**, **Cursor**, **ChatGPT**, **Claude.ai**, or **Other**. The dialog shows the steps for that client.
+
+    <Frame caption="The Set up your AI agent dialog with Claude Code picked: install the plugin, then approve it in AgentaOS.">
+      <img src="/images/agents/set-up-your-ai-agent.png" alt="The Set up your AI agent dialog in Settings. The Claude Code tab is selected next to Cursor, ChatGPT, Claude.ai and Other. Step 1, Install the plugin, shows two claude plugins commands with copy buttons. Step 2, Approve it here, says to type /mcp, choose agentaos, then Authenticate, and pick Test or Live on the AgentaOS page." />
+    </Frame>
+
+    <Frame caption="The same dialog with Claude.ai picked: add the connector, then approve it in AgentaOS.">
+      <img src="/images/agents/set-up-your-ai-agent-claude.png" alt="The Set up your AI agent dialog with the Claude.ai tab selected. Step 1, Add the connector, says: In Claude, Customize, Connectors, Add custom connector, and paste this URL, followed by https://mcp.agentaos.ai/mcp with a copy button. Step 2, Approve it here, says a page opens on AgentaOS where you pick Test or Live and press Approve." />
+    </Frame>
+  </Step>
+
   <Step title="Connect your agent">
     Follow [MCP server](/mcp/setup) for your client. For Claude.ai or ChatGPT, follow [Connect Claude.ai or ChatGPT](/mcp/remote-connector). Pick **Test mode** on the approval page while you try things out.
   </Step>
@@ -96,14 +109,14 @@ On the MCP path, the agent calls `agenta_status_get`. Before you go live, the an
 
 ## Next steps
 
-<CardGroup cols={2}>
+<Columns cols={2}>
   <Card title="MCP server" icon="server" href="/mcp/setup">
     Setup for each client, and every tool your agent can use.
   </Card>
   <Card title="CLI install" icon="terminal" href="/cli/install">
     The full `agenta` CLI reference, for scripts outside an AI agent too.
   </Card>
-  <Card title="Handle webhooks" icon="bell" href="/guides/handle-webhooks">
+  <Card title="Handle webhooks" icon="bell" href="/sdk/handle-webhooks">
     Checkouts an agent creates still need your server to fulfill them on completion.
   </Card>
-</CardGroup>
+</Columns>
