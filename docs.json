@@ -63,6 +63,7 @@
             "pages": [
               "connect/overview",
               "connect/fees",
+              "connect/bank-accounts",
               "connect/webhooks"
             ]
           },
@@ -255,6 +256,17 @@
                   "api-reference/businesses/resend-invitation",
                   "api-reference/businesses/revoke-invitation",
                   "api-reference/businesses/verification-link"
+                ]
+              },
+              {
+                "group": "Bank Accounts",
+                "expanded": false,
+                "pages": [
+                  "api-reference/bank-accounts/requirements",
+                  "api-reference/bank-accounts/refresh-requirements",
+                  "api-reference/bank-accounts/create",
+                  "api-reference/bank-accounts/list",
+                  "api-reference/bank-accounts/deactivate"
                 ]
               },
               "api-reference/webhooks"

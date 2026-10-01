@@ -1,0 +1,17 @@
+---
+title: "Add a bank account"
+openapi: "POST /gateway/bank-accounts"
+---
+
+<Note>
+Needs a live key. For a platform acting on a business it manages, ask us to open bank accounts by API for your platform first; until then the call gets `403 bank_accounts_by_api_closed`. The holder name is checked against the business's verified legal name at once: an account in another name is saved but never paid. Every account added through a platform's key is emailed to the platform's owner and to the business's owner. We keep the last four digits and a hash, never the number.
+</Note>
+
+<Columns cols={2}>
+  <Card title="Bank accounts by API" icon="building-columns" href="/connect/bank-accounts">
+    The flow end to end, with the SDK.
+  </Card>
+  <Card title="Build a platform" icon="route" href="/guides/build-a-platform">
+    Managing businesses, start to finish.
+  </Card>
+</Columns>

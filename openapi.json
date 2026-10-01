@@ -52,9 +52,246 @@
     {
       "name": "Businesses",
       "description": "For platforms: the businesses you manage, a client's business or another app of your own company. To act as one of them on any other endpoint, send its id in the `AgentaOS-Account` header. Every field on this resource is camelCase on the wire."
+    },
+    {
+      "name": "Bank Accounts",
+      "description": "Where payouts go: the bank accounts of a business, as thin references (holder, last four digits, the name-check result), never the account number. For a platform: with the `AgentaOS-Account` header these act on a business you manage, once we have opened bank accounts by API for your platform. Adding an account needs a live key."
     }
   ],
   "paths": {
+    "/gateway/bank-accounts/requirements": {
+      "get": {
+        "tags": [
+          "Bank Accounts"
+        ],
+        "operationId": "getBankAccountRequirements",
+        "summary": "Get the fields a currency needs",
+        "description": "The form schema for a bank account in this currency. Render it, then send the answers to `POST /gateway/bank-accounts`. Works with a test or a live key.",
+        "parameters": [
+          {
+            "name": "currency",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "EUR",
+                "USD"
+              ]
+            }
+          }
+        ],
+        "responses": {
+      "BankAccountsForbidden": {
+        "description": "A test key (`live_key_required`); a business you do not manage (`You cannot act as this business.`); or, for a platform key, bank accounts by API not opened for your platform (`bank_accounts_by_api_closed`).",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "statusCode": 403,
+              "message": "Bank accounts by API are not enabled for your platform. Ask us to open it, or add the account from the dashboard.",
+              "code": "bank_accounts_by_api_closed"
+            }
+          }
+        }
+      },
+          "200": {
+            "description": "The fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BankAccountRequirements"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/gateway/bank-accounts/requirements/refresh": {
+      "post": {
+        "tags": [
+          "Bank Accounts"
+        ],
+        "operationId": "refreshBankAccountRequirements",
+        "summary": "Refresh the fields after an answer",
+        "description": "Some answers change the fields that follow (a field marked `refreshRequirementsOnChange`, such as the legal type). Send the `quoteId` and the answers so far; the fields come back updated.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "quoteId": {
+                    "type": "string"
+                  },
+                  "details": {
+                    "type": "object",
+                    "additionalProperties": true
+                  }
+                },
+                "required": [
+                  "quoteId",
+                  "details"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The fields, updated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/gateway/bank-accounts": {
+      "get": {
+        "tags": [
+          "Bank Accounts"
+        ],
+        "operationId": "listBankAccounts",
+        "summary": "List bank accounts",
+        "description": "The active bank accounts of the business, thin references only, each with whether the next payout can go to it.",
+        "responses": {
+          "200": {
+            "description": "The accounts.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BankAccount"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Bank Accounts"
+        ],
+        "operationId": "createBankAccount",
+        "summary": "Add a bank account",
+        "description": "Save a bank account for the business. The holder name is checked against the business's verified legal name at once: an account in another name is saved but never paid. Needs a live key. For a platform acting on a business it manages, bank accounts by API must have been opened for your platform; ask us. Every account added through a platform's key is emailed to the platform's owner and to the business's owner. The account number is never stored: we keep the last four characters and a hash.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBankAccountParams"
+              },
+              "example": {
+                "currency": "EUR",
+                "type": "iban",
+                "accountHolderName": "Seller GmbH",
+                "legalType": "BUSINESS",
+                "details": {
+                  "IBAN": "DE89370400440532013000"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The saved account, as a thin reference.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BankAccount"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The bank partner refused the details (`RECIPIENT_INVALID`, with `fieldErrors` per field).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/BankAccountsForbidden"
+          }
+        }
+      }
+    },
+    "/gateway/bank-accounts/{id}": {
+      "delete": {
+        "tags": [
+          "Bank Accounts"
+        ],
+        "operationId": "deactivateBankAccount",
+        "summary": "Retire a bank account",
+        "description": "The account stops being paid to. A currency that pointed at it falls back to the newest payable account. Needs a live key; the same platform rule as adding one.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Retired.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/BankAccountsForbidden"
+          }
+        }
+      }
+    },
     "/gateway/payment-links": {
       "post": {
         "tags": [
@@ -2278,7 +2515,8 @@
           "createdAt": "2026-09-28T10:00:00.000Z",
           "platformFee": {
             "bps": 1000,
-            "fixedMinor": 50
+            "fixedMinor": 50,
+            "fixedDisplay": "€0.50"
           },
           "sameLegalEntity": false,
           "feesThisMonth": [
@@ -2303,7 +2541,8 @@
             "createdAt": "2026-09-28T10:00:00.000Z",
             "platformFee": {
               "bps": 1000,
-              "fixedMinor": 50
+              "fixedMinor": 50,
+              "fixedDisplay": "€0.50"
             },
             "sameLegalEntity": false,
             "feesThisMonth": [
@@ -2320,6 +2559,131 @@
       }
     },
     "schemas": {
+      "BankAccount": {
+        "type": "object",
+        "description": "A bank account as we keep it: a thin reference. The account number itself stays with our bank partner.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "currency": {
+            "type": "string",
+            "description": "Upper-case, `EUR` or `USD`."
+          },
+          "account_type": {
+            "type": "string",
+            "description": "The corridor: `iban`, `sort_code`, `aba`."
+          },
+          "account_identifier_last4": {
+            "type": "string",
+            "description": "The last four characters of the account number."
+          },
+          "account_holder_name": {
+            "type": "string"
+          },
+          "legal_type": {
+            "type": "string",
+            "enum": [
+              "PRIVATE",
+              "BUSINESS"
+            ]
+          },
+          "name_match_status": {
+            "type": "string",
+            "enum": [
+              "success",
+              "partial",
+              "failed",
+              "unknown"
+            ],
+            "description": "How the holder name compared with the name the bank holds. `failed` is never paid."
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "payable": {
+            "type": "boolean",
+            "description": "Can the next payout go to this account right now: active, and the name check did not fail."
+          },
+          "payableReason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "When `payable` is false: why, in a sentence for the merchant."
+          }
+        },
+        "required": [
+          "id",
+          "currency",
+          "account_type",
+          "account_identifier_last4",
+          "account_holder_name",
+          "legal_type",
+          "name_match_status",
+          "active",
+          "payable",
+          "payableReason"
+        ]
+      },
+      "BankAccountRequirements": {
+        "type": "object",
+        "description": "The fields a bank account in this currency needs, as a form schema: one entry per account type (`iban` for EUR, `aba` for USD), each with its fields, their validation and whether changing one refreshes the rest.",
+        "properties": {
+          "quoteId": {
+            "type": "string",
+            "description": "Pass back to `requirements/refresh` when a field marked `refreshRequirementsOnChange` changes."
+          },
+          "requirements": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        },
+        "required": [
+          "quoteId",
+          "requirements"
+        ]
+      },
+      "CreateBankAccountParams": {
+        "type": "object",
+        "properties": {
+          "currency": {
+            "type": "string",
+            "description": "`EUR` or `USD`."
+          },
+          "type": {
+            "type": "string",
+            "description": "The account type from the requirements: `iban`, `sort_code`, `aba`."
+          },
+          "accountHolderName": {
+            "type": "string",
+            "description": "Must match the business's verified legal name, or the account is saved but not paid."
+          },
+          "legalType": {
+            "type": "string",
+            "enum": [
+              "PRIVATE",
+              "BUSINESS"
+            ]
+          },
+          "details": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "The fields the requirements asked for, for example `{ \"IBAN\": \"DE89…\" }`. Never stored: we keep the last four characters and a hash."
+          }
+        },
+        "required": [
+          "currency",
+          "type",
+          "accountHolderName",
+          "legalType",
+          "details"
+        ]
+      },
       "Error": {
         "type": "object",
         "description": "Every non-2xx response is JSON in this shape. Every response (success or error) also carries an `x-request-id` response header; send that header on your request to have your own id echoed back, otherwise the server mints one. On errors the same id is repeated in the `requestId` body field.",
@@ -4211,11 +4575,16 @@
               },
               "fixedMinor": {
                 "type": "integer"
+              },
+              "fixedDisplay": {
+                "type": "string",
+                "description": "The fixed part as money, in the currency of this month's fees, else euros: `€0.30`."
               }
             },
             "required": [
               "bps",
-              "fixedMinor"
+              "fixedMinor",
+              "fixedDisplay"
             ]
           },
           "sameLegalEntity": {
