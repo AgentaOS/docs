@@ -12,15 +12,21 @@ A stablecoin payout sends your balance to a wallet instead of your bank account.
 
 ## Who can be paid in stablecoins
 
-Wallet payouts are switched on per account, after your account has paid you once by bank. The rule:
+Stablecoin payouts are switched on per account, after your account has paid you once by bank. Open **Balances**, then the **Payout accounts** tab. The **Stablecoin payouts** card lists three conditions and ticks each one when you meet it:
 
-1. Your business is verified and the identity check has passed, the same as for any payout. See [Verify your business](/mor/verification).
-2. You have a bank payout account that shows **Ready for payouts** (the name check passed). See [Add a payout account](/payouts/payout-accounts).
-3. You have received at least one bank payout to that account.
+1. **Business verified and identity check passed**, the same as for any payout. See [Verify your business](/mor/verification).
+2. **Bank account ready for payouts**: a bank account that shows **Ready for payouts** (the name check passed). See [Add a bank account](/payouts/payout-accounts).
+3. **First bank payout received**: at least one bank payout to that account.
 
-When all three are true, ask at [contact@agentaos.ai](mailto:contact@agentaos.ai) and AgentaOS switches wallet payouts on for your account. Until then, the **Payout accounts** tab shows no wallet section, and the API answers "Wallet payouts are not open for this account."
+<Frame caption="The Stablecoin payouts card before it is switched on. Each condition gets a tick when you meet it.">
+  <img src="/images/payouts/stablecoin-payouts-card.png" alt="The Payout accounts tab with the Bank accounts section and, below it, the Stablecoin payouts card. The card lists Business verified and identity check passed, Bank account ready for payouts, and First bank payout received, all not yet ticked, with the buttons Learn how and Ask us and the line 0 of 3 done. Ask us when all three are ticked." />
+</Frame>
 
-If your country has no local bank route, so that a bank payout can only travel by Swift (the countries marked on [Supported countries](/mor/supported-countries#supported-payout-countries)), ask after step 1: AgentaOS can switch wallet payouts on without the bank payout in that case.
+Under the list, the card counts the conditions: "0 of 3 done. Ask us when all three are ticked." The **Go live** page shows the same count on its **Stablecoin payouts** row.
+
+When all three are ticked, click **Ask us**, or write to [contact@agentaos.ai](mailto:contact@agentaos.ai). AgentaOS switches stablecoin payouts on for your account, usually the same day. The card then shows **On** and the button **Add wallet**. Until then, the API answers "Wallet payouts are not open for this account."
+
+If your country has no local bank route, so that a bank payout can only travel by Swift (the countries marked on [Supported countries](/mor/supported-countries#supported-payout-countries)), the card has one condition: **Business verified and identity check passed**. Click **Start the identity check** on the card, in live mode. AgentaOS can switch stablecoin payouts on without the bank payout in that case.
 
 ## Networks
 
@@ -33,10 +39,10 @@ If your country has no local bank route, so that a bank payout can only travel b
 
 <Steps>
   <Step title="Open Payout accounts">
-    In the dashboard sidebar, click **Balances**. Then click the **Payout accounts** tab. The **Digital wallet payouts** section is below your bank accounts.
+    In the dashboard sidebar, click **Balances**. Then click the **Payout accounts** tab. The **Stablecoin payouts** section is below your bank accounts and shows **On**.
   </Step>
   <Step title="Start a new wallet">
-    Click **Add digital wallet**. The **Add digital wallet** panel opens.
+    Click **Add wallet**. The **Add wallet** panel opens.
   </Step>
   <Step title="Choose the currency and the network">
     - **Pay me in**: choose **EUR** or **USD**.
@@ -45,19 +51,19 @@ If your country has no local bank route, so that a bank payout can only travel b
   <Step title="Enter the wallet">
     - **Wallet address**: paste the address. "Payouts to a wallet cannot be recalled. Check the address before you save it."
     - **Name**: optional, for example "Treasury".
-    - **Who holds this wallet**: choose **My own wallet — I hold the keys** or **An exchange account that holds it for me**.
+    - **Who holds this wallet**: choose **My own wallet, I hold the keys** or **An exchange account that holds it for me**.
   </Step>
   <Step title="Save">
     Click **Save wallet**.
   </Step>
 </Steps>
 
-<Frame caption="The Digital wallet payouts section appears below your bank accounts once stablecoin payouts are on for your account.">
-  <img src="/images/payouts/wallet-section.png" alt="The Payout accounts tab with the Payout accounts section for bank accounts and, below it, the Digital wallet payouts section with an Add digital wallet button and the empty state No digital wallet yet" />
+<Frame caption="The Stablecoin payouts section once stablecoin payouts are on for your account.">
+  <img src="/images/payouts/wallet-section.png" alt="The Payout accounts tab with the Bank accounts section and, below it, the Stablecoin payouts section marked On, with an Add wallet button and the empty state No wallet yet" />
 </Frame>
 
-<Frame caption="The Add digital wallet panel for a EUR payout on Base to a wallet you hold the keys to.">
-  <img src="/images/payouts/add-wallet.png" alt="The Add digital wallet panel with Pay me in set to EUR, Network set to Base, the warning that payouts to a wallet cannot be recalled, a wallet address, the name Treasury, and My own wallet selected under Who holds this wallet" />
+<Frame caption="The Add wallet panel for a EUR payout on Base to a wallet you hold the keys to.">
+  <img src="/images/payouts/add-wallet.png" alt="The Add wallet panel with Pay me in set to EUR, Network set to Base, the warning that payouts to a wallet cannot be recalled, a wallet address, the name Treasury, and My own wallet selected under Who holds this wallet" />
 </Frame>
 
 AgentaOS checks the address before it saves it. It refuses an address that is not valid on the network you chose, the burn address, and the contract address of a USDC or EURC token. Anything sent to those addresses cannot be recovered.
@@ -76,7 +82,7 @@ If you have no bank account in that currency and have not chosen a wallet, that 
 To return to your bank account, click **Switch back to bank** on the wallet's row. If you remove the wallet that pays a currency, that currency goes back to your bank account.
 
 <Frame caption="A saved EURC wallet on Base, before it pays your EUR payouts. The badge shows the date it becomes payable.">
-  <img src="/images/payouts/wallet-saved.png" alt="The Digital wallet payouts section with one wallet named Treasury, EURC on Base with a shortened address, the badge Payable from September 29, 2026, and the link Use for EUR payouts" />
+  <img src="/images/payouts/wallet-saved.png" alt="The Stablecoin payouts section with one wallet named Treasury, EURC on Base with a shortened address, the badge Payable from September 30, 2026, and the link Use for EUR payouts" />
 </Frame>
 
 ## The 24-hour wait
@@ -102,7 +108,7 @@ On **You ask**, the **Payouts** tab shows what you would receive today and the f
   <Card title="Payouts" icon="money-bill-transfer" href="/payouts/overview">
     Your balance, the schedule, and the documents for each payout.
   </Card>
-  <Card title="Add a payout account" icon="building-columns" href="/payouts/payout-accounts">
+  <Card title="Add a bank account" icon="building-columns" href="/payouts/payout-accounts">
     Save a bank account for the currencies you do not pay to a wallet.
   </Card>
 </Columns>

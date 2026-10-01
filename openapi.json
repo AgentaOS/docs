@@ -4191,7 +4191,7 @@
               "rejected",
               "live"
             ],
-            "description": "Where the business stands. `live` = verified and with a payout account. `changes_needed` = we asked the business for a change."
+            "description": "Where the business stands. `live` = verified. A bank account is needed before the first payout, not for this status. `changes_needed` = we asked the business for a change."
           },
           "platformOrgId": {
             "type": "string",
