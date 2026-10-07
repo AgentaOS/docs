@@ -73,12 +73,9 @@
             "in": "query",
             "required": true,
             "schema": {
-              "type": "string",
-              "enum": [
-                "EUR",
-                "USD"
-              ]
-            }
+              "type": "string"
+            },
+            "description": "The payout currency. EUR and USD are supported."
           }
         ],
         "responses": {
@@ -2656,7 +2653,7 @@
         "properties": {
           "currency": {
             "type": "string",
-            "description": "`EUR` or `USD`."
+            "description": "The payout currency. EUR and USD are supported."
           },
           "type": {
             "type": "string",

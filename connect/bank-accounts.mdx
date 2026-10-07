@@ -16,7 +16,7 @@ A marketplace or a platform whose sellers never log in here can save each seller
 - Use a live key. A test key gets `403 live_key_required`.
 - Act as the business: pass `{ business: id }` on the call or create the client with it. See [Build a platform](/guides/build-a-platform).
 
-Without the switch, the call gets `403 bank_accounts_by_api_closed` and the business's bank account can still be added from the dashboard: open the business and go to Balances, Payout accounts.
+Without the switch, adding and retiring an account get `403 bank_accounts_by_api_closed`; asking for the requirements and listing still work. The business's bank account can still be added from the dashboard: open the business and go to Balances, Payout accounts.
 
 ## Add an account
 
@@ -51,7 +51,7 @@ Without the switch, the call gets `403 bank_accounts_by_api_closed` and the busi
 
 ## What happens next
 
-- **We email the owners.** Every account added through your key is emailed to your owner and, when the business has one, to the business's owner: the business, the currency, the last four digits, and that it came through the API.
+- **We email the owners.** Every account added through your key is emailed to your owner and, when the business has one, to the business's owner: the business, the currency, the last four digits, the holder name, and that it came through your API key.
 - **Payouts use the newest usable account per currency**, unless the business chose one. A seller who logs in sees the account on their Payout accounts page like any other.
 - **Retire an account** with `deactivate(id)`. A currency that pointed at it falls back to the newest usable account.
 
