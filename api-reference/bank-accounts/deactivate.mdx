@@ -1,0 +1,17 @@
+---
+title: "Retire a bank account"
+openapi: "DELETE /gateway/bank-accounts/{id}"
+---
+
+<Note>
+The account stops being paid to. A currency that pointed at it falls back to the newest usable account. Needs a live key, and the same platform rule as adding one.
+</Note>
+
+<Columns cols={2}>
+  <Card title="Bank accounts by API" icon="building-columns" href="/connect/bank-accounts">
+    The flow end to end, with the SDK.
+  </Card>
+  <Card title="Build a platform" icon="route" href="/guides/build-a-platform">
+    Managing businesses, start to finish.
+  </Card>
+</Columns>

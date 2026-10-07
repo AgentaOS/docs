@@ -1,0 +1,17 @@
+---
+title: "Get the fields a currency needs"
+openapi: "GET /gateway/bank-accounts/requirements"
+---
+
+<Note>
+The fields depend on the currency: an IBAN for EUR, a routing and an account number for USD. Render the schema, then send the answers to add the account. When a field is marked `refreshRequirementsOnChange`, send the answers so far to the refresh call and render the fields again.
+</Note>
+
+<Columns cols={2}>
+  <Card title="Bank accounts by API" icon="building-columns" href="/connect/bank-accounts">
+    The flow end to end, with the SDK.
+  </Card>
+  <Card title="Build a platform" icon="route" href="/guides/build-a-platform">
+    Managing businesses, start to finish.
+  </Card>
+</Columns>
