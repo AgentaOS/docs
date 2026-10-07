@@ -82,21 +82,6 @@
           }
         ],
         "responses": {
-      "BankAccountsForbidden": {
-        "description": "A test key (`live_key_required`); a business you do not manage (`You cannot act as this business.`); or, for a platform key, bank accounts by API not opened for your platform (`bank_accounts_by_api_closed`).",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/Error"
-            },
-            "example": {
-              "statusCode": 403,
-              "message": "Bank accounts by API are not enabled for your platform. Ask us to open it, or add the account from the dashboard.",
-              "code": "bank_accounts_by_api_closed"
-            }
-          }
-        }
-      },
           "200": {
             "description": "The fields.",
             "content": {
@@ -109,6 +94,9 @@
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/BankAccountsForbidden"
           }
         }
       }
@@ -198,7 +186,7 @@
         ],
         "operationId": "createBankAccount",
         "summary": "Add a bank account",
-        "description": "Save a bank account for the business. The holder name is checked against the business's verified legal name at once: an account in another name is saved but never paid. Needs a live key. For a platform acting on a business it manages, bank accounts by API must have been opened for your platform; ask us. Every account added through a platform's key is emailed to the platform's owner and to the business's owner. The account number is never stored: we keep the last four characters and a hash.",
+        "description": "Save a bank account for the business. The bank confirms the holder name at once: a clear mismatch is saved but never paid, and `payableReason` says so. Needs a live key. For a platform acting on a business it manages, bank accounts by API must have been opened for your platform; ask us. Every account added through a platform's key is emailed to the platform's owner and to the business's owner. The account number is never stored: we keep the last four characters and a hash.",
         "requestBody": {
           "required": true,
           "content": {
@@ -2357,6 +2345,21 @@
             }
           }
         }
+      },
+      "BankAccountsForbidden": {
+        "description": "A test key (`live_key_required`); a business you do not manage (`You cannot act as this business.`); or, for a platform key, bank accounts by API not opened for your platform (`bank_accounts_by_api_closed`).",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "statusCode": 403,
+              "message": "Bank accounts by API are not enabled for your platform. Ask us to open it, or add the account from the dashboard.",
+              "code": "bank_accounts_by_api_closed"
+            }
+          }
+        }
       }
     },
     "examples": {
@@ -2661,7 +2664,7 @@
           },
           "accountHolderName": {
             "type": "string",
-            "description": "Must match the business's verified legal name, or the account is saved but not paid."
+            "description": "The name on the bank account, as the bank holds it. A clear mismatch is saved but not paid."
           },
           "legalType": {
             "type": "string",

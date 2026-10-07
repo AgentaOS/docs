@@ -1,6 +1,6 @@
 ---
 title: "Bank accounts by API"
-description: "Save a bank account for a business you manage from your own app. We check the holder name against the business's verified legal name and keep only the last four digits."
+description: "Save a bank account for a business you manage from your own app. The bank confirms the holder name; we keep only the last four digits."
 icon: "building-columns"
 ---
 
@@ -8,7 +8,7 @@ import PrivatePreview from "/snippets/private-preview.mdx";
 
 <PrivatePreview />
 
-A marketplace or a platform whose sellers never log in here can save each seller's bank account from its own app. The account is the seller's: payouts for that business go to it, and we check the holder name against the business's verified legal name before anything is paid.
+A marketplace or a platform whose sellers never log in here can save each seller's bank account from its own app. The account is the seller's: payouts for that business go to it, and the bank confirms the holder name before anything is paid: a clear mismatch is saved but never paid.
 
 ## Before you start
 
@@ -45,7 +45,7 @@ Without the switch, the call gets `403 bank_accounts_by_api_closed` and the busi
     You get the account back as a thin reference: `accountIdentifierLast4`, `accountHolderName`, `nameMatchStatus` and `payable`. We keep the last four digits and a hash. The account number stays with our bank partner.
   </Step>
   <Step title="Read the name check">
-    The holder name is compared with the name the bank holds, at once. `payable: true` means the next payout can go there. `nameMatchStatus: "failed"` means the account is saved but never paid: the name on the account is not the business's verified legal name. `payableReason` says why in a sentence you can show.
+    The bank confirms the holder name at once. `payable: true` means the next payout can go there. `name_match_status: "failed"` means the account is saved but never paid: the name on the account is not the business's. `payableReason` says why in a sentence you can show.
   </Step>
 </Steps>
 
