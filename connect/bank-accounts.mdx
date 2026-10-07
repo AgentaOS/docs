@@ -8,7 +8,7 @@ import PrivatePreview from "/snippets/private-preview.mdx";
 
 <PrivatePreview />
 
-A marketplace or a platform whose sellers never log in here can save each seller's bank account from its own app. The account is the seller's: payouts for that business go to it, and the bank confirms the holder name before anything is paid: a clear mismatch is saved but never paid.
+A marketplace or a platform whose sellers never log in here can save each seller's bank account from its own app. The account is the seller's: payouts for that business go to it, and where the bank offers a name check, a clear mismatch is saved but never paid.
 
 ## Before you start
 
@@ -45,13 +45,13 @@ Without the switch, adding and retiring an account get `403 bank_accounts_by_api
     You get the account back as a thin reference: `accountIdentifierLast4`, `accountHolderName`, `nameMatchStatus` and `payable`. We keep the last four digits and a hash. The account number stays with our bank partner.
   </Step>
   <Step title="Read the name check">
-    The bank confirms the holder name at once. `payable: true` means the next payout can go there. `name_match_status: "failed"` means the account is saved but never paid: the name on the account is not the business's. `payableReason` says why in a sentence you can show.
+    Where the bank offers a name check, it runs at once; not every currency has one. `payable: true` means the next payout can go there. `nameMatchStatus: "failed"` means the account is saved but never paid: the name on the account is not the business's. `partial` and `unknown` are paid. `payableReason` says why in a sentence you can show.
   </Step>
 </Steps>
 
 ## What happens next
 
-- **We email the owners.** Every account added through your key is emailed to your owner and, when the business has one, to the business's owner: the business, the currency, the last four digits, the holder name, and that it came through your API key.
+- **We email the owners.** Every account added through your key is emailed to your owner and, when the business has one, to the business's owner (every owner address on each side, one email each): the business, the currency, the last four digits, the holder name, that it came through your API key, whether the next payout goes there, and to reply at once if nobody at the platform did this.
 - **Payouts use the newest usable account per currency**, unless the business chose one. A seller who logs in sees the account on their Payout accounts page like any other.
 - **Retire an account** with `deactivate(id)`. A currency that pointed at it falls back to the newest usable account.
 

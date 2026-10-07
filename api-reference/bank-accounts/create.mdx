@@ -4,7 +4,7 @@ openapi: "POST /gateway/bank-accounts"
 ---
 
 <Note>
-Needs a live key. For a platform acting on a business it manages, ask us to open bank accounts by API for your platform first; until then the call gets `403 bank_accounts_by_api_closed`. The bank confirms the holder name at once: a clear mismatch is saved but never paid, and `payableReason` says so. Every account added through a platform's key is emailed to the platform's owner and to the business's owner. We keep the last four digits and a hash, never the number.
+Needs a live key. For a platform acting on a business it manages, ask us to open bank accounts by API for your platform first; until then the call gets `403 bank_accounts_by_api_closed`. Where the bank offers a name check, it runs at once: a clear mismatch is saved but never paid, and `payableReason` says so; `partial` and `unknown` are paid. Every account added through a platform's key is emailed to the platform's owner and to the business's owner. We keep the last four digits and a hash, never the number.
 </Note>
 
 <Columns cols={2}>
