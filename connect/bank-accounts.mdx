@@ -51,7 +51,7 @@ Without the switch, adding and retiring an account get `403 bank_accounts_by_api
 
 ## What happens next
 
-- **We email the owners.** Every account added through your key is emailed to your owner and, when the business has one, to the business's owner (every owner address on each side, one email each): the business, the currency, the last four digits, the holder name, that it came through your API key, whether the next payout goes there, and to reply at once if nobody at the platform did this.
+- **We email the owners.** Every account added through your key is emailed to your owners and, when the business has any, to the business's owners, one email each: the business, the currency, the last four digits, the holder name, that it came through your API key, whether the next payout goes there, and to reply at once if nobody at the platform did this.
 - **Payouts use the newest usable account per currency**, unless the business chose one. A seller who logs in sees the account on their Payout accounts page like any other.
 - **Retire an account** with `deactivate(id)`. A currency that pointed at it falls back to the newest usable account.
 
