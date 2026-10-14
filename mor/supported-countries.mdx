@@ -7,7 +7,7 @@ icon: "earth-europe"
 AgentaOS accepts purchases from buyers in almost every country, and pays merchants out by bank transfer across the countries listed below. For how the money moves end to end, see [How it works](/mor/how-it-works).
 
 <Info>
-If your country is not in the payout list: bank payout coverage expands over time. In the meantime, [stablecoin payouts (public preview)](/payouts/stablecoin-payouts) pay your balance to a wallet in USDC or EURC. Ask us at [contact@agentaos.ai](mailto:contact@agentaos.ai) and we confirm your options.
+If your country is not in the payout list: bank payout coverage expands over time. In the meantime, [stablecoin payouts (public preview)](/payouts/stablecoin-payouts) pay your balance to a wallet in USDC or EURC. Ask us at [contact@agentaos.ai](mailto:contact@agentaos.ai) and we confirm your options. The exception is the short list of [countries we cannot pay out to](#countries-we-cannot-pay-out-to): no payout reaches them, by bank or by wallet.
 </Info>
 
 ## Accepting payment (your buyer's side)
@@ -46,41 +46,71 @@ You can receive a bank payout in the following countries. This list follows our 
 
 | | | | |
 |---|---|---|---|
-| Albania | Andorra | Argentina | Australia |
-| Austria | Bangladesh** | Belgium | Bosnia and Herzegovina† |
+| Albania† | Andorra | Argentina | Australia |
+| Austria | Bangladesh† | Belgium | Bosnia and Herzegovina† |
 | Brazil | Bulgaria | Canada | Cayman Islands† |
 | Chile | China* | Colombia** | Costa Rica |
 | Croatia | Cyprus | Czech Republic | Denmark |
 | Dominican Republic† | Egypt | Estonia | Finland |
 | France | Georgia | Germany | Gibraltar |
 | Greece | Guatemala† | Hong Kong | Hungary |
-| Iceland | India | Indonesia | Ireland |
+| Iceland† | India | Indonesia | Ireland |
 | Israel | Italy | Japan | Kenya |
 | Latvia | Liechtenstein | Lithuania | Luxembourg |
-| Malaysia | Malta | Mexico | Moldova |
-| Monaco | Montenegro | Morocco | Nepal** |
-| Netherlands | New Zealand | Nigeria | North Macedonia |
+| Malaysia | Malta | Mexico | Moldova† |
+| Monaco | Montenegro† | Morocco | Nepal** |
+| Netherlands | New Zealand | Nigeria | North Macedonia† |
 | Norway | Pakistan** | Peru† | Philippines |
 | Poland | Portugal | Romania | San Marino |
-| Serbia | Singapore | Slovakia | Slovenia |
+| Serbia† | Singapore | Slovakia | Slovenia |
 | South Africa | South Korea | Spain | Sri Lanka |
-| Sweden | Switzerland | Taiwan† | Tanzania** |
+| Sweden | Switzerland | Taiwan† | Tanzania† |
 | Thailand | Turkey | Ukraine** | United Arab Emirates |
 | United Kingdom | United States | Uruguay | Vietnam |
-| Zambia | | | |
+| Zambia† | | | |
 
 ### Marks in the table
 
-- `**` Personal bank accounts only, in the recipient's own name. Our banking partner does not pay a business account in these countries. In Bangladesh the partner also refuses transfers sent by a business, so ask us before you count on a bank payout there.
+- `**` The local route pays personal bank accounts only, in the recipient's own name. A business account in these countries is paid by Swift instead, so the cross-border fee in the table above applies.
 - `*` China: a business is paid to a CNY account at a bank in mainland China, with a transfer reason on file; the recipient's bank can ask for the contract and the invoice. A person is paid through a card or wallet network, with a cap on each payout.
 - `†` No local route. The payout travels by Swift, so the cross-border fee in the table above applies.
 
 Some routes cap one payout. Brazil: 10,000 USD to a business account and 3,000 USD to a personal account, and the account holder's tax number is required. Argentina: 18,000 USD per calendar month. India: 1.5 million INR per working day. These caps are our banking partner's and can change. If your balance is above a cap, ask us before the payout window.
 
+## Countries we cannot pay out to
+
+A merchant has to be paid, so you cannot go live from one of the countries below: neither our banking partner nor our stablecoin partner sends money there. The Go live page says so the moment the country is picked.
+
+<Accordion title="Countries we cannot pay out to">
+- Afghanistan
+- Belarus
+- Burma (Myanmar)
+- Burundi
+- Central African Republic
+- Chad
+- Congo
+- Cuba
+- Democratic Republic of Congo
+- Eritrea
+- Iran
+- Iraq
+- Lebanon
+- Libya
+- North Korea
+- Palestine
+- Russia
+- Somalia
+- South Sudan
+- Sudan
+- Syria
+- Venezuela
+- Yemen
+</Accordion>
+
 ## Unsupported countries for purchases
 
 <Accordion title="Unsupported countries (sanctioned and embargoed jurisdictions)">
-AgentaOS cannot accept payments from customers or merchants in the following countries:
+AgentaOS cannot accept payments from customers in the following countries. Where you can be paid out is a separate list, [above](#countries-we-cannot-pay-out-to).
 
 - Afghanistan
 - Antarctica
