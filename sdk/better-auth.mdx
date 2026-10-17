@@ -1,0 +1,78 @@
+---
+title: "Better Auth plugin"
+description: "Add AgentaOS checkouts, subscriptions and webhooks to an app that signs users in with Better Auth, using the @agentaos/better-auth plugin."
+icon: "key"
+---
+
+If your app signs users in with [Better Auth](https://better-auth.com), the `@agentaos/better-auth` plugin connects AgentaOS to those users. It adds three endpoints to your auth server:
+
+| Endpoint | What it does |
+|---|---|
+| `POST /api/auth/agentaos/checkout` | Starts a checkout for the signed-in user. Their email is filled in, and their user ID goes into the checkout `metadata`. |
+| `GET /api/auth/agentaos/subscriptions` | Lists the signed-in user's subscriptions. The user's email must be verified. |
+| `POST /api/auth/agentaos/webhook` | Checks the signature of each AgentaOS event and passes it to your `onEvent` function. |
+
+## Before you start
+
+1. In the dashboard, create the products your users can buy. Copy each product's link ID from the product page.
+2. Open **Developers → API keys** and create a key. A key that starts with `sk_test_` works in test mode.
+3. Open **Settings → Developers → Webhooks** and set the URL to `https://your-domain.com/api/auth/agentaos/webhook`. Click **Reveal signing secret** and copy the secret.
+
+## Install
+
+```bash
+npm install @agentaos/better-auth @agentaos/pay
+```
+
+## Add the plugin to your auth server
+
+```ts auth.ts
+import { AgentaOS } from '@agentaos/pay';
+import { agentaos } from '@agentaos/better-auth';
+import { betterAuth } from 'better-auth';
+
+export const auth = betterAuth({
+  // ...your existing config
+  plugins: [
+    agentaos({
+      client: new AgentaOS(process.env.AGENTAOS_API_KEY!),
+      products: [{ slug: 'pro', productId: 'your-product-link-id' }],
+      successUrl: 'https://your-domain.com/thanks',
+      webhookSecret: process.env.AGENTAOS_WEBHOOK_SECRET,
+      onEvent: async ({ event, userId }) => {
+        if (event.type === 'checkout.session.completed' && userId) {
+          // Give userId the product event.data.linkId
+        }
+      },
+    }),
+  ],
+});
+```
+
+A user can only buy a product that is in `products`, by its `slug`. The product, the price and the return URLs come from your server, not from the browser.
+
+## Start a checkout from the browser
+
+```ts auth-client.ts
+import { createAuthClient } from 'better-auth/client';
+import { agentaosClient } from '@agentaos/better-auth/client';
+
+export const authClient = createAuthClient({ plugins: [agentaosClient()] });
+```
+
+```ts
+const { data } = await authClient.agentaos.checkout({ slug: 'pro' });
+window.location.href = data!.url;
+```
+
+In test mode, pay with the card `4242 4242 4242 4242`, any future date and any CVC.
+
+## Handle events
+
+`onEvent` receives every event after its signature is checked. For `checkout.session.completed`, `userId` is the user who started the checkout. In your handler:
+
+- Give the user the product in `event.data.linkId`.
+- Ignore test events in live mode: check `event.data.livemode`.
+- Give access only once per checkout, for example by saving `event.data.sessionId`. An event can arrive more than once.
+
+The full list of events is in [Webhook events](/webhooks/events).

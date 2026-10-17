@@ -145,7 +145,8 @@
                 "group": "Recipes",
                 "pages": [
                   "sdk/paywall-for-logged-in-users",
-                  "sdk/handle-webhooks"
+                  "sdk/handle-webhooks",
+                  "sdk/better-auth"
                 ]
               }
             ]
