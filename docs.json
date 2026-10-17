@@ -446,6 +446,78 @@
     {
       "source": "/guides/handle-webhooks",
       "destination": "/sdk/handle-webhooks"
+    },
+    {
+      "source": "/guardian/api-reference",
+      "destination": "/api-reference/introduction"
+    },
+    {
+      "source": "/guardian/:slug*",
+      "destination": "/experimental/agent-wallet"
+    },
+    {
+      "source": "/signers/:slug*",
+      "destination": "/experimental/agent-wallet"
+    },
+    {
+      "source": "/architecture/overview",
+      "destination": "/mor/how-it-works"
+    },
+    {
+      "source": "/sub/create",
+      "destination": "/payments/subscriptions"
+    },
+    {
+      "source": "/sub/:slug*",
+      "destination": "/payments/subscriptions"
+    },
+    {
+      "source": "/sdk/pay-example",
+      "destination": "/sdk/pay-overview"
+    },
+    {
+      "source": "/sdk/sub-foundry",
+      "destination": "/payments/subscriptions"
+    },
+    {
+      "source": "/x402/pricing",
+      "destination": "/mor/pricing"
+    },
+    {
+      "source": "/x402/:slug*",
+      "destination": "/introduction"
+    },
+    {
+      "source": "/banking/activate-eur",
+      "destination": "/payouts/payout-accounts"
+    },
+    {
+      "source": "/banking/activate-eur-business",
+      "destination": "/payouts/payout-accounts"
+    },
+    {
+      "source": "/banking/:slug*",
+      "destination": "/payouts/overview"
+    },
+    {
+      "source": "/gateway/sessions",
+      "destination": "/payments/checkouts"
+    },
+    {
+      "source": "/gateway/subscriptions",
+      "destination": "/payments/subscriptions"
+    },
+    {
+      "source": "/gateway/all-transactions",
+      "destination": "/api-reference/transactions/list"
+    },
+    {
+      "source": "/gateway/payment-links",
+      "destination": "/payments/payment-links"
+    },
+    {
+      "source": "/gateway/:slug*",
+      "destination": "/introduction"
     }
   ]
 }
