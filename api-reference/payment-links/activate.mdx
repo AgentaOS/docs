@@ -1,0 +1,12 @@
+---
+title: "Activate a payment link"
+openapi: "POST /gateway/payment-links/{id}/activate"
+---
+
+<Note>
+**Webhook:** none. Activating a link moves no money. See [Which action fires which event](/webhooks/events#which-action-fires-which-event).
+</Note>
+
+<Note>
+The way back from [Cancel](/api-reference/payment-links/cancel). The link keeps its id and its payment history, and new checkouts can be started from it at once. A `409` means the link is not deactivated: it is already active, or it changed concurrently.
+</Note>

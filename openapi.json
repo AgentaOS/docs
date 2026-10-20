@@ -533,6 +533,48 @@
         }
       }
     },
+    "/gateway/payment-links/{id}/activate": {
+      "post": {
+        "tags": [
+          "Payment Links"
+        ],
+        "operationId": "activatePaymentLink",
+        "summary": "Activate a payment link",
+        "description": "The way back from cancel: switches a deactivated link on again under the same id, so every place it was shared keeps working. New checkouts can be started from it at once. Returns `409` when the link is not deactivated.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PaymentLinkId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The link is active again.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "success": true
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/gateway/sessions": {
       "post": {
         "tags": [
