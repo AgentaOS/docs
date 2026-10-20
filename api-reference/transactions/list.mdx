@@ -8,7 +8,7 @@ Only `confirmed` rows are returned. A pending or failed attempt never appears he
 </Info>
 
 <Note>
-This row carries additional internal ledger fields (settlement batch references, dispute markers, raw card-processor fee) beyond what's documented here. Treat any field not listed as forward-compatible and safe to ignore. Don't build logic against undocumented keys.
+`status` is always `confirmed`. Where the sale's money stands is `mor_status`: `held` until the hold period ends, `available` when payable, `paid_out` once paid to you, `refunded` after a refund, `disputed` while a dispute is open, `charged_back` when a dispute was lost. `disputed_at`, `charged_back_at` and `refunded_at` say when. A lost dispute and a refund send no webhook, so poll `mor_status` for a sale that received a `dispute.created` and no `dispute.closed`. Any other field not listed here is internal: treat it as forward-compatible and safe to ignore.
 </Note>
 
 <Columns cols={2}>
@@ -17,5 +17,8 @@ This row carries additional internal ledger fields (settlement batch references,
   </Card>
   <Card title="Webhooks" icon="bell" href="/api-reference/webhooks">
     Get notified when a transaction settles, instead of polling this list.
+  </Card>
+  <Card title="Ask for a refund" icon="rotate-left" href="/api-reference/transactions/refund-request">
+    Request a full refund of a sale; AgentaOS reviews it within 2 business days.
   </Card>
 </Columns>

@@ -31,7 +31,7 @@ The button changes to a **Refund requested** label. No money moves at this step.
 
 ### Approval or decline
 
-AgentaOS reviews the request and does one of two things:
+AgentaOS reviews the request within 2 business days, usually the same day, and does one of two things:
 
 - **Refunds the buyer.** The buyer gets the whole amount back on the card they paid with. The sale shows **Refunded**.
 - **Declines the request.** The sale shows **Refund declined**, with AgentaOS's note below it. You can read the note and ask again.
@@ -61,7 +61,7 @@ If a platform takes a share of your sales, the platform returns its share too. T
 
 ### Ask with the API
 
-Send `POST /gateway/transactions/{id}/refund-request` with the sale's id, signed with your secret key. The request follows the same steps as the button.
+Send `POST /gateway/transactions/{id}/refund-request` with the sale's id, signed with your secret key. The request follows the same steps as the button, in test and in live. There is no webhook for the outcome: the sale's `mor_status` becomes `refunded` on [List transactions](/api-reference/transactions/list). A refund does not cancel a subscription; cancel it separately, and it ends at period end. See [Ask for a refund](/api-reference/transactions/refund-request).
 
 ## Disputes and chargebacks
 
@@ -90,7 +90,7 @@ AgentaOS gives back everything the dispute took: the sale's money and the disput
 
 ### If you lose
 
-The sale shows **Charged back**, and its money does not come back. What you owe depends on whether the sale was already paid to you:
+The sale shows **Charged back**, and its money does not come back. On the API the sale's `mor_status` is `charged_back`, with `charged_back_at`; no webhook is sent. What you owe depends on whether the sale was already paid to you:
 
 | When the dispute opened | What you owe |
 |---|---|

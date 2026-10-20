@@ -244,7 +244,8 @@
                 "group": "Transactions",
                 "expanded": false,
                 "pages": [
-                  "api-reference/transactions/list"
+                  "api-reference/transactions/list",
+                  "api-reference/transactions/refund-request"
                 ]
               },
               {
