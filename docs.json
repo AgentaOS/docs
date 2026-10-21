@@ -182,7 +182,8 @@
                   "api-reference/payment-links/list",
                   "api-reference/payment-links/retrieve",
                   "api-reference/payment-links/update",
-                  "api-reference/payment-links/cancel"
+                  "api-reference/payment-links/cancel",
+                  "api-reference/payment-links/activate"
                 ]
               },
               {

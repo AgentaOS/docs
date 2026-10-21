@@ -167,11 +167,14 @@ Creating a subscription product does not create a subscription. A subscription s
 
     curl -X DELETE https://api.agentaos.ai/api/v1/gateway/payment-links/link-uuid \
       -H "x-api-key: sk_live_..."
+
+    curl -X POST https://api.agentaos.ai/api/v1/gateway/payment-links/link-uuid/activate \
+      -H "x-api-key: sk_live_..."
     ```
   </Tab>
 </Tabs>
 
-A list call returns `{ items, total, hasMore }`. Canceling a product stops new checkouts on its link. Checkouts already in progress and subscriptions already running from it continue.
+A list call returns `{ items, total, hasMore }`. Canceling a product stops new checkouts on its link. Checkouts already in progress and subscriptions already running from it continue. Activating the product switches the same link back on: the id and the payment history stay, and new checkouts start at once. In the dashboard, **Deactivate** and **Activate** are the same control on the product page.
 
 ## Next steps
 
