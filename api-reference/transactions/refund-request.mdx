@@ -1,0 +1,12 @@
+---
+title: "Ask for a refund"
+openapi: "POST /gateway/transactions/{id}/refund-request"
+---
+
+<Note>
+The request moves no money. AgentaOS reviews it within 2 business days, usually the same day, and either refunds the whole amount, VAT included, or declines it with a note you read in the dashboard. While it is open, the sale is held out of your payouts. It works in test and live; the key you sign with decides the mode. See [Refunds](/mor/refunds-and-disputes#ask-with-the-api).
+</Note>
+
+<Note>
+**Outcome:** there is no webhook. The sale's `mor_status` on [List transactions](/api-reference/transactions/list) becomes `refunded` once the refund is executed. A refund does not cancel a subscription: cancel it separately, and it ends at period end.
+</Note>

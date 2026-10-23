@@ -106,7 +106,7 @@ Fires when a checkout is paid or a free trial starts. The full field list, with 
 <ResponseField name="linkId" type="string">The payment link's public token from its `checkoutUrl`, not its `id`. `null` for a checkout created without a link, although the type says `string`.</ResponseField>
 <ResponseField name="sessionId" type="string" />
 <ResponseField name="amount" type="string">e.g. `"49.99"`.</ResponseField>
-<ResponseField name="currency" type="string" />
+<ResponseField name="currency" type="string">The currency the buyer was charged in: the fiat currency (`EUR`, `USD`) for a card or bank checkout, the token (`USDC`) for a wallet checkout.</ResponseField>
 <ResponseField name="txHash" type="string">On-chain settlement hash. `null` for a card or bank sale, although the type says `string`.</ResponseField>
 <ResponseField name="payer" type="string">Payer wallet address. `null` for a card or bank sale, although the type says `string`.</ResponseField>
 <ResponseField name="payerType" type="'human' | 'agent'" />

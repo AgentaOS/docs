@@ -533,6 +533,48 @@
         }
       }
     },
+    "/gateway/payment-links/{id}/activate": {
+      "post": {
+        "tags": [
+          "Payment Links"
+        ],
+        "operationId": "activatePaymentLink",
+        "summary": "Activate a payment link",
+        "description": "The way back from cancel: switches a deactivated link on again under the same id, so every place it was shared keeps working. New checkouts can be started from it at once. Returns `409` when the link is not deactivated.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PaymentLinkId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The link is active again.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "success": true
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/gateway/sessions": {
       "post": {
         "tags": [
@@ -768,7 +810,7 @@
         ],
         "operationId": "cancelSubscription",
         "summary": "Cancel a subscription",
-        "description": "Cancels at the end of the current paid period by default: the subscriber keeps what they already paid for, no refund. Pass `atPeriodEnd: false` to cancel immediately instead. Calling cancel again on an already-`canceled` subscription is a no-op. Returns `400` if the subscription never completed a first successful charge (`stripeSubscriptionId` is `null`).",
+        "description": "Cancels at the end of the current paid period: the subscriber keeps what they already paid for, no refund. There is no immediate cancellation; `atPeriodEnd: false` returns `400`. Calling cancel again on an already-`canceled` subscription is a no-op. Returns `400` if the subscription never completed a first successful charge (`stripeSubscriptionId` is `null`).",
         "parameters": [
           {
             "$ref": "#/components/parameters/SubscriptionId"
@@ -1325,6 +1367,56 @@
           },
           "403": {
             "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/gateway/transactions/{id}/refund-request": {
+      "post": {
+        "tags": [
+          "Transactions"
+        ],
+        "operationId": "requestRefund",
+        "summary": "Ask for a refund",
+        "description": "Asks AgentaOS to refund a sale in full. Works in test and live; the key you sign with decides the mode. The request moves no money: AgentaOS reviews it within 2 business days, usually the same day, and either refunds the whole amount, VAT included, or declines it with a note. While the request is open the sale is held out of your payouts. There is no webhook for the outcome: the sale's `mor_status` becomes `refunded`. A refund does not cancel a subscription. Returns `400` when the sale is already refunded, in dispute or not refundable, and `404` when it is not yours in this mode.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The sale's transaction `id`: from the transactions list, or a `checkout.session.completed` event's id without the `evt_` prefix.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request as recorded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefundRequest"
+                },
+                "example": {
+                  "captureId": "8c7d6e5f-4a3b-2c1d-0e9f-8a7b6c5d4e3f",
+                  "status": "requested",
+                  "requestedAt": "2026-10-20T10:31:05.609Z",
+                  "decidedAt": null,
+                  "note": null
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
@@ -3807,7 +3899,7 @@
           "atPeriodEnd": {
             "type": "boolean",
             "default": true,
-            "description": "true schedules the cancellation for period end. false cancels now."
+            "description": "Only `true` is accepted, and it is the default: the cancellation is scheduled for the end of the current period. `false` returns `400`; there is no immediate cancellation."
           }
         }
       },
@@ -4416,11 +4508,76 @@
           "netMinor"
         ]
       },
+      "RefundRequest": {
+        "type": "object",
+        "properties": {
+          "captureId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The sale the request is about."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "requested",
+              "executed",
+              "declined"
+            ],
+            "description": "`requested` while AgentaOS reviews it, `executed` once the buyer was refunded, `declined` with a note."
+          },
+          "requestedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "decidedAt": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          },
+          "note": {
+            "type": ["string", "null"],
+            "description": "AgentaOS's reason on a decline, shown to you. Null otherwise."
+          }
+        },
+        "required": [
+          "captureId",
+          "status",
+          "requestedAt",
+          "decidedAt",
+          "note"
+        ]
+      },
       "Transaction": {
         "type": "object",
         "additionalProperties": true,
-        "description": "This row carries additional internal ledger fields (settlement batch references, dispute markers, raw card-processor fee) beyond what's documented here. Treat any undocumented field as forward-compatible and safe to ignore.",
+        "description": "`status` is always `confirmed`. Where the sale's money stands is `mor_status`, with `disputed_at`, `charged_back_at` and `refunded_at` saying when. Any other field not listed here is internal: treat it as forward-compatible and safe to ignore.",
         "properties": {
+          "mor_status": {
+            "type": "string",
+            "enum": [
+              "held",
+              "available",
+              "paid_out",
+              "refunded",
+              "disputed",
+              "charged_back"
+            ],
+            "description": "Where the sale's money stands: `held` until the hold period ends, `available` when payable, `paid_out` once paid to you, `refunded` after a refund, `disputed` while a dispute is open, `charged_back` when a dispute was lost. A lost dispute and a refund send no webhook; this field is where you see them."
+          },
+          "disputed_at": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "When a dispute was opened on this sale. Null otherwise."
+          },
+          "charged_back_at": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "When a dispute on this sale was lost and the money reversed. Null otherwise."
+          },
+          "refunded_at": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "When the sale was refunded. Null otherwise."
+          },
           "id": {
             "type": "string",
             "format": "uuid"

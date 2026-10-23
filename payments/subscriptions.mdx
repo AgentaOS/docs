@@ -18,6 +18,12 @@ In the dashboard, go to **Products** and click **New product**. Under **Pricing*
 
 Click **Create product**. The plan gets a link that you send to buyers, and a link ID that your code uses. Make one product for each price: a monthly Pro plan and a yearly Pro plan are two products.
 
+Changing a plan's price applies to new subscriptions only. A running subscription keeps the price it started on.
+
+## One buyer, several subscriptions
+
+One email can hold several active subscriptions on the same plan at once, for example one person paying for several teams. AgentaOS keeps one customer record for the email and a separate subscription for each payment, with no limit. If your product allows one subscription per account, enforce it on your side: the first `checkout.session.completed` carries your metadata and the subscription's id in `metadata.subscriptionId`, so keep that pair and show the link only to a buyer who has no active subscription. The subscriptions list is paged only; it cannot be filtered by email or by link.
+
 ## Subscription statuses
 
 A subscription moves through these statuses. The dashboard shows the status on each subscription, and the API returns it as `status`.
@@ -79,7 +85,7 @@ Click **Cancel subscription** on the subscription page and confirm. The subscrip
   <img src="/images/subscriptions/cancel-scheduled.png" alt="A subscription page with the status Cancels Oct 12, 2026. The side panel says Active until Oct 12, 2026, then cancels. No further charges, with a Resume subscription button." />
 </Frame>
 
-Until the period ends, **Resume subscription** undoes the cancellation. A subscription always runs to the end of the period it is in; it cannot be ended earlier.
+Until the period ends, **Resume subscription** undoes the cancellation. A subscription always runs to the end of the period it is in; it cannot be ended earlier. You can schedule a cancellation while a dispute on one of its charges is open; the cancellation and the dispute do not affect each other.
 
 ## Credits
 

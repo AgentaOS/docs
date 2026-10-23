@@ -22,7 +22,7 @@ The API calls a product a payment link. Both names mean the same object, and the
     In the sidebar, click **Products**. Then click **New product**.
   </Step>
   <Step title="Fill in the details">
-    Under **Details**, enter the **Product name** and a **Description**. Add a **Product image** if you want one. The buyer sees all three on the checkout.
+    Under **Details**, enter the **Product name** and a **Description**. Add a **Product image** if you want one. The buyer sees all three on the checkout. The image runs across the top of the checkout summary, 190 px tall and cropped to fill, so use a landscape image of about 2.3:1, for example 1200 × 520, with the subject centred: a PNG, JPG or WebP under 2 MB, served over HTTPS.
   </Step>
   <Step title="Set the price">
     Under **Pricing**, enter the price and pick **EUR** or **USD**. Choose **One-time** or **Subscription**. For a subscription, pick **Monthly** or **Yearly**.
@@ -167,11 +167,14 @@ Creating a subscription product does not create a subscription. A subscription s
 
     curl -X DELETE https://api.agentaos.ai/api/v1/gateway/payment-links/link-uuid \
       -H "x-api-key: sk_live_..."
+
+    curl -X POST https://api.agentaos.ai/api/v1/gateway/payment-links/link-uuid/activate \
+      -H "x-api-key: sk_live_..."
     ```
   </Tab>
 </Tabs>
 
-A list call returns `{ items, total, hasMore }`. Canceling a product stops new checkouts on its link. Checkouts already in progress and subscriptions already running from it continue.
+A list call returns `{ items, total, hasMore }`. Canceling a product stops new checkouts on its link. Checkouts already in progress and subscriptions already running from it continue. Activating the product switches the same link back on: the id and the payment history stay, and new checkouts start at once. In the dashboard, **Deactivate** and **Activate** are the same control on the product page.
 
 ## Next steps
 

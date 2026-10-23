@@ -171,7 +171,7 @@ This is the event to listen for to fulfill an order. For the order of subscripti
     Amount paid, in currency units, as a string, e.g. `"49.99"`. `"0"` for a free trial start.
   </ResponseField>
   <ResponseField name="currency" type="string">
-    Settlement currency, e.g. `"EUR"`.
+    The currency the buyer was charged in: the fiat currency, e.g. `"EUR"` or `"USD"`, for a card or bank checkout, and the token, e.g. `"USDC"`, for a wallet checkout.
   </ResponseField>
   <ResponseField name="rail" type="string">
     How the buyer paid: `card`, `sepa` (a bank transfer), or `crypto`.
@@ -428,6 +428,8 @@ Subscription lifecycle events, delivered to your account's webhook URL. All five
 - **`dispute.closed`**: a dispute closes in your favor (`status` is `won`). A lost dispute sends no event.
 
 A dispute starts when a buyer's bank opens a chargeback on a sale. Both events share the same `data` shape.
+
+`transaction_id` is the sale's transaction id. For a one-time sale and for every subscription charge, it equals that charge's `checkout.session.completed` id without the `evt_` prefix, so keep those event ids and a dispute finds its sale, and for a renewal its `metadata.subscriptionId`. `subscription.renewed` cannot be matched to a dispute: its id is random and it carries no transaction id.
 
 <Expandable title="data fields" defaultOpen>
   <ResponseField name="dispute_id" type="string">The dispute's id at the card processor.</ResponseField>
