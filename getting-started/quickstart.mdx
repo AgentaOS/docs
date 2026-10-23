@@ -15,6 +15,10 @@ Both paths below run in **test mode** with test money, so there is nothing to ve
   </Card>
 </Columns>
 
+<Tip>
+Building with Claude Code, Cursor or Codex? Run `npx skills add AgentaOS/skills` first. The [AgentaOS skills](https://github.com/AgentaOS/skills) teach your agent to set up checkout, subscriptions and webhooks correctly, then ask it to add AgentaOS payments.
+</Tip>
+
 ## No-code
 
 The fastest way to get paid: create a product in the dashboard and share its link.
@@ -100,7 +104,7 @@ A full Node.js and Express app: create a checkout, and receive the payment event
 ```bash .env
 AGENTAOS_API_KEY=sk_test_your_key
 AGENTAOS_WEBHOOK_SECRET=whsec_your_webhook_secret
-APP_URL=http://localhost:3000
+APP_URL=https://your-tunnel-address
 ```
 ```typescript server.ts
 import express from 'express';
@@ -155,7 +159,7 @@ app.listen(3000, () => console.log('Listening on :3000'));
 To run it, you need Node.js 20.6 or later:
 
 1. Run `npm install express @agentaos/pay`.
-2. AgentaOS does not deliver webhooks to `localhost`, so give port 3000 a public HTTPS address with a tunnel service.
+2. AgentaOS does not deliver webhooks to `localhost` and only redirects buyers to `https` addresses, so give port 3000 a public HTTPS address with a tunnel service and set `APP_URL` to it.
 3. In **Settings → Developers → Webhooks**, set the webhook URL to the tunnel address plus `/webhooks`, and copy the signing secret into `AGENTAOS_WEBHOOK_SECRET`.
 4. Start the server with `npx tsx --env-file=.env server.ts`. `tsx` runs the TypeScript file directly, and `--env-file` loads the `.env` values.
 
