@@ -1,0 +1,45 @@
+---
+title: "Integrations"
+description: "Tools, frameworks and AI agents that work with AgentaOS, and how to add a guide for your own tool."
+icon: "puzzle-piece"
+---
+
+AgentaOS works with the tools below today. Each card links to the setup guide.
+
+## Frameworks and auth
+
+<Columns cols={2}>
+  <Card title="Better Auth" icon="key" href="/sdk/better-auth">
+    The `@agentaos/better-auth` plugin starts checkouts for signed-in users, lists their subscriptions and verifies webhooks.
+  </Card>
+  <Card title="Node.js and TypeScript" icon="cube" href="/sdk/pay-overview">
+    The `@agentaos/pay` SDK works in any Node.js runtime, including Next.js route handlers.
+  </Card>
+  <Card title="Embedded checkout" icon="window-maximize" href="/payments/embedded-checkout">
+    Show the checkout inside your own page instead of redirecting.
+  </Card>
+  <Card title="Webhooks" icon="bell" href="/payments/webhooks">
+    Signed events for checkouts, subscriptions and disputes, for any backend.
+  </Card>
+</Columns>
+
+## AI agents
+
+<Columns cols={2}>
+  <Card title="Claude, ChatGPT and Cursor (MCP)" icon="plug" href="/mcp/setup">
+    The hosted MCP server lets an assistant create products, checkouts and subscriptions. You approve it once; no key to paste.
+  </Card>
+  <Card title="Coding agents (CLI)" icon="terminal" href="/guides/ai-agent">
+    The `agenta` CLI and its SKILL.md let any agent that runs shell commands manage your store.
+  </Card>
+</Columns>
+
+## Add your tool
+
+If your product works with AgentaOS (email, affiliates, analytics, starter kits, no-code builders or anything else), you can publish a guide here.
+
+1. Fork [AgentaOS/docs](https://github.com/AgentaOS/docs) and add `integrations/<your-tool>.mdx`.
+2. Cover: what the integration does, setup steps, the AgentaOS webhook events or API calls it uses, and a link to your own docs.
+3. Add the page to the **Integrations** group in `docs.json` and open a pull request.
+
+We review guides for accuracy and keep the wording factual. Questions: [contact@agentaos.ai](mailto:contact@agentaos.ai).
