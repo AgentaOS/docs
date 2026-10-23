@@ -44,6 +44,13 @@
             ]
           },
           {
+            "group": "Integrations",
+            "icon": "puzzle-piece",
+            "pages": [
+              "integrations/overview"
+            ]
+          },
+          {
             "group": "Sell",
             "icon": "cart-shopping",
             "pages": [
