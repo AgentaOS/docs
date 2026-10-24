@@ -768,9 +768,7 @@
             "description": "`session_already_paid`: the buyer already paid; the payment is booked. `payment_in_progress`: a payment is still processing, try again. No code: modified concurrently.",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                },
+                "schema": { "$ref": "#/components/schemas/Error" },
                 "example": {
                   "statusCode": 409,
                   "code": "session_already_paid",
@@ -3513,13 +3511,7 @@
           },
           "paymentMethods": {
             "type": "array",
-            "items": {
-              "type": "string",
-              "enum": [
-                "card",
-                "bank_transfer"
-              ]
-            },
+            "items": { "type": "string", "enum": ["card", "bank_transfer"] },
             "description": "What the checkout offers. `[\"card\"]` makes it card-only. Without it: card, plus bank transfer on EUR. Card must be included; bank transfer is EUR only. An impossible list answers 400 `payment_methods_unavailable`."
           },
           "metadata": {
@@ -4554,17 +4546,11 @@
             "format": "date-time"
           },
           "decidedAt": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date-time"
           },
           "note": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "description": "AgentaOS's reason on a decline, shown to you. Null otherwise."
           }
         },
@@ -4594,26 +4580,17 @@
             "description": "Where the sale's money stands: `held` until the hold period ends, `available` when payable, `paid_out` once paid to you, `refunded` after a refund, `disputed` while a dispute is open, `charged_back` when a dispute was lost. A lost dispute and a refund send no webhook; this field is where you see them."
           },
           "disputed_at": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date-time",
             "description": "When a dispute was opened on this sale. Null otherwise."
           },
           "charged_back_at": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date-time",
             "description": "When a dispute on this sale was lost and the money reversed. Null otherwise."
           },
           "refunded_at": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date-time",
             "description": "When the sale was refunded. Null otherwise."
           },
