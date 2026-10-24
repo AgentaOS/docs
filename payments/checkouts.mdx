@@ -159,7 +159,13 @@ The company, VAT number, and address are printed on the invoice. The buyer canno
   </Tab>
 </Tabs>
 
-An open checkout expires after `expiresIn` seconds: 1800 by default, from 300 to 86400. Canceling stops the buyer from paying. A payment that cleared before the cancel still completes.
+An open checkout expires after `expiresIn` seconds, from 300 to 86400. Without it, a checkout lasts 30 minutes, or 48 hours for an EUR checkout that offers bank transfer. At the deadline, a card payment not yet completed is stopped and the buyer sees that the checkout has expired. A bank transfer the buyer chose before the deadline is the exception: its details stay valid and the checkout completes when the money arrives, up to 30 days later. You hear about it from [`checkout.session.bank_transfer_pending`](/webhooks/events).
+
+Cancelling stops a payment that is not yet complete. If the buyer already paid, the cancel answers `409` with `code: "session_already_paid"` and you receive `checkout.session.completed` for that payment. Money sent after a cancel is not booked to you and is not returned automatically: write to us and we refund it to the buyer.
+
+To make a checkout card-only, send `paymentMethods: ["card"]`. Without it, an EUR checkout also offers bank transfer; every other currency is card only.
+
+The buyer's email is required on every card and bank-transfer checkout, because we send the receipt and invoice. If you create a checkout without `buyerEmail`, the checkout page asks the buyer for it.
 
 The full parameter and response reference is in [Checkouts (SDK)](/sdk/pay-checkouts) and [agenta pay](/cli/pay).
 
