@@ -4,7 +4,13 @@ openapi: "POST /gateway/sessions/{sessionId}/cancel"
 ---
 
 <Note>
-Cancelling only works while the checkout is `open` (`400` otherwise). A `409` means it was modified concurrently.
+Cancelling stops a payment that is not yet complete, then closes the checkout. It only works while the checkout is `open` (`400` otherwise).
+
+A `409` has a `code`:
+- `session_already_paid`: the buyer paid before the cancel. The payment is booked and you receive `checkout.session.completed`.
+- `payment_in_progress`: a payment is still processing. Try again in a few minutes.
+
+A `409` with no `code` means the checkout was modified concurrently.
 </Note>
 
 <Note>

@@ -765,7 +765,18 @@
             "$ref": "#/components/responses/NotFound"
           },
           "409": {
-            "$ref": "#/components/responses/Conflict"
+            "description": "`session_already_paid`: the buyer already paid; the payment is booked. `payment_in_progress`: a payment is still processing, try again. No code: modified concurrently.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" },
+                "example": {
+                  "statusCode": 409,
+                  "code": "session_already_paid",
+                  "message": "This checkout is already paid. The payment is booked to you.",
+                  "timestamp": "2026-10-24T12:00:00.000Z"
+                }
+              }
+            }
           }
         }
       }
@@ -3495,8 +3506,13 @@
             "type": "integer",
             "minimum": 300,
             "maximum": 86400,
-            "default": 1800,
-            "description": "Seconds until expiry. Sessions eligible for SEPA bank transfer get a 48-hour window regardless of this value."
+            "default": 86400,
+            "description": "Seconds until the checkout expires. Without it: 24 hours for a card checkout, 48 hours for an EUR checkout that offers bank transfer, 30 minutes for a stablecoin checkout. At the deadline a card payment not yet completed is stopped; a bank transfer the buyer chose before it stays valid up to 30 days."
+          },
+          "paymentMethods": {
+            "type": "array",
+            "items": { "type": "string", "enum": ["card", "bank_transfer"] },
+            "description": "What the checkout offers. `[\"card\"]` makes it card-only. Without it: card, plus bank transfer on EUR. Card must be included; bank transfer is EUR only. An impossible list answers 400 `payment_methods_unavailable`."
           },
           "metadata": {
             "type": "object",
