@@ -1,0 +1,113 @@
+---
+title: "Next.js route handlers"
+description: "Add an AgentaOS checkout link and a verified webhook route to a Next.js app with the @agentaos/nextjs package."
+icon: "route"
+---
+
+The `@agentaos/nextjs` package gives a Next.js app two route handlers:
+
+| Handler | What it does |
+|---|---|
+| `Checkout` | A `GET` route. A link such as `/checkout?product=pro` starts a checkout for that product and sends the buyer to it. |
+| `Webhooks` | A `POST` route. It checks the signature of each AgentaOS event and calls the function you set for that event. |
+
+The handlers use the standard `Request` and `Response`, so they also work in other frameworks with web-standard route handlers.
+
+## Before you start
+
+1. In the dashboard, create the products you sell. Copy each product's link ID from the product page.
+2. Open **Developers → API keys** and create a key. A key that starts with `sk_test_` works in test mode.
+3. Open **Settings → Developers → Webhooks** and set the URL to `https://your-domain.com/api/webhooks/agentaos`. Click **Reveal signing secret** and copy the secret.
+4. Add both values to your environment:
+
+```bash .env.local
+AGENTAOS_API_KEY=sk_test_...
+AGENTAOS_WEBHOOK_SECRET=whsec_...
+```
+
+## Install
+
+```bash
+npm install @agentaos/nextjs
+```
+
+## Add the checkout route
+
+```ts app/checkout/route.ts
+import { Checkout } from '@agentaos/nextjs';
+
+export const GET = Checkout({
+  products: { pro: 'your-pro-link-id', team: 'your-team-link-id' },
+  successUrl: 'https://your-domain.com/thanks',
+  // Optional: who is buying, read from your own session on the server
+  customer: async () => {
+    const user = await getCurrentUser();
+    return user ? { email: user.email, name: user.name, metadata: { userId: user.id } } : null;
+  },
+});
+```
+
+Link to the route with a plain link:
+
+```tsx
+<a href="/checkout?product=pro">Buy Pro</a>
+```
+
+- A buyer can only buy a product that is in `products`, by its slug. The route adds the slug to the checkout `metadata` as `product`.
+- The buyer's details, the metadata and the return URLs come from your server, never from the link.
+- The route ignores prefetch requests, so a link that scrolls into view does not start a checkout. With the Next.js `<Link>` component, set `prefetch={false}`.
+- After paying, the buyer returns to `successUrl` with `?sessionId=...` added.
+
+In test mode, pay with the card `4242 4242 4242 4242`, any future date and any CVC.
+
+## Add the webhook route
+
+```ts app/api/webhooks/agentaos/route.ts
+import { Webhooks } from '@agentaos/nextjs';
+
+export const POST = Webhooks({
+  webhookSecret: process.env.AGENTAOS_WEBHOOK_SECRET!,
+  onCheckoutCompleted: async (event) => {
+    const { userId, product } = event.data.metadata;
+    // Renewals and upgrade charges arrive here too, without your metadata.
+    if (typeof userId !== 'string') return;
+    await grantAccess(userId, product);
+  },
+  onSubscriptionCanceled: async (event) => {
+    // event.data.customerEmail identifies the buyer
+  },
+});
+```
+
+The route needs no API key. It does not start without `webhookSecret`.
+
+You can set one function per event: `onCheckoutCompleted`, `onSubscriptionCreated`, `onSubscriptionRenewed`, `onSubscriptionUpdated`, `onSubscriptionPaymentFailed`, `onSubscriptionCanceled`, `onDisputeCreated` and `onDisputeClosed`. `onEvent` receives every event, after the function for that event. If a function throws an error, the route answers `500` and AgentaOS sends the event again.
+
+## Handle events
+
+In your functions:
+
+- Use `event.data.metadata.product` to know what was bought. On `checkout.session.completed`, `event.data.linkId` is the payment link's public token, not the link ID in `products`.
+- Expect your metadata on the first `checkout.session.completed` only. Renewals and upgrade charges also arrive as `checkout.session.completed`, with AgentaOS's `subscriptionId` in the metadata instead. Save the link from `subscriptionId` to your user from the first event.
+- Read metadata keys in camelCase. A key you send as `user_id` arrives as `userId`.
+- Ignore test events in live mode: check `event.data.livemode`.
+- Give access only once, because an event can arrive more than once. For checkouts, save `event.data.sessionId`.
+
+The full list of events is in [Webhook events](/webhooks/events).
+
+## Use your own client
+
+To set a business for a platform account, a different base URL or timeouts, pass your own client:
+
+```ts
+import { AgentaOS } from '@agentaos/pay';
+import { Checkout } from '@agentaos/nextjs';
+
+export const GET = Checkout({
+  client: new AgentaOS(process.env.AGENTAOS_API_KEY!, { timeout: 10_000 }),
+  products: { pro: 'your-pro-link-id' },
+  successUrl: 'https://your-domain.com/thanks',
+});
+```
+
+If your app signs users in with Better Auth, the [Better Auth plugin](/sdk/better-auth) starts checkouts for signed-in users and lists their subscriptions.
