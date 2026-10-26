@@ -8,7 +8,7 @@ Only `confirmed` rows are returned. A pending or failed attempt never appears he
 </Info>
 
 <Note>
-`status` is always `confirmed`. Where the sale's money stands is `mor_status`: `held` until the hold period ends, `available` when payable, `paid_out` once paid to you, `refunded` after a refund, `disputed` while a dispute is open, `charged_back` when a dispute was lost. `disputed_at`, `charged_back_at` and `refunded_at` say when. A lost dispute and a refund send no webhook, so poll `mor_status` for a sale that received a `dispute.created` and no `dispute.closed`. Any other field not listed here is internal: treat it as forward-compatible and safe to ignore.
+`status` is always `confirmed`. Where the sale's money stands is `mor_status`: `held` until the hold period ends, `available` when payable, `paid_out` once paid to you, `refunded` after a refund, `disputed` while a dispute is open, `charged_back` when a dispute was lost. It is `null` for a sale that is not a card or bank-transfer sale. A won dispute returns the sale to `refunded` if it was refunded, `paid_out` if its money had already been paid to you, and `available` otherwise. `disputed_at`, `dispute_won_at`, `charged_back_at` and `refunded_at` say when; `disputed_at` stays set after a won dispute. A lost dispute and a refund send no webhook, so poll `mor_status` for a sale that received a `dispute.created` and no `dispute.closed`. Any other field not listed here is internal: treat it as forward-compatible and safe to ignore.
 </Note>
 
 <Columns cols={2}>

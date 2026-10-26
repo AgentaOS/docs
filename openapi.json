@@ -1381,7 +1381,7 @@
         ],
         "operationId": "requestRefund",
         "summary": "Ask for a refund",
-        "description": "Asks AgentaOS to refund a sale in full. Works in test and live; the key you sign with decides the mode. The request moves no money: AgentaOS reviews it within 2 business days, usually the same day, and either refunds the whole amount, VAT included, or declines it with a note. While the request is open the sale is held out of your payouts. There is no webhook for the outcome: the sale's `mor_status` becomes `refunded`. A refund does not cancel a subscription. Returns `400` when the sale is already refunded, in dispute or not refundable, and `404` when it is not yours in this mode.",
+        "description": "Asks AgentaOS to refund a sale in full. Works in test and live; the key you sign with decides the mode. The request moves no money: AgentaOS reviews it within 2 business days, usually the same day, and either refunds the whole amount, VAT included, or declines it with a note. While the request is open the sale is held out of your payouts. There is no webhook for the outcome: the sale's `mor_status` becomes `refunded`. A refund does not cancel a subscription. There is no request body. Calling it again while a request is open returns that same request, not an error; a declined request can be asked again. A sale still `held` can be refunded. Returns `400` with the message `This sale cannot be refunded: <reason>`, where the reason is `already_refunded`, `disputed`, `status_not_refundable` or `not_mor_capture`; `403` when your user is not a member of the business; and `404` (`Sale not found`) when the sale is not yours in this mode.",
         "parameters": [
           {
             "name": "id",
@@ -1395,8 +1395,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "The request as recorded.",
+          "201": {
+            "description": "The request as recorded, or the request already open for this sale.",
             "content": {
               "application/json": {
                 "schema": {
@@ -3026,6 +3026,12 @@
             "maximum": 730,
             "description": "Free-trial length in days. Subscription links only. The buyer's card is saved with nothing due today; the first charge happens when the trial ends."
           },
+          "trialAmount": {
+            "type": ["number", "null"],
+            "minimum": 0.01,
+            "maximum": 1000000,
+            "description": "Price of the trial period in currency units, e.g. `1.00`. Only with `trialPeriodDays`. Omit it, or send `null`, for a free trial."
+          },
           "maxUses": {
             "type": "integer",
             "minimum": 1,
@@ -3120,6 +3126,12 @@
             "minimum": 1,
             "maximum": 730,
             "description": "Free-trial length in days; subscription links only."
+          },
+          "trialAmount": {
+            "type": ["number", "null"],
+            "minimum": 0.01,
+            "maximum": 1000000,
+            "description": "Price of the trial period in currency units. Only with `trialPeriodDays`; `null` makes it a free trial."
           }
         }
       },
@@ -3269,6 +3281,14 @@
               "year",
               null
             ]
+          },
+          "trial_period_days": {
+            "type": ["integer", "null"],
+            "description": "Free-trial length in days, or `null` when the link has no trial."
+          },
+          "trial_amount": {
+            "type": ["number", "null"],
+            "description": "Price of the trial period in currency units, or `null` for a free trial (or no trial)."
           },
           "environment": {
             "type": "string",
@@ -4552,21 +4572,27 @@
         "description": "`status` is always `confirmed`. Where the sale's money stands is `mor_status`, with `disputed_at`, `charged_back_at` and `refunded_at` saying when. Any other field not listed here is internal: treat it as forward-compatible and safe to ignore.",
         "properties": {
           "mor_status": {
-            "type": "string",
+            "type": ["string", "null"],
             "enum": [
               "held",
               "available",
               "paid_out",
               "refunded",
               "disputed",
-              "charged_back"
+              "charged_back",
+              null
             ],
-            "description": "Where the sale's money stands: `held` until the hold period ends, `available` when payable, `paid_out` once paid to you, `refunded` after a refund, `disputed` while a dispute is open, `charged_back` when a dispute was lost. A lost dispute and a refund send no webhook; this field is where you see them."
+            "description": "Where the sale's money stands: `held` until the hold period ends, `available` when payable, `paid_out` once paid to you, `refunded` after a refund, `disputed` while a dispute is open, `charged_back` when a dispute was lost. A won dispute returns the sale to `refunded` if it was refunded, `paid_out` if it had been paid to you, and `available` otherwise. `null` for a sale that is not a card or bank-transfer sale. A lost dispute and a refund send no webhook; this field is where you see them."
           },
           "disputed_at": {
             "type": ["string", "null"],
             "format": "date-time",
-            "description": "When a dispute was opened on this sale. Null otherwise."
+            "description": "When a dispute was opened on this sale. It stays set after the dispute is won. Null if the sale was never disputed."
+          },
+          "dispute_won_at": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "When a dispute on this sale was won, or a bank inquiry about it closed without a chargeback. Null otherwise."
           },
           "charged_back_at": {
             "type": ["string", "null"],
