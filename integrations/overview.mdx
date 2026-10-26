@@ -10,10 +10,13 @@ AgentaOS works with the tools below today. Each card links to the setup guide.
 
 <Columns cols={2}>
   <Card title="Better Auth" icon="key" href="/sdk/better-auth">
-    The `@agentaos/better-auth` plugin starts checkouts for signed-in users, lists their subscriptions and verifies webhooks.
+    The `@agentaos/better-auth` plugin starts checkouts for signed-in users, lists their subscriptions and verifies webhooks, with one function per event.
+  </Card>
+  <Card title="Next.js" icon="route" href="/sdk/nextjs">
+    The `@agentaos/nextjs` package adds a checkout link route and a verified webhook route.
   </Card>
   <Card title="Node.js and TypeScript" icon="cube" href="/sdk/pay-overview">
-    The `@agentaos/pay` SDK works in any Node.js runtime, including Next.js route handlers.
+    The `@agentaos/pay` SDK works in any Node.js runtime.
   </Card>
   <Card title="Embedded checkout" icon="window-maximize" href="/payments/embedded-checkout">
     Show the checkout inside your own page instead of redirecting.

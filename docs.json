@@ -153,7 +153,8 @@
                 "pages": [
                   "sdk/paywall-for-logged-in-users",
                   "sdk/handle-webhooks",
-                  "sdk/better-auth"
+                  "sdk/better-auth",
+                  "sdk/nextjs"
                 ]
               }
             ]

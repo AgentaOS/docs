@@ -8,9 +8,9 @@ If your app signs users in with [Better Auth](https://better-auth.com), the `@ag
 
 | Endpoint | What it does |
 |---|---|
-| `POST /api/auth/agentaos/checkout` | Starts a checkout for the signed-in user. Their email is filled in, and their user ID goes into the checkout `metadata`. |
+| `POST /api/auth/agentaos/checkout` | Starts a checkout for the signed-in user. Their email is filled in, and their user ID and the product slug go into the checkout `metadata`. |
 | `GET /api/auth/agentaos/subscriptions` | Lists the signed-in user's subscriptions. The user's email must be verified. |
-| `POST /api/auth/agentaos/webhook` | Checks the signature of each AgentaOS event and passes it to your `onEvent` function. |
+| `POST /api/auth/agentaos/webhook` | Checks the signature of each AgentaOS event and calls the function you set for that event. |
 
 ## Before you start
 
@@ -39,10 +39,10 @@ export const auth = betterAuth({
       products: [{ slug: 'pro', productId: 'your-product-link-id' }],
       successUrl: 'https://your-domain.com/thanks',
       webhookSecret: process.env.AGENTAOS_WEBHOOK_SECRET,
-      onEvent: async ({ event, userId }) => {
-        if (event.type === 'checkout.session.completed' && userId) {
-          // Give userId the product event.data.linkId
-        }
+      onCheckoutCompleted: async ({ event, userId }) => {
+        // Renewals and upgrade charges arrive here too, with no userId.
+        if (!userId) return;
+        await grantAccess(userId, event.data.metadata.product);
       },
     }),
   ],
@@ -65,14 +65,20 @@ const { data } = await authClient.agentaos.checkout({ slug: 'pro' });
 window.location.href = data!.url;
 ```
 
-In test mode, pay with the card `4242 4242 4242 4242`, any future date and any CVC.
+When AgentaOS refuses a checkout, the error keeps its reason and status. In test mode, pay with the card `4242 4242 4242 4242`, any future date and any CVC.
 
 ## Handle events
 
-`onEvent` receives every event after its signature is checked. For `checkout.session.completed`, `userId` is the user who started the checkout. In your handler:
+You can set one function per event: `onCheckoutCompleted`, `onSubscriptionCreated`, `onSubscriptionRenewed`, `onSubscriptionUpdated`, `onSubscriptionPaymentFailed`, `onSubscriptionCanceled`, `onDisputeCreated` and `onDisputeClosed`. Each receives `{ event, userId }`. `onEvent` receives every event, after the function for that event. If a function throws an error, the endpoint answers `500` and AgentaOS sends the event again.
 
-- Give the user the product in `event.data.linkId`.
+`userId` is the user who started the checkout. It is set on the first `checkout.session.completed` of that checkout only. Renewals and upgrade charges also arrive as `checkout.session.completed`, with `userId` empty. In your functions:
+
+- Use `event.data.metadata.product` to know what was bought. On `checkout.session.completed`, `event.data.linkId` is the payment link's public token, not the link ID in `products`.
+- Save the link from `event.data.metadata.subscriptionId` to your user from the first event, if you need it for later events.
+- Read metadata keys in camelCase. A key you send as `user_id` arrives as `userId`.
 - Ignore test events in live mode: check `event.data.livemode`.
 - Give access only once per checkout, for example by saving `event.data.sessionId`. An event can arrive more than once.
 
 The full list of events is in [Webhook events](/webhooks/events).
+
+For a Next.js app without Better Auth, use the [Next.js route handlers](/sdk/nextjs).
