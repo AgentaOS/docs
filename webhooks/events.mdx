@@ -430,7 +430,7 @@ Subscription lifecycle events, delivered to your account's webhook URL. All five
 - **`dispute.created`**: AgentaOS finds a new dispute on one of your sales.
 - **`dispute.closed`**: a dispute closes in your favor (`status` is `won`), or a bank inquiry closes without a chargeback (`status` is `warning_closed`). Either way the sale is released. A lost dispute sends no event: read it from the sale's `mor_status`, which becomes `charged_back`.
 
-A dispute starts when a buyer's bank opens a chargeback on a sale, or first sends an inquiry about it (the `warning_` statuses). An inquiry that becomes a chargeback keeps the same `dispute_id`. Both events share the same `data` shape.
+A dispute starts when a buyer's bank opens a chargeback on a sale, or first sends an inquiry about it (the `warning_` statuses). Both events share the same `data` shape.
 
 `transaction_id` is the sale's transaction id. For a one-time sale and for every subscription charge, it equals that charge's `checkout.session.completed` id without the `evt_` prefix, so keep those event ids and a dispute finds its sale, and for a renewal its `metadata.subscriptionId`. `subscription.renewed` cannot be matched to a dispute: its id is random and it carries no transaction id.
 
