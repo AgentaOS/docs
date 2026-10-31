@@ -24,64 +24,64 @@ Purchases are accepted from buyers worldwide, except the sanctioned or embargoed
 
 Whichever method your buyer uses, your AgentaOS balance settles in **EUR or USD**, then pays out to your bank account:
 
-<Card title="Local bank transfer" icon="building-columns" href="/payouts/overview">
-  Available across every supported country below, through our banking partner. See [Payout fees](#payout-fees).
+<Card title="Bank transfer in EUR or USD" icon="building-columns" href="/payouts/overview">
+  Available in every supported country below, through our banking partner: by SEPA where your bank takes it, otherwise by Swift. See [Payout fees](#payout-fees).
 </Card>
 
 ### Payout fees
 
-Each payout carries the [payout fee](/payouts/overview#fees). AgentaOS adds the bank transfer cost at cost, and that cost depends on the route your money takes:
+Each payout carries the [payout fee](/payouts/overview#fees). On top of it, AgentaOS passes on our banking partner's transfer cost at cost. Payouts are sent in EUR or USD only, and each payout takes the cheapest route our banking partner offers to your bank:
 
-| Route | Fee per payout |
+| Route | Banking partner cost per payout |
 |---|---|
-| Local bank transfer, including SEPA | A small flat fee |
-| Swift in EUR, shared cost | 5.21 EUR, and the recipient's bank may deduct its own fees |
-| Swift in EUR, fixed cost | 25.22 EUR, and the recipient receives the exact amount |
-| Swift in USD, no correspondent fees expected | 6.15 USD |
-| Swift in USD, correspondent fees expected | 7.24 to 35.00 USD by country, and the recipient receives the exact amount |
+| SEPA, in EUR | 0.00 EUR |
+| Local transfer in the United States, in USD | 1.13 USD |
+| Swift in EUR, shared cost | 5.21 EUR Swift fee, plus the partner's transfer fee. The recipient's bank may deduct its own fees |
+| Swift in EUR, fixed cost | 25.22 EUR Swift fee, plus the partner's transfer fee. The recipient receives the exact amount |
+| Swift in USD | 6.15 USD Swift fee, or 7.24 to 35.00 USD where the partner expects correspondent bank fees, plus the partner's transfer fee |
 
-Our banking partner's own transfer fee comes on top of the Swift fee: in its published example, 1.13 USD on a 4,000 USD Swift transfer. Currency conversion, where it applies, is charged separately. Swift fee in USD by country, where correspondent fees are expected: Bosnia and Herzegovina 13.22 USD, Montenegro 13.19 USD, Albania 13.16 USD, North Macedonia 16.83 USD, Serbia 17.25 USD, Turkey 19.24 USD. A country without its own rate costs 21.71 USD. These are our banking partner's prices and can change.
+The partner's transfer fee on a Swift payout was 0.48 EUR on a 1,000 EUR quote and 1.13 USD on both a 1,000 USD quote and a 4,000 USD example. Currency conversion, where it applies, is charged separately.
 
-Our banking partner picks the route for your account; you cannot choose between the shared and the fixed cost. The quoted cost shows on the Payouts tab before you request a payout and on the statement after it. Your own bank or an intermediary bank may add a charge on arrival, which AgentaOS cannot see.
+USD Swift fee where correspondent bank fees are expected, for some countries: Albania 13.16 USD, Bosnia and Herzegovina 13.22 USD, Montenegro 13.19 USD, North Macedonia 16.83 USD, Serbia 17.25 USD, Turkey 19.24 USD. Where the partner expects these fees and the country has no rate of its own, the fee is 21.71 USD. With the transfer fee, a USD payout to North Macedonia costs 16.83 + 1.13 = 17.96 USD.
+
+These are our banking partner's prices and can change. Our banking partner picks shared or fixed cost on a EUR Swift payout; you cannot choose. The quoted cost shows on the Payouts tab before you request a payout and on the statement after it. Your own bank or an intermediary bank may add a charge on arrival, which AgentaOS cannot see.
 
 ## Supported payout countries
 
-You can receive a bank payout in the following countries. This list follows our banking partner's coverage, which grows over time.
+You can receive a bank payout in the following countries, to an account in EUR or USD. This list follows our banking partner's coverage, which grows over time.
 
 | | | | |
 |---|---|---|---|
-| Albania | Andorra | Argentina | Australia |
-| Austria | Bangladesh** | Belgium | Bosnia and Herzegovina† |
-| Brazil | Bulgaria | Canada | Cayman Islands† |
-| Chile | China* | Colombia** | Costa Rica |
+| Albania | Andorra | Argentina† | Australia† |
+| Austria | Bangladesh† | Belgium | Bosnia and Herzegovina† |
+| Brazil‡ | Bulgaria | Canada† | Cayman Islands† |
+| Chile† | China† | Colombia‡ | Costa Rica† |
 | Croatia | Cyprus | Czech Republic | Denmark |
-| Dominican Republic† | Egypt | Estonia | Finland |
-| France | Georgia | Germany | Gibraltar |
-| Greece | Guatemala† | Hong Kong | Hungary |
-| Iceland | India | Indonesia | Ireland |
-| Israel | Italy | Japan | Kenya |
+| Dominican Republic† | Egypt† | Estonia | Finland |
+| France | Georgia† | Germany | Gibraltar |
+| Greece | Guatemala† | Hong Kong† | Hungary |
+| Iceland | India† | Indonesia† | Ireland |
+| Israel† | Italy | Japan† | Kenya† |
 | Kosovo† | Latvia | Liechtenstein | Lithuania |
-| Luxembourg | Malaysia | Malta | Mexico |
-| Moldova | Monaco | Montenegro | Morocco |
-| Nepal** | Netherlands | New Zealand | Nigeria |
-| North Macedonia | Norway | Pakistan** | Peru† |
-| Philippines | Poland | Portugal | Romania |
-| San Marino | Serbia | Singapore | Slovakia |
-| Slovenia | South Africa | South Korea | Spain |
-| Sri Lanka | Sweden | Switzerland | Taiwan† |
-| Tanzania** | Thailand | Turkey | Ukraine** |
-| United Arab Emirates | United Kingdom | United States | Uruguay |
-| Vietnam | Zambia† | | |
+| Luxembourg | Malaysia† | Malta | Mexico† |
+| Moldova | Monaco | Montenegro | Morocco† |
+| Nepal† | Netherlands | New Zealand† | Nigeria‡ |
+| North Macedonia | Norway | Pakistan‡ | Peru† |
+| Philippines† | Poland | Portugal | Romania |
+| San Marino | Serbia | Singapore† | Slovakia |
+| Slovenia | South Africa† | South Korea† | Spain |
+| Sri Lanka† | Sweden | Switzerland | Taiwan† |
+| Tanzania† | Thailand† | Turkey† | Ukraine† |
+| United Arab Emirates† | United Kingdom | United States | Uruguay† |
+| Vietnam† | Zambia† |  |  |
 
 ### Marks in the table
 
-- `**` The local route pays personal bank accounts only, in the recipient's own name. A business account in these countries is paid by Swift instead, so the cross-border fee in the table above applies.
-- `*` China: a business is paid to a CNY account at a bank in mainland China, with a transfer reason on file; the recipient's bank can ask for the contract and the invoice. A person is paid through a card or wallet network, with a cap on each payout.
-- `†` No local route. The payout travels by Swift, so the cross-border fee in the table above applies.
+- No mark: your EUR account is paid by SEPA, at no partner cost. In the United States, your USD account is paid by local transfer.
+- `†` No SEPA route. A EUR or USD payout travels by Swift, so the Swift cost in the table above applies.
+- `‡` Swift in USD only. Our banking partner does not send EUR by Swift to this country, so you need a USD account.
 
-Albania, Moldova, Montenegro, North Macedonia and Serbia are paid in EUR by SEPA transfer, the same local route as the euro area. A bank there that does not take SEPA transfers is paid by Swift instead, so the cross-border fee applies.
-
-Some routes cap one payout. Brazil: 10,000 USD to a business account and 3,000 USD to a personal account, and the account holder's tax number is required. Argentina: 18,000 USD per calendar month. India: 1.5 million INR per working day. Ukraine: 29,999 UAH per transfer, except to PrivatBank. These caps are our banking partner's and can change. If your balance is above a cap, ask us before the payout window.
+A bank in a SEPA country that does not take SEPA transfers is paid by Swift instead. A USD payout to a SEPA country also travels by Swift. Three USD routes skip Swift: USD to Hong Kong goes through the local CHATS system for 7.97 USD, USD to a DBS account in Singapore costs 1.49 USD, and USD to a personal PrivatBank account in Ukraine costs 1.13 USD plus 1.94%.
 
 ## Countries we cannot pay out to
 
