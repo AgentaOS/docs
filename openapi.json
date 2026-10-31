@@ -5463,7 +5463,7 @@
               "null"
             ],
             "additionalProperties": true,
-            "description": "The bill-to details the business entered on the invoice (for example `name`, `email`)."
+            "description": "Who the invoice is for. On an invoice the business created, the bill-to details it entered (for example `name`, `email`). On an invoice for a bank-transfer payment, what the payment carried: the payer's `name` and bank account (`iban`)."
           },
           "network": {
             "type": [
