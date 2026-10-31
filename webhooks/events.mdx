@@ -26,7 +26,7 @@ Each event type below lists every trigger in the platform. [Which action fires w
 | `subscription.updated` | A cancel is scheduled. A scheduled cancel is resumed. An upgrade is applied. A downgrade is scheduled. A scheduled downgrade is reverted. A scheduled downgrade takes over at the period end. | Store the payload as the subscription's latest state. |
 | `subscription.canceled` | The status becomes `canceled`: at the period end after a scheduled cancel, or when the card processor ends the subscription for another reason. | Remove access. |
 | `dispute.created` | AgentaOS finds a new dispute on one of your sales. | Mark the order as disputed and reply to our dispute email with your evidence; AgentaOS answers the buyer's bank. |
-| `dispute.closed` | A dispute closes in your favor. A lost dispute sends no event. | Clear the disputed mark on the order. |
+| `dispute.closed` | A dispute closes in your favor, or a bank inquiry closes without a chargeback. A lost dispute sends no event. | Clear the disputed mark on the order. |
 | `send.completed` | An outbound stablecoin send that you started is confirmed. | Mark the payout as paid. |
 | `send.failed` | An outbound stablecoin send that you started fails: the broadcast fails, for example on a network error or an insufficient balance, or the transaction reverts on-chain. | Retry the send. |
 | `account.updated` | A business's verification changes, in live mode only. Its identity check is verified or declined. Our reviewers approve, reject, hold or resume the business, or ask for a change. Our reviewers verify or withdraw its identity by hand. The event goes to the business and to the platform that manages it. | Show the business its next step from `verification`. |
@@ -88,11 +88,13 @@ Events describe money and account state, not every API call. An action that chan
 | A buyer starts a free trial | `subscription.created` and `checkout.session.completed` with `amount: "0"` | On the next check after the card is saved. |
 | A renewal charge succeeds, including the first charge after a trial | `checkout.session.completed` and `subscription.renewed` | On the next check after the charge. |
 | An upgrade's prorated charge succeeds | `checkout.session.completed` and `subscription.renewed` | On the next check after the charge. |
-| A renewal charge fails, including the first charge after a trial | `subscription.payment_failed` | On the next check. |
+| A renewal charge fails, including the first charge after a trial | `subscription.payment_failed`, once. Later failed retries of the same charge send nothing more. | On the next check. |
+| A failed renewal charge succeeds on a later retry | `checkout.session.completed` and `subscription.renewed`, the same as any renewal | On the next check after the charge. |
 | A scheduled cancel takes effect at the period end | `subscription.canceled` | On the next check after the period ends. |
 | A scheduled downgrade takes over at the period end | `subscription.updated` | On the next check after the period ends. |
 | A buyer's bank opens a chargeback | `dispute.created` | On the next dispute check. |
 | A chargeback closes in your favor | `dispute.closed` | On the next dispute check. |
+| A bank inquiry closes without a chargeback | `dispute.closed` with `status: "warning_closed"` | On the next dispute check. |
 | A chargeback closes against you | None | |
 | A business's identity check is verified or declined | `account.updated` | When AgentaOS reads the result. |
 | Our reviewers approve, reject, hold or resume a business, or ask for a change | `account.updated` | Right away. |
@@ -142,11 +144,12 @@ AgentaOS checks each subscription with the card processor on a schedule and send
 | A buyer starts a trial with a trial price | `subscription.created`, and `checkout.session.completed` with the amount charged for the trial. There is no `trial` field. |
 | The trial ends and the first full charge succeeds | `checkout.session.completed` and `subscription.renewed` |
 | A later period is paid | `checkout.session.completed` and `subscription.renewed` |
-| A renewal charge fails | `subscription.payment_failed` |
+| A renewal charge fails | `subscription.payment_failed`, once, however many retries fail |
+| A failed renewal charge succeeds on a later retry | `checkout.session.completed` and `subscription.renewed`, with nothing that marks it as a retry |
 | A cancel is scheduled or resumed, or a plan changes | `subscription.updated` |
 | The subscription ends | `subscription.canceled` |
 
-The `checkout.session.completed` for a renewal, or for the first charge after a trial, has its own `session_id`. Its `metadata` is AgentaOS's own, not the metadata you set on the checkout, so your `metadata.customerId` is not on it. Match it to your user through `metadata.subscriptionId`, the subscription's `id`, which is also on the first checkout event. A renewal's `metadata` also has `subscriptionCycle: true`.
+The `checkout.session.completed` for a renewal, or for the first charge after a trial, has its own `session_id`. Its `metadata` is AgentaOS's own, not the metadata you set on the checkout, so your `metadata.customerId` is not on it. Match it to your user through `metadata.subscriptionId`, the subscription's `id`, which is also on the first checkout event. The `metadata` of a renewal, and of the first charge after a trial, also has `subscriptionCycle: true`.
 
 ---
 
@@ -373,7 +376,7 @@ The SDK's `CheckoutCompletedData` type differs from the wire body in two ways. I
 
 - **`subscription.created`**: the subscription becomes `active` or `trialing` for the first time: the buyer pays the first period, or saves a card for a trial.
 - **`subscription.renewed`**: a charge after the first one succeeds: a renewal, the first charge after a trial, or an upgrade's prorated charge. A renewal that a subscriber credit pays also fires it. The first period does not fire it.
-- **`subscription.payment_failed`**: the status becomes `past_due` or `unpaid`: a renewal charge fails, including the first charge after a trial.
+- **`subscription.payment_failed`**: the status becomes `past_due` or `unpaid`: a renewal charge fails, including the first charge after a trial. It fires once when the status first moves there; a move from `past_due` to `unpaid`, and every later failed retry, sends nothing more.
 - **`subscription.updated`**: a cancel is scheduled or resumed (`cancel_at_period_end`), an upgrade is applied (new `plan_name`, `link_id` and `amount_minor`), a downgrade is scheduled (`pending_plan` set), a scheduled downgrade is reverted (`pending_plan` null again), or a scheduled downgrade takes over at the period end.
 - **`subscription.canceled`**: the status becomes `canceled`: at the period end after a scheduled cancel, or when the card processor ends the subscription for another reason. No more charges follow.
 
@@ -427,18 +430,18 @@ Subscription lifecycle events, delivered to your account's webhook URL. All five
 **Fires when:**
 
 - **`dispute.created`**: AgentaOS finds a new dispute on one of your sales.
-- **`dispute.closed`**: a dispute closes in your favor (`status` is `won`). A lost dispute sends no event.
+- **`dispute.closed`**: a dispute closes in your favor (`status` is `won`), or a bank inquiry closes without a chargeback (`status` is `warning_closed`). Either way the sale is released. A lost dispute sends no event: read it from the sale's `mor_status`, which becomes `charged_back`.
 
-A dispute starts when a buyer's bank opens a chargeback on a sale. Both events share the same `data` shape.
+A dispute starts when a buyer's bank opens a chargeback on a sale, or first sends an inquiry about it (the `warning_` statuses). Both events share the same `data` shape.
 
 `transaction_id` is the sale's transaction id. For a one-time sale and for every subscription charge, it equals that charge's `checkout.session.completed` id without the `evt_` prefix, so keep those event ids and a dispute finds its sale, and for a renewal its `metadata.subscriptionId`. `subscription.renewed` cannot be matched to a dispute: its id is random and it carries no transaction id.
 
 <Expandable title="data fields" defaultOpen>
   <ResponseField name="dispute_id" type="string">The dispute's id at the card processor.</ResponseField>
-  <ResponseField name="status" type="string">The dispute's status as the card processor reports it, e.g. `needs_response` or `won`.</ResponseField>
+  <ResponseField name="status" type="string">The dispute's status as the card processor reports it. On `dispute.created`: `warning_needs_response`, `warning_under_review`, `needs_response`, `under_review`, `prevented`, or `lost` when AgentaOS first sees a dispute that has already closed. On `dispute.closed`: `won` or `warning_closed`.</ResponseField>
   <ResponseField name="transaction_id" type="string">The sale the dispute is about.</ResponseField>
   <ResponseField name="amount_minor" type="number">Disputed amount in integer minor units. `4999` = `€49.99`.</ResponseField>
-  <ResponseField name="currency" type="string">e.g. `"EUR"`.</ResponseField>
+  <ResponseField name="currency" type="string">Lowercase ISO code, e.g. `"eur"`.</ResponseField>
   <ResponseField name="livemode" type="boolean">`true` in live mode, `false` in test mode.</ResponseField>
 </Expandable>
 
@@ -452,7 +455,7 @@ A dispute starts when a buyer's bank opens a chargeback on a sale. Both events s
     "status": "needs_response",
     "transaction_id": "8c7d6e5f-4a3b-2c1d-0e9f-8a7b6c5d4e3f",
     "amount_minor": 4999,
-    "currency": "EUR",
+    "currency": "eur",
     "livemode": true
   }
 }
