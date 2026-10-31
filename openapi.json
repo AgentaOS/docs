@@ -56,6 +56,14 @@
     {
       "name": "Bank Accounts",
       "description": "Where payouts go: the bank accounts of a business, as thin references (holder, last four digits, the name-check result), never the account number. For a platform: with the `AgentaOS-Account` header these act on a business you manage, once we have opened bank accounts by API for your platform. Adding an account needs a live key."
+    },
+    {
+      "name": "Approved sites",
+      "description": "The sites allowed to show a business's embedded checkout."
+    },
+    {
+      "name": "Payouts",
+      "description": "A business's payouts and the two documents that come with each one."
     }
   ],
   "paths": {
@@ -2201,6 +2209,361 @@
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/orgs/{id}/embed-domains": {
+      "patch": {
+        "tags": [
+          "Approved sites"
+        ],
+        "operationId": "updateApprovedSites",
+        "summary": "Set the approved sites",
+        "description": "Replaces the business's approved sites with `embedDomains`: send every site each time, and an empty list to remove them all. Each entry is reduced to its origin (`https://host`, with a port if you give one): a path, query or trailing `/` is dropped, and duplicates are removed. Needs a live key, and the key's owner must be an owner or admin of the business. At most 5 saves per minute.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/BusinessId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApprovedSites"
+              },
+              "example": {
+                "embedDomains": [
+                  "https://acme.com",
+                  "https://shop.acme.com"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The saved list, as stored.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovedSites"
+                },
+                "example": {
+                  "embedDomains": [
+                    "https://acme.com",
+                    "https://shop.acme.com"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "An entry is not an `https://` address on a public name (no IP address, `localhost`, `.local`, `.internal`, `*` or `user@`), or the list has more than 10 entries.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "not_a_site": {
+                    "value": {
+                      "statusCode": 400,
+                      "message": "acme.com isn't a site address we can approve. Use the address from the browser bar, like https://acme.com.",
+                      "timestamp": "2026-10-31T12:00:00.000Z"
+                    }
+                  },
+                  "not_public": {
+                    "value": {
+                      "statusCode": 400,
+                      "message": "Embed domain must be a public HTTPS origin: https://localhost",
+                      "timestamp": "2026-10-31T12:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "description": "A test key, a business you do not manage, or a key whose owner is not an owner or admin of the business.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "live_key_required": {
+                    "value": {
+                      "statusCode": 403,
+                      "code": "live_key_required",
+                      "message": "This needs a live API key: it changes real money, live settings or a real identity check. This is a test key.",
+                      "timestamp": "2026-10-31T12:00:00.000Z"
+                    }
+                  },
+                  "not_yours": {
+                    "value": {
+                      "statusCode": 403,
+                      "message": "You cannot act as this business.",
+                      "timestamp": "2026-10-31T12:00:00.000Z"
+                    }
+                  },
+                  "role": {
+                    "value": {
+                      "statusCode": 403,
+                      "message": "Requires role: owner or admin",
+                      "timestamp": "2026-10-31T12:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/gateway/mor-settlements": {
+      "get": {
+        "tags": [
+          "Payouts"
+        ],
+        "operationId": "listPayouts",
+        "summary": "List payouts",
+        "description": "The business's payouts, newest first, in the mode of the key. A payout appears once its money has been sent on its way. The response is `{ \"items\": [...] }`, not the paginated envelope of the other list endpoints: there is no total. A page can hold fewer than `limit` items while more exist, so ask for the next page until one comes back empty.",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Payouts per page.",
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "minimum": 1
+            }
+          },
+          {
+            "$ref": "#/components/parameters/Offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The payouts.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayoutList"
+                },
+                "example": {
+                  "items": [
+                    {
+                      "id": "8c3e5a1d-2f4b-4e6a-9d7c-1b2a3c4d5e6f",
+                      "statementRef": "PS-2026-0004",
+                      "statementRefDisplay": "PS-2026-0004",
+                      "sbiRef": null,
+                      "sbiRefDisplay": "Not yet issued",
+                      "leg": "net",
+                      "currency": "EUR",
+                      "amountMinor": 125000,
+                      "transferFeeMinor": 52,
+                      "receivedMinor": 123698,
+                      "totalFeesMinor": 1302,
+                      "status": "paid",
+                      "createdAt": "2026-10-15T06:00:00.000Z",
+                      "canDownloadSelfBill": true,
+                      "wallet": null
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "description": "A business you do not manage.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "not_yours": {
+                    "value": {
+                      "statusCode": 403,
+                      "message": "You cannot act as this business.",
+                      "timestamp": "2026-10-31T12:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/gateway/mor-settlements/{id}/payout-statement.pdf": {
+      "get": {
+        "tags": [
+          "Payouts"
+        ],
+        "operationId": "downloadPayoutStatement",
+        "summary": "Download the payout statement",
+        "description": "Response is `application/pdf` (binary), not JSON. The first download gives the statement its number (`PS-`), which then never changes. See [Payout statements and self-billed invoices](/payouts/statements).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The payout id, from `GET /gateway/mor-settlements`.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The payout statement PDF.",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "description": "A business you do not manage.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "not_yours": {
+                    "value": {
+                      "statusCode": 403,
+                      "message": "You cannot act as this business.",
+                      "timestamp": "2026-10-31T12:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such payout for this business in this mode.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "not_found": {
+                    "value": {
+                      "statusCode": 404,
+                      "message": "Settlement not found",
+                      "timestamp": "2026-10-31T12:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/gateway/mor-settlements/{id}/self-billed-invoice.pdf": {
+      "get": {
+        "tags": [
+          "Payouts"
+        ],
+        "operationId": "downloadSelfBilledInvoice",
+        "summary": "Download the self-billed invoice",
+        "description": "Response is `application/pdf` (binary), not JSON. Call it only for a payout whose `canDownloadSelfBill` is `true`. The first download issues the invoice and gives it its number (`SBI-`), which then never changes. See [Payout statements and self-billed invoices](/payouts/statements).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The payout id, from `GET /gateway/mor-settlements`.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The self-billed invoice PDF.",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "This payout has no self-billed invoice (`canDownloadSelfBill` is `false`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "description": "A business you do not manage.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "not_yours": {
+                    "value": {
+                      "statusCode": 403,
+                      "message": "You cannot act as this business.",
+                      "timestamp": "2026-10-31T12:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such payout for this business in this mode.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "not_found": {
+                    "value": {
+                      "statusCode": 404,
+                      "message": "Settlement not found",
+                      "timestamp": "2026-10-31T12:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -5370,6 +5733,186 @@
           "balanceMinor",
           "currency"
         ]
+      },
+      "ApprovedSites": {
+        "type": "object",
+        "required": [
+          "embedDomains"
+        ],
+        "properties": {
+          "embedDomains": {
+            "type": "array",
+            "maxItems": 10,
+            "items": {
+              "type": "string"
+            },
+            "description": "Every site the business approves, as `https://` addresses. This list replaces the saved list."
+          }
+        }
+      },
+      "PayoutWallet": {
+        "type": "object",
+        "description": "Where a stablecoin payout went. Present only when `rail` is `wallet`.",
+        "properties": {
+          "networkLabel": {
+            "type": "string",
+            "description": "The chain, for example `Base`."
+          },
+          "destinationLabel": {
+            "type": "string",
+            "description": "The wallet as the dashboard names it, for example `your wallet on Base`."
+          },
+          "addressLast6": {
+            "type": "string",
+            "description": "The last 6 characters of the wallet address."
+          },
+          "targetMinor": {
+            "type": "integer",
+            "description": "The amount promised to the wallet, in minor units. This is also the self-billed invoice total for this payout."
+          },
+          "corridorFeeMinor": {
+            "type": "integer",
+            "description": "The stablecoin delivery fee, in minor units."
+          },
+          "receivedMinor": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "What landed in the wallet, in minor units. `null` until the transfer receipt is in."
+          },
+          "receivedTokenDisplay": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "What landed, in the token, for example `98.00 USDC`."
+          },
+          "txHash": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The on-chain transaction hash."
+          },
+          "receiptUrl": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "A link to the transfer receipt."
+          }
+        }
+      },
+      "Payout": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The payout id. Use it to download the two documents."
+          },
+          "statementRef": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The payout statement number, for example `PS-2026-0001`. `null` until the statement is first downloaded."
+          },
+          "statementRefDisplay": {
+            "type": "string",
+            "description": "The statement number, or `Not yet issued`."
+          },
+          "sbiRef": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The self-billed invoice number, for example `SBI-2026-0001`. `null` until the invoice is first downloaded, or when this payout has no invoice."
+          },
+          "sbiRefDisplay": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The invoice number, or `Not yet issued`. `null` when this payout has no invoice."
+          },
+          "leg": {
+            "type": "string",
+            "enum": [
+              "net",
+              "reserve_release",
+              "shares"
+            ],
+            "description": "`net`: the business's own sales. `reserve_release`: a reserve released. `shares`: only shares of other businesses' sales (platform fees)."
+          },
+          "currency": {
+            "type": "string",
+            "description": "Uppercase currency code, `EUR` or `USD`."
+          },
+          "amountMinor": {
+            "type": "integer",
+            "description": "The amount the balance paid out, in minor units, before fees."
+          },
+          "transferFeeMinor": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "The bank transfer fee, in minor units. `null` when not known yet, and on a stablecoin payout."
+          },
+          "receivedMinor": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "What reaches the payout account, in minor units. `null` when not known yet, or when the payout failed or came back."
+          },
+          "totalFeesMinor": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "All fees on this payout, in minor units. `amountMinor - totalFeesMinor = receivedMinor`. `null` exactly when `receivedMinor` is `null`."
+          },
+          "status": {
+            "type": "string",
+            "description": "For example `initiated`, `submitted`, `paid`, `failed` or `returned`."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "canDownloadSelfBill": {
+            "type": "boolean",
+            "description": "`true` when this payout has a self-billed invoice. `false` for a payout of platform fees only, and for a payout that failed or came back."
+          },
+          "rail": {
+            "type": "string",
+            "description": "How the payout was sent. `wallet` is a stablecoin payout; any other value is a bank payout."
+          },
+          "wallet": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/PayoutWallet"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "PayoutList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Payout"
+            }
+          }
+        }
       }
     }
   }

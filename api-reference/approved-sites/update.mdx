@@ -1,0 +1,20 @@
+---
+title: "Set the approved sites"
+openapi: "PATCH /orgs/{id}/embed-domains"
+---
+
+<Warning>
+Needs a live key (`sk_live_...`): approved sites are a live setting. A test key gets `403 live_key_required`. The key's owner must be an owner or admin of the business.
+</Warning>
+
+<Note>
+The list you send replaces the saved list. Send every site each time; an empty list removes them all. This is the same list as **Settings → Developers → Approved sites** in the dashboard. See [Embedded checkout](/payments/embedded-checkout).
+</Note>
+
+<Note>
+**For a platform:** to set the sites of a business you manage, put its id in the path **and** in the [`AgentaOS-Account` header](/api-reference/introduction#acting-for-a-business). The two must match, or the call returns `403 You cannot act as this business.`
+</Note>
+
+<Note>
+**Webhook:** none.
+</Note>

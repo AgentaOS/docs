@@ -1,0 +1,16 @@
+---
+title: "Download the self-billed invoice"
+openapi: "GET /gateway/mor-settlements/{id}/self-billed-invoice.pdf"
+---
+
+<Note>
+Check `canDownloadSelfBill` in [List payouts](/api-reference/payouts/list) first. A payout of platform fees only, or a payout that failed or came back, has no self-billed invoice and returns `400`.
+</Note>
+
+<Note>
+**For a platform:** send the business's id in the [`AgentaOS-Account` header](/api-reference/introduction#acting-for-a-business).
+</Note>
+
+<Note>
+**Webhook:** none.
+</Note>
