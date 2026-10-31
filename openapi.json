@@ -1659,7 +1659,7 @@
         ],
         "operationId": "createBusiness",
         "summary": "Create a business",
-        "description": "Add a business you manage. It starts in test mode and goes live after its own verification. With `clientEmail`, your client is invited as its admin, and the invitation expires after 7 days. We email the invitation, or with `sendInvitationEmail: false` we send nothing and you send `inviteUrl` yourself (white-label).",
+        "description": "Add a business you manage. It starts in test mode and goes live after its own verification. With `clientEmail`, your client is invited as its admin, and the invitation expires after 7 days. We email the invitation, or with `sendInvitationEmail: false` we send nothing and you send `inviteUrl` yourself (white-label). At most 10 a minute.",
         "requestBody": {
           "required": true,
           "content": {
@@ -1803,7 +1803,7 @@
         ],
         "operationId": "resendBusinessInvitation",
         "summary": "Resend the invitation",
-        "description": "Send your client's invitation again, to the person last invited. It is a new link that expires after 7 days: the old one stops working. Refused with `409 client_joined` once your client has joined the business.",
+        "description": "Send your client's invitation again, to the person last invited. It is a new link that expires after 7 days: the old one stops working. Refused with `409 client_joined` once your client has joined the business. At most 10 a minute.",
         "parameters": [
           {
             "$ref": "#/components/parameters/BusinessId"
@@ -1912,7 +1912,7 @@
         ],
         "operationId": "createBusinessVerificationLink",
         "summary": "Create a verification link",
-        "description": "The identity check link for your client. You send it; only your client can complete it. Needs a live key: a test key gets `403 live_key_required`. While a check is open, calling again returns the same check. `url` is `null` when the client is already verified. For another app of your own company it returns `409 identity_from_company`: its identity check is your company's.",
+        "description": "The identity check link for your client. You send it; only your client can complete it. Needs a live key: a test key gets `403 live_key_required`. While a check is open, calling again returns the same check. `url` is `null` when the client is already verified. For another app of your own company it returns `409 identity_from_company`: its identity check is your company's. At most 10 a minute.",
         "parameters": [
           {
             "$ref": "#/components/parameters/BusinessId"
@@ -3106,7 +3106,7 @@
         }
       },
       "TooManyRequests": {
-        "description": "Too many requests: at most 60 a minute from one IP address, and fewer on some routes (the route says so). Wait a minute, then retry.",
+        "description": "Too many requests: at most 60 a minute to one route from one IP address, and fewer on some routes (the route says so). Wait a minute, then retry.",
         "content": {
           "application/json": {
             "schema": {
@@ -4333,14 +4333,14 @@
               "null"
             ],
             "format": "uuid",
-            "description": "Set once an invoice has been issued for this session; null until then. Only in the response to `POST /gateway/sessions`."
+            "description": "The invoice issued with this checkout. Only in the response to `POST /gateway/sessions`, and absent when no invoice was issued."
           },
           "invoiceNumber": {
             "type": [
               "string",
               "null"
             ],
-            "description": "Only in the response to `POST /gateway/sessions`."
+            "description": "That invoice's number. Only in the response to `POST /gateway/sessions`, and absent when no invoice was issued."
           },
           "x402Url": {
             "type": "string",
@@ -5942,7 +5942,7 @@
               "null"
             ],
             "format": "uuid",
-            "description": "The buyer's customer record. Null for a payout and for older sales."
+            "description": "The buyer's customer record, for a card or bank sale where the buyer gave an email. Null for a crypto sale, a payout, and older sales."
           },
           "discount_code_id": {
             "type": [
@@ -5957,14 +5957,14 @@
               "string",
               "null"
             ],
-            "description": "Lowercase currency of a card or bank sale, for example `eur`. Also the currency of `refunded_minor`. Null for a crypto sale."
+            "description": "Lowercase currency the sale settled in, for example `eur`; it can differ from the currency the buyer paid in. Also the currency of `refunded_minor`. Null until the sale settles, and for a crypto sale."
           },
           "refunded_minor": {
             "type": [
               "integer",
               "null"
             ],
-            "description": "How much went back to the buyer, in minor units of `card_currency`. Null if the sale was never refunded."
+            "description": "How much went back to the buyer, in minor units of `card_currency`. Null if the sale was never refunded, and on sales refunded before this field existed (check `refunded_at`)."
           },
           "payer_metadata": {
             "type": [
