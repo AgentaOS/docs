@@ -4022,47 +4022,6 @@
           "hasMore"
         ]
       },
-      "LinkTransactionRow": {
-        "type": "object",
-        "description": "A raw transaction row as nested under a Payment Link or Checkout detail response: same shape as a Transaction, but without the computed `money` breakdown.",
-        "additionalProperties": true,
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "direction": {
-            "type": "string",
-            "enum": [
-              "inbound",
-              "outbound"
-            ]
-          },
-          "status": {
-            "type": "string"
-          },
-          "amount": {
-            "type": "number"
-          },
-          "payment_method": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          }
-        },
-        "required": [
-          "id",
-          "direction",
-          "status",
-          "amount",
-          "created_at"
-        ]
-      },
       "PaymentLinkDetail": {
         "allOf": [
           {
@@ -4074,7 +4033,7 @@
               "transactions": {
                 "type": "array",
                 "items": {
-                  "$ref": "#/components/schemas/LinkTransactionRow"
+                  "$ref": "#/components/schemas/Transaction"
                 },
                 "description": "Every payment (inbound or outbound) recorded against this link, newest first."
               },
@@ -4463,7 +4422,7 @@
               "transactions": {
                 "type": "array",
                 "items": {
-                  "$ref": "#/components/schemas/LinkTransactionRow"
+                  "$ref": "#/components/schemas/Transaction"
                 }
               },
               "invoices": {
