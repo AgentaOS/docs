@@ -45,7 +45,7 @@ agenta customers list [--limit <n>] [--json]
       "name": "Jane Cooper",
       "country": "DE",
       "vatNumber": "DE123456789",
-      "stripeCustomerId": "cus_Q4f...",
+      "currency": "eur",
       "createdAt": "2026-06-11T09:15:00.000Z"
     }
   ]
@@ -61,7 +61,7 @@ agenta customers list [--limit <n>] [--json]
 | `name` | Buyer's name, `null` if never provided. |
 | `country` | ISO 3166-1 alpha-2 country code (`DE`, `US`), `null` if unknown. |
 | `vatNumber` | Buyer's VAT number if they entered one at checkout. |
-| `stripeCustomerId` | Underlying customer from the card processor, for card and bank payments. |
+| `currency` | Lowercase currency of this customer record. A buyer has one record per currency. |
 | `createdAt` | When this customer record was first created. |
 
 <Tip>

@@ -95,7 +95,7 @@ Send request bodies as JSON with `Content-Type: application/json`. Body fields a
 The list endpoints `GET /gateway/payment-links`, `/sessions`, `/subscriptions`, `/customers`, `/invoices` and `/all-transactions` page with `limit` and `offset` and return the same envelope. There is no cursor.
 
 <ParamField query="limit" type="number" default="20">
-  Items per page. The server caps it at 100 on payment links, checkouts, subscriptions and customers, and at 5000 on invoices and transactions. A larger value returns the capped number of items without an error.
+  Items per page. The server caps it at 100 on payment links, checkouts, subscriptions and customers, and at 1000 on invoices and transactions. A larger value returns the capped number of items without an error.
 </ParamField>
 
 <ParamField query="offset" type="number" default="0">

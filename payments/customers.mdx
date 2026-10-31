@@ -60,7 +60,7 @@ The list is newest first, and each call returns `{ items, total, hasMore }`.
       "name": "Jane Doe",
       "country": "DE",
       "vatNumber": "DE123456789",
-      "stripeCustomerId": "cus_...",
+      "currency": "eur",
       "createdAt": "2026-03-17T02:00:00.000Z"
     }
   ],
@@ -74,7 +74,7 @@ The list is newest first, and each call returns `{ items, total, hasMore }`.
 <ResponseField name="name" type="string | null">Customer name.</ResponseField>
 <ResponseField name="country" type="string | null">ISO 3166-1 alpha-2 country code.</ResponseField>
 <ResponseField name="vatNumber" type="string | null">VAT number, if the customer gave one.</ResponseField>
-<ResponseField name="stripeCustomerId" type="string | null">The card processor's customer ID. Set when the customer first subscribes or saves a card.</ResponseField>
+<ResponseField name="currency" type="string | null">Lowercase currency of this customer record, for example `eur`. A buyer has one record per currency, so the same email can appear once per currency.</ResponseField>
 <ResponseField name="createdAt" type="string">ISO 8601. When AgentaOS first added this customer.</ResponseField>
 
 ## Next steps
