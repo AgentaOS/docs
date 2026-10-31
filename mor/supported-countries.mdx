@@ -34,11 +34,13 @@ Each payout carries the [payout fee](/payouts/overview#fees). AgentaOS adds the 
 
 | Route | Fee per payout |
 |---|---|
-| Local bank transfer | A small flat fee |
-| Cross-border (Swift), shared cost | About €5, and the recipient may bear onward bank fees |
-| Cross-border (Swift), fixed cost | About €25, and the recipient receives the exact amount |
+| Local bank transfer, including SEPA | A small flat fee |
+| Swift in EUR, shared cost | 5.21 EUR, and the recipient's bank may deduct its own fees |
+| Swift in EUR, fixed cost | 25.22 EUR, and the recipient receives the exact amount |
+| Swift in USD, no correspondent fees expected | 6.15 USD |
+| Swift in USD, correspondent fees expected | 7.24 to 35.00 USD by country, and the recipient receives the exact amount |
 
-Cross-border Swift fees depend on the destination and the payout currency, from €5 to €35 per transfer. Currency conversion, where it applies, is charged separately.
+Our banking partner's own transfer fee comes on top of the Swift fee: in its published example, 1.13 USD on a 4,000 USD Swift transfer. Currency conversion, where it applies, is charged separately. Swift fee in USD by country, where correspondent fees are expected: Bosnia and Herzegovina 13.22 USD, Montenegro 13.19 USD, Albania 13.16 USD, North Macedonia 16.83 USD, Serbia 17.25 USD, Turkey 19.24 USD. A country without its own rate costs 21.71 USD. These are our banking partner's prices and can change.
 
 Our banking partner picks the route for your account; you cannot choose between the shared and the fixed cost. The quoted cost shows on the Payouts tab before you request a payout and on the statement after it. Your own bank or an intermediary bank may add a charge on arrival, which AgentaOS cannot see.
 
@@ -48,26 +50,26 @@ You can receive a bank payout in the following countries. This list follows our 
 
 | | | | |
 |---|---|---|---|
-| Albania† | Andorra | Argentina | Australia |
-| Austria | Bangladesh† | Belgium | Bosnia and Herzegovina† |
+| Albania | Andorra | Argentina | Australia |
+| Austria | Bangladesh** | Belgium | Bosnia and Herzegovina† |
 | Brazil | Bulgaria | Canada | Cayman Islands† |
 | Chile | China* | Colombia** | Costa Rica |
 | Croatia | Cyprus | Czech Republic | Denmark |
 | Dominican Republic† | Egypt | Estonia | Finland |
 | France | Georgia | Germany | Gibraltar |
 | Greece | Guatemala† | Hong Kong | Hungary |
-| Iceland† | India | Indonesia | Ireland |
+| Iceland | India | Indonesia | Ireland |
 | Israel | Italy | Japan | Kenya |
 | Kosovo† | Latvia | Liechtenstein | Lithuania |
 | Luxembourg | Malaysia | Malta | Mexico |
-| Moldova† | Monaco | Montenegro† | Morocco |
+| Moldova | Monaco | Montenegro | Morocco |
 | Nepal** | Netherlands | New Zealand | Nigeria |
-| North Macedonia† | Norway | Pakistan** | Peru† |
+| North Macedonia | Norway | Pakistan** | Peru† |
 | Philippines | Poland | Portugal | Romania |
-| San Marino | Serbia† | Singapore | Slovakia |
+| San Marino | Serbia | Singapore | Slovakia |
 | Slovenia | South Africa | South Korea | Spain |
 | Sri Lanka | Sweden | Switzerland | Taiwan† |
-| Tanzania† | Thailand | Turkey | Ukraine** |
+| Tanzania** | Thailand | Turkey | Ukraine** |
 | United Arab Emirates | United Kingdom | United States | Uruguay |
 | Vietnam | Zambia† | | |
 
@@ -77,7 +79,9 @@ You can receive a bank payout in the following countries. This list follows our 
 - `*` China: a business is paid to a CNY account at a bank in mainland China, with a transfer reason on file; the recipient's bank can ask for the contract and the invoice. A person is paid through a card or wallet network, with a cap on each payout.
 - `†` No local route. The payout travels by Swift, so the cross-border fee in the table above applies.
 
-Some routes cap one payout. Brazil: 10,000 USD to a business account and 3,000 USD to a personal account, and the account holder's tax number is required. Argentina: 18,000 USD per calendar month. India: 1.5 million INR per working day. These caps are our banking partner's and can change. If your balance is above a cap, ask us before the payout window.
+Albania, Moldova, Montenegro, North Macedonia and Serbia are paid in EUR by SEPA transfer, the same local route as the euro area. A bank there that does not take SEPA transfers is paid by Swift instead, so the cross-border fee applies.
+
+Some routes cap one payout. Brazil: 10,000 USD to a business account and 3,000 USD to a personal account, and the account holder's tax number is required. Argentina: 18,000 USD per calendar month. India: 1.5 million INR per working day. Ukraine: 29,999 UAH per transfer, except to PrivatBank. These caps are our banking partner's and can change. If your balance is above a cap, ask us before the payout window.
 
 ## Countries we cannot pay out to
 
