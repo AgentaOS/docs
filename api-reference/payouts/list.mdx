@@ -1,0 +1,16 @@
+---
+title: "List payouts"
+openapi: "GET /gateway/mor-settlements"
+---
+
+<Note>
+Each payout comes with a payout statement and, when `canDownloadSelfBill` is `true`, a self-billed invoice. Use the payout's `id` to [download the statement](/api-reference/payouts/statement) and [the invoice](/api-reference/payouts/self-billed-invoice). See [Payout statements and self-billed invoices](/payouts/statements).
+</Note>
+
+<Note>
+**For a platform:** send the business's id in the [`AgentaOS-Account` header](/api-reference/introduction#acting-for-a-business) to list that business's payouts.
+</Note>
+
+<Note>
+**Webhook:** none.
+</Note>

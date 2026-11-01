@@ -280,6 +280,20 @@
                   "api-reference/bank-accounts/deactivate"
                 ]
               },
+              {
+                "group": "Approved sites",
+                "pages": [
+                  "api-reference/approved-sites/update"
+                ]
+              },
+              {
+                "group": "Payouts",
+                "pages": [
+                  "api-reference/payouts/list",
+                  "api-reference/payouts/statement",
+                  "api-reference/payouts/self-billed-invoice"
+                ]
+              },
               "api-reference/webhooks"
             ]
           }
