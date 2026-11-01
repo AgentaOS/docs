@@ -5854,7 +5854,7 @@
               "null"
             ],
             "format": "uuid",
-            "description": "The matching invoice, joined for convenience. null for outbound rows."
+            "description": "The matching invoice, joined for convenience. null for outbound rows. Only on `GET /gateway/all-transactions`: the sale rows inside a product or checkout detail leave it out."
           },
           "payment_link_id": {
             "type": [
@@ -5979,7 +5979,6 @@
           "vendor_reference",
           "network",
           "seller_of_record",
-          "invoice_id",
           "payment_link_id",
           "session_id",
           "description",
