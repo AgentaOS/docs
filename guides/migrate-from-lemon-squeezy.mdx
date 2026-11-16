@@ -1,0 +1,157 @@
+---
+title: "Migrate from Lemon Squeezy"
+description: "Copy your products, plans, trials and discount codes from Lemon Squeezy to AgentaOS with one command, then move your subscribers before their next renewal."
+icon: "right-left"
+---
+
+Lemon Squeezy announced on 16 November 2026 that it stops processing payments on 31 March 2027. This guide moves your store to AgentaOS before that date. One command copies your products, plans, trials and discount codes. Your Lemon Squeezy account is only read. Nothing in it is changed, paused or cancelled.
+
+You can start today. New sales move as soon as your links point to AgentaOS. Your existing subscribers keep renewing on Lemon Squeezy until you move them, one renewal date at a time.
+
+## What moves
+
+| Item | Moves | Notes |
+|---|---|---|
+| One-time products | Yes | Name, description, price and image |
+| Subscription plans | Yes | Monthly and yearly, with their free trials |
+| Discount codes | Yes | On AgentaOS a code takes money off the first invoice |
+| Subscribers | Listed | A file with each subscriber's plan, renewal date and new link |
+| Saved cards | No | See [Move your subscribers](#move-your-subscribers) |
+| License keys | No | See [License keys](#license-keys) |
+
+Some items cannot move as they are:
+
+- Plans billed every week or every quarter. AgentaOS plans are monthly or yearly.
+- Prices in a currency other than EUR or USD.
+- Free products and pay-what-you-want products.
+- Fixed-amount discount codes in a currency other than EUR or USD.
+
+The command leaves these items behind and lists each one in `skipped.csv` with the reason, so you can create them again by hand.
+
+## Before you start
+
+- An AgentaOS account. Sign up at [app.agentaos.ai](https://app.agentaos.ai). The dashboard opens in **Test mode**, so you can run the full move with test money first. See [Test mode and testing](/getting-started/test-mode).
+- A test API key. Open **Developers → API keys** in the sidebar and click **Generate Test Key**.
+- A Lemon Squeezy API key. Create it in your Lemon Squeezy settings.
+- Node.js 20 or later.
+- A product that AgentaOS can sell. AgentaOS is a merchant of record for software and digital products. See [Account review](/mor/account-review#acceptable-products) and [Supported countries](/mor/supported-countries).
+
+## Copy your catalog
+
+<Steps>
+  <Step title="Do a dry run">
+    Set your Lemon Squeezy key in your terminal and run the command. A dry run reads your store and writes a plan. It creates nothing.
+
+    ```bash
+    export LEMONSQUEEZY_API_KEY=...
+    npx @agentaos/migrate --from lemonsqueezy
+    ```
+  </Step>
+  <Step title="Read the plan">
+    The command writes its report to the folder `agentaos-migration`. Open `summary.md` to see how many products, discount codes and subscribers it found. Open `skipped.csv` to see what stays behind, and why.
+  </Step>
+  <Step title="Create the products in test mode">
+    Set your AgentaOS test key and add `--apply`.
+
+    ```bash
+    export AGENTAOS_API_KEY=sk_test_...
+    npx @agentaos/migrate --from lemonsqueezy --apply
+    ```
+
+    You can run the command again safely. It finds the products and codes it already created and does not create them twice.
+  </Step>
+  <Step title="Pay for one product yourself">
+    Open a new link from `products.csv` and pay with the test card `4242 4242 4242 4242`, any future expiry date and any CVC. Type the card only into the card form on the checkout page. The sale appears on **Home** in the dashboard.
+  </Step>
+</Steps>
+
+## The report
+
+| File | Contents |
+|---|---|
+| `summary.md` | What the command found, what it created, and the next steps |
+| `products.csv` | Each Lemon Squeezy product with its new product id and link |
+| `redirects.csv` | Each old buy link with the new link that replaces it |
+| `subscribers.csv` | Each subscriber with their plan, renewal date and new link |
+| `email-to-subscribers.md` | A short email to send to your subscribers |
+| `skipped.csv` | What stayed behind, and why |
+
+`subscribers.csv` holds your customers' email addresses. It stays on your computer. The folder gets its own `.gitignore`, so the file is not committed by accident.
+
+## Go live
+
+Test mode and live mode are separate. To take real money, verify your business first. See [Go live](/guides/go-live). Then generate a live API key and run the command again:
+
+```bash
+export AGENTAOS_API_KEY=sk_live_...
+npx @agentaos/migrate --from lemonsqueezy --apply
+```
+
+The live products get their own links. Use the files from this run for the steps below.
+
+## Swap your links
+
+`redirects.csv` pairs each Lemon Squeezy buy link with its new AgentaOS link. Replace the old links on your website, in your app and in your emails. From that moment, new buyers pay on AgentaOS.
+
+If your app listens for Lemon Squeezy webhooks, point it at AgentaOS events too. See [Webhooks](/payments/webhooks).
+
+## Move your subscribers
+
+Saved cards stay with Lemon Squeezy. A card on file belongs to the seller that collected it, and it is not handed to another seller. So each subscriber subscribes one time on the new link.
+
+<Steps>
+  <Step title="Create a switch code">
+    Your subscribers already paid Lemon Squeezy for their current period. A switch code makes their first AgentaOS invoice free, so nobody pays twice.
+
+    ```bash
+    npx @agentaos/migrate --from lemonsqueezy --apply --switch-code
+    ```
+
+    The code is random. It can be used as many times as you have subscribers, and it expires after 60 days.
+  </Step>
+  <Step title="Email each subscriber before their renewal">
+    `subscribers.csv` lists everyone with their renewal date and new link. Send the email in `email-to-subscribers.md` from your own address, one or two weeks before each renewal date.
+  </Step>
+  <Step title="Cancel the old subscription">
+    When a subscriber pays on AgentaOS, cancel their Lemon Squeezy subscription at the end of the period they paid for.
+  </Step>
+</Steps>
+
+<Note>
+If a plan has a free trial, a moved subscriber gets that trial too. To prevent that, remove the trial from the plan in the dashboard before you send the email.
+</Note>
+
+Lemon Squeezy stops processing payments on 31 March 2027. Move every subscriber whose renewal date is after that day before it arrives.
+
+## License keys
+
+AgentaOS does not issue license keys. Keep the keys your customers already have, and issue new keys from your own app. When a sale completes, AgentaOS sends the `checkout.session.completed` event to your webhook. Create and send the key there. See [Webhook events](/webhooks/events).
+
+## Payment methods
+
+Buyers pay by card, with Apple Pay and Google Pay on devices that support them, and by bank transfer on EUR sales. PayPal is not available. A subscriber who paid with PayPal subscribes again with a card.
+
+## Fees and payouts
+
+Fees are on [Pricing](/mor/pricing). Payout routes for your country are on [Supported countries](/mor/supported-countries).
+
+## Let your AI agent do it
+
+With the AgentaOS plugin in your coding agent, say "move me off Lemon Squeezy". The agent does a dry run, shows you the plan, and creates products only after you agree. Set your API keys in your terminal. Do not paste them into the chat. See [Build with AI agents](/agents/overview).
+
+## From code
+
+The same steps are available as a library:
+
+```typescript
+import { AgentaOS } from '@agentaos/pay';
+import { applyPlan, buildPlan, readSource, writeReport } from '@agentaos/migrate';
+
+const plan = buildPlan(await readSource('lemonsqueezy', process.env.LEMONSQUEEZY_API_KEY!));
+const result = await applyPlan(new AgentaOS(process.env.AGENTAOS_API_KEY!), plan, { switchCode: true });
+await writeReport('agentaos-migration', plan, result);
+```
+
+## Get help
+
+Write to [contact@agentaos.ai](mailto:contact@agentaos.ai). Say what you sell on Lemon Squeezy: your products, the number of subscribers, and whether you use license keys.
