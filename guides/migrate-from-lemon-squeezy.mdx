@@ -8,6 +8,17 @@ Lemon Squeezy announced on 16 November 2026 that it stops processing payments on
 
 You can start today. New sales move as soon as your links point to AgentaOS. Your existing subscribers keep renewing on Lemon Squeezy until you move them, one renewal date at a time.
 
+## Lemon Squeezy's dates
+
+| Date | What happens |
+|---|---|
+| 16 November 2026 | Lemon Squeezy stops accepting new stores |
+| 2 December 2026 | Lemon Squeezy opens its own migration tool for eligible stores |
+| Mid-January 2027 | The latest date Lemon Squeezy recommends to start a migration |
+| 31 March 2027 | Lemon Squeezy stops processing payments, subscription renewals included |
+
+The dates are from Lemon Squeezy's [migration guide](https://docs.lemonsqueezy.com/migration). Lemon Squeezy says it does not extend the last date.
+
 ## What moves
 
 | Item | Moves | Notes |
@@ -30,17 +41,22 @@ The command leaves these items behind and lists each one in `skipped.csv` with t
 
 ## Before you start
 
-- An AgentaOS account. Sign up at [app.agentaos.ai](https://app.agentaos.ai). The dashboard opens in **Test mode**, so you can run the full move with test money first. See [Test mode and testing](/getting-started/test-mode).
-- A test API key. Open **Developers → API keys** in the sidebar and click **Generate Test Key**.
+To do a dry run, you need only these two items. You do not need an AgentaOS account.
+
 - A Lemon Squeezy API key. Create it in your Lemon Squeezy settings.
 - Node.js 20 or later.
+
+To create your products on AgentaOS, you also need:
+
+- An AgentaOS account. Sign up at [app.agentaos.ai](https://app.agentaos.ai). The dashboard opens in **Test mode**, so you can run the full move with test money first. See [Test mode and testing](/getting-started/test-mode).
+- A test API key. Open **Developers → API keys** in the sidebar and click **Generate Test Key**.
 - A product that AgentaOS can sell. AgentaOS is a merchant of record for software and digital products. See [Account review](/mor/account-review#acceptable-products) and [Supported countries](/mor/supported-countries).
 
 ## Copy your catalog
 
 <Steps>
   <Step title="Do a dry run">
-    Set your Lemon Squeezy key in your terminal and run the command. A dry run reads your store and writes a plan. It creates nothing.
+    Set your Lemon Squeezy key in your terminal and run the command. A dry run needs only that key, not an AgentaOS account. It reads your store and writes a plan to your computer. It creates nothing, and it changes nothing in Lemon Squeezy.
 
     ```bash
     export LEMONSQUEEZY_API_KEY=...
@@ -71,10 +87,12 @@ The command leaves these items behind and lists each one in `skipped.csv` with t
 |---|---|
 | `summary.md` | What the command found, what it created, and the next steps |
 | `products.csv` | Each Lemon Squeezy product with its new product id and link |
-| `redirects.csv` | Each old buy link with the new link that replaces it |
-| `subscribers.csv` | Each subscriber with their plan, renewal date and new link |
-| `email-to-subscribers.md` | A short email to send to your subscribers |
+| `redirects.csv` | Each old buy link with the new link that replaces it. Written when you run with `--apply` |
+| `subscribers.csv` | Each subscriber with their plan, renewal date and new link. Written when your store has subscribers |
+| `email-to-subscribers.md` | A short email to send to your subscribers. Written when your store has subscribers |
 | `skipped.csv` | What stayed behind, and why |
+
+A dry run leaves the new product ids and links empty, because nothing exists on AgentaOS yet. The subscriber list holds subscribers who are active, in a trial or past due. Cancelled, paused and expired subscribers are not listed.
 
 `subscribers.csv` holds your customers' email addresses. It stays on your computer. The folder gets its own `.gitignore`, so the file is not committed by accident.
 
@@ -93,11 +111,30 @@ The live products get their own links. Use the files from this run for the steps
 
 `redirects.csv` pairs each Lemon Squeezy buy link with its new AgentaOS link. Replace the old links on your website, in your app and in your emails. From that moment, new buyers pay on AgentaOS.
 
-If your app listens for Lemon Squeezy webhooks, point it at AgentaOS events too. See [Webhooks](/payments/webhooks).
+## Replace your webhooks
+
+If your app listens for Lemon Squeezy webhooks, add an AgentaOS webhook and handle these events. See [Webhooks](/payments/webhooks) for the setup.
+
+| Lemon Squeezy event | AgentaOS event |
+|---|---|
+| `order_created` | `checkout.session.completed` |
+| `subscription_created` | `subscription.created` |
+| `subscription_payment_success`, `subscription_payment_recovered` | `subscription.renewed` |
+| `subscription_payment_failed` | `subscription.payment_failed` |
+| `subscription_cancelled`, `subscription_resumed` | `subscription.updated` |
+| `subscription_expired` | `subscription.canceled` |
+
+Three differences matter:
+
+- `checkout.session.completed` also fires for each later subscription charge, together with `subscription.renewed`. Handle a renewal from one of the two events, not from both.
+- A cancel that is scheduled for the period end sends `subscription.updated`. `subscription.canceled` arrives when access ends.
+- AgentaOS sends no event for a refund, a paused subscription or a license key.
+
+[Webhook events](/webhooks/events) lists each event with its payload.
 
 ## Move your subscribers
 
-Saved cards stay with Lemon Squeezy. A card on file belongs to the seller that collected it, and it is not handed to another seller. So each subscriber subscribes one time on the new link.
+This command does not move saved cards. Lemon Squeezy can transfer card subscriptions to another provider through the intake form in its account settings, but AgentaOS does not receive those transfers today. So each subscriber subscribes one time on the new link.
 
 <Steps>
   <Step title="Create a switch code">
@@ -154,4 +191,6 @@ await writeReport('agentaos-migration', plan, result);
 
 ## Get help
 
-Write to [contact@agentaos.ai](mailto:contact@agentaos.ai). Say what you sell on Lemon Squeezy: your products, the number of subscribers, and whether you use license keys.
+Book a free call at [cal.com/panche-agenta/onboarding](https://cal.com/panche-agenta/onboarding). We help you choose a provider that fits your business, even if it is not AgentaOS, and we help you move your data.
+
+Or write to [contact@agentaos.ai](mailto:contact@agentaos.ai). Say what you sell on Lemon Squeezy: your products, the number of subscribers, and whether you use license keys.
